@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
 
-@Entity('User')
+@Entity('user')
 export class UserEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: string;
