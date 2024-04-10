@@ -3,7 +3,7 @@ import { IsBoolean, IsNotEmpty, IsNumber, IsString } from "class-validator";
 export class CreateCourseDto {
     @IsString()
     @IsNotEmpty()
-    professor_name: string;
+    professorName: string;
     
     @IsString()
     @IsNotEmpty()
@@ -14,11 +14,11 @@ export class CreateCourseDto {
 
     @IsString()
     @IsNotEmpty()
-    course_name : string;
+    courseName : string;
 
     @IsString()
     @IsNotEmpty()
-    course_code : string;
+    courseCode : string;
 
     @IsNumber()
     @IsNotEmpty()
@@ -29,7 +29,7 @@ export class CreateCourseDto {
 
     @IsBoolean()
     @IsNotEmpty()
-    has_exchange_seat : boolean;
+    hasExchangeSeat: boolean;
 
     @IsString()
     @IsNotEmpty()
