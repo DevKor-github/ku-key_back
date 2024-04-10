@@ -32,4 +32,8 @@ export class CourseService {
             throw new NotFoundException(`Course with id ${createCourseDetailDto.courseId} not found`);
         }
     }
+
+    async getAllCourses() : Promise<CourseEntity[]>{
+        return await this.courseRepository.find();
+    }
 }

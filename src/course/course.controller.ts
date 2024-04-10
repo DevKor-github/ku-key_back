@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseService } from './course.service';
@@ -21,5 +21,10 @@ export class CourseController {
         @Body() createCourseDetailDto : CreateCourseDetailDto,
     ) : Promise<CourseDetailEntity> {
         return await this.courseService.createCourseDetail(createCourseDetailDto);
+    }
+
+    @Get()
+    async getAllCourses() : Promise<CourseEntity[]>{
+        return await this.courseService.getAllCourses();
     }
 }
