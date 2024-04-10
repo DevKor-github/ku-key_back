@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseService } from './course.service';
@@ -26,5 +26,10 @@ export class CourseController {
     @Get()
     async getAllCourses() : Promise<CourseEntity[]>{
         return await this.courseService.getAllCourses();
+    }
+
+    @Get('/:courseId')
+    async getCourse(@Param('courseId') courseId : number) : Promise<CourseEntity>{
+        return await this.courseService.getCourse(courseId);
     }
 }
