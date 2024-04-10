@@ -16,10 +16,10 @@ export class CourseEntity extends CommonEntity {
   college: string;
 
   @Column('varchar',{nullable:false})
-  course_name: string;
+  courseName: string;
 
   @Column('varchar',{nullable:false})
-  course_code: string;
+  courseCode: string;
 
   @Column('int',{nullable:false})
   credit: number;
