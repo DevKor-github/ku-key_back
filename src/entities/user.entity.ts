@@ -4,7 +4,7 @@ import { CommonEntity } from './common.entity';
 @Entity('user')
 export class UserEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  id: number;
 
   @Column('varchar', { unique: true })
   email: string;
