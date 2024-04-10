@@ -1,10 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { CourseDetailEntity } from './course-detail.entity';
 
 @Entity('course')
 export class CourseEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  id: number;
 
   @Column('varchar', {nullable:false})
   professorName: string;
@@ -35,4 +36,7 @@ export class CourseEntity extends CommonEntity {
 
   @Column('varchar',{nullable:false})
   semester: string;
+
+  @OneToMany(()=>CourseDetailEntity, courseDetailEntity => courseDetailEntity.course)
+  courseDetail: CourseDetailEntity[];
 }
