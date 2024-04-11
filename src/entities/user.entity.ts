@@ -9,29 +9,32 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { unique: true })
   email: string;
 
+  @Column('varchar', { unique: true })
+  username: string;
+
   @Column('varchar')
   password: string;
 
-  @Column('varchar')
-  homeUniversity: string;
+  @Column('varchar', { nullable: true })
+  homeUniversity: string | null;
 
-  @Column('varchar')
-  language: string;
+  @Column('varchar', { nullable: true })
+  language: string | null;
 
-  @Column('varchar')
-  country: string;
+  @Column('varchar', { nullable: true })
+  country: string | null;
 
-  @Column('varchar')
-  major: string;
+  @Column('varchar', { nullable: true })
+  major: string | null;
 
-  @Column('varchar')
-  gender: string;
+  @Column('varchar', { nullable: true })
+  gender: string | null;
 
   @Column('tinyint', { default: false })
   isVerified: boolean;
 
-  @Column('varchar')
-  name: string;
+  @Column('varchar', { nullable: true })
+  name: string | null;
 
   @Column('timestamp', { nullable: true })
   startDay: Date | null;
