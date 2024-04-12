@@ -8,11 +8,11 @@ export class TimeTableCourseEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-//   @Column({nullable:false})
-//   timeTableId: number;
+  @Column({nullable:false})
+  timeTableId: number;
 
-//   @Column({nullable:false})
-//   courseId: number;
+  @Column({nullable:false})
+  courseId: number;
 
   @JoinColumn({name: 'timeTableId'})
   @ManyToOne(()=>TimeTableEntity, timeTableEntity => timeTableEntity.timeTableCourse,{
