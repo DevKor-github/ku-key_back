@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as path from 'path';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -26,6 +27,11 @@ import { AuthModule } from './auth/auth.module';
         synchronize: true,
         logging: true,
       }),
+    }),
+    CacheModule.register({
+      ttl: 60000,
+      max: 100,
+      isGlobal: true,
     }),
     UserModule,
     AuthModule,
