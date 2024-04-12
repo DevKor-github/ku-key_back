@@ -52,7 +52,8 @@ export class AuthService {
   }
 
   createAccessToken(user: AuthorizedUserDto) {
-    return this.jwtService.sign(user, {
+    const payload = { email: user.email, id: user.id };
+    return this.jwtService.sign(payload, {
       expiresIn: '30m',
     });
   }
