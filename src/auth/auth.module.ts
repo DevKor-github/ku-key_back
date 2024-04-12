@@ -7,6 +7,7 @@ import { UserRepository } from 'src/user/user.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RefreshStrategy } from './strategies/refresh.strategy';
+import { EmailService } from './email.service';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RefreshStrategy } from './strategies/refresh.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
+    EmailService,
     UserRepository,
     LocalStrategy,
     JwtStrategy,
