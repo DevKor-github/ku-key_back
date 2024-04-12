@@ -6,6 +6,7 @@ import { CourseEntity } from 'src/entities/course.entity';
 import { CreateCourseDetailDto } from './dto/create-course-detail.dto';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -55,5 +56,9 @@ export class CourseService {
         major: search,
       },
     });
+  }
+
+  async updateCourse(updateCourseDto : UpdateCourseDto, courseId: number) : Promise<CourseEntity> {
+    return await this.courseRepository.updateCourse(updateCourseDto, courseId);
   }
 }
