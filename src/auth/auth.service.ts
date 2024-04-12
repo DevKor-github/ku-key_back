@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/user/user.repository';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { JwtTokenDto } from './dto/jwtToken.dto';
+import { AuthorizedUserDto } from './dto/authorized-user-dto';
 
 @Injectable()
 export class AuthService {
@@ -26,18 +28,54 @@ export class AuthService {
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return new AuthorizedUserDto(user.id, user.email);
   }
 
-  async logIn(user) {
-    return {
-      accessToken: this.jwtService.sign(user),
-    };
+  async createToken(user: AuthorizedUserDto) {
+    const id = user.id;
+    const tokenDto = new JwtTokenDto(
+      this.createAccessToken(user),
+      this.createRefreshToken(id),
+    );
+    await this.setCurrentRefresthToken(tokenDto.refreshToken, id);
+    return tokenDto;
+  }
+
+  createAccessToken(user: AuthorizedUserDto) {
+    return this.jwtService.sign(user, {
+      expiresIn: '30m',
+    });
+  }
+
+  createRefreshToken(id: number) {
+    return this.jwtService.sign(
+      { id },
+      {
+        expiresIn: '2w',
+      },
+    );
+  }
+
+  async setCurrentRefresthToken(refreshToken: string, id: number) {
+    await this.userRepository.setCurrentRefrestToken(id, refreshToken);
+  }
+
+  async refreshTokenMatches(refreshToken: string, id: number) {
+    const user = await this.userRepository.findUserById(id);
+    const isMatches = refreshToken === user.refreshToken;
+    if (!isMatches) {
+      throw new BadRequestException('refreshToken is not matched!');
+    }
+
+    return new AuthorizedUserDto(user.id, user.email);
+  }
+
+  async logIn(user: AuthorizedUserDto) {
+    return await this.createToken(user);
+  }
+
+  async refreshToken(user: AuthorizedUserDto) {
+    const accessToken = this.createAccessToken(user);
+    return { accessToken };
   }
 }
