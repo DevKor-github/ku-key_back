@@ -13,4 +13,11 @@ export class UserRepository extends Repository<UserEntity> {
     const user = this.create({ ...createUserDto });
     return await this.save(user);
   }
+
+  async findUserByEmail(email: string) {
+    const user = await this.findOne({
+      where: { email: email },
+    });
+    return user;
+  }
 }
