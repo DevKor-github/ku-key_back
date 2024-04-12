@@ -1,10 +1,20 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseService } from './course.service';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CreateCourseDetailDto } from './dto/create-course-detail.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
 
 @Controller('course')
 export class CourseController {
@@ -39,6 +49,14 @@ export class CourseController {
   @Get('/:courseId')
   async getCourse(@Param('courseId') courseId: number): Promise<CourseEntity> {
     return await this.courseService.getCourse(courseId);
+  }
+
+  @Patch('detail/:courseDetailId')
+  async updateCourseDetail(
+    @Param('courseDetailId') courseDetailId: number,
+    @Body() updateCourseDetailDto: UpdateCourseDetailDto,
+  ): Promise<CourseDetailEntity> {
+    return await this.courseService.updateCourseDetail(updateCourseDetailDto,courseDetailId);
   }
 
   @Patch('/:courseId')
