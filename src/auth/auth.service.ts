@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/user/user.repository';
-import { compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
@@ -57,12 +57,15 @@ export class AuthService {
   }
 
   async setCurrentRefresthToken(refreshToken: string, id: number) {
-    await this.userRepository.setCurrentRefrestToken(id, refreshToken);
+    const hashedToken = await hash(refreshToken, 10);
+
+    await this.userRepository.setCurrentRefrestToken(id, hashedToken);
   }
 
   async refreshTokenMatches(refreshToken: string, id: number) {
     const user = await this.userRepository.findUserById(id);
-    const isMatches = refreshToken === user.refreshToken;
+    const isMatches = await compare(refreshToken, user.refreshToken);
+
     if (!isMatches) {
       throw new BadRequestException('refreshToken is not matched!');
     }
