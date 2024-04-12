@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { TimeTableEntity } from './timetable.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -47,4 +48,7 @@ export class UserEntity extends CommonEntity {
 
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
+
+  @OneToMany(()=> TimeTableEntity, timeTableEntity => timeTableEntity.user)
+  timeTable: TimeTableEntity[];
 }
