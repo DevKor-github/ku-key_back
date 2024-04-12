@@ -23,12 +23,12 @@ export class AuthController {
     return await this.authService.refreshToken(user);
   }
 
-  @Post('sendEmail')
+  @Post('verification-request')
   async sendVerification(@Body() body) {
     return await this.authService.sendVerification(body.email);
   }
 
-  @Post('verifyEmail')
+  @Post('verify-email')
   async VerifyEmailByToken(@Body() body) {
     return await this.authService.verifyEmail(body.email, body.verifyToken);
   }
