@@ -8,8 +8,8 @@ export class TimeTableEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-//   @Column({nullable:false})
-//   userId: number;
+  @Column({nullable:false})
+  userId: number;
 
   @Column('varchar',{nullable:false})
   tableName: string;

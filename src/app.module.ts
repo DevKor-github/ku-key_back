@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourseModule } from './course/course.module';
+import { TimetableModule } from './timetable/timetable.module';
 import * as path from 'path';
 
 @Module({
@@ -27,6 +28,7 @@ import * as path from 'path';
       }),
     }),
     CourseModule,
+    TimetableModule,
   ],
   controllers: [AppController],
   providers: [AppService],
