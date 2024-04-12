@@ -20,4 +20,22 @@ export class UserRepository extends Repository<UserEntity> {
     });
     return user;
   }
+
+  async findUserById(id: number) {
+    const user = await this.findOne({
+      where: { id: id },
+    });
+    return user;
+  }
+
+  async setCurrentRefrestToken(id: number, newRefresthToken: string) {
+    const updateResult = await this.update(
+      { id: id },
+      {
+        refreshToken: newRefresthToken,
+      },
+    );
+
+    return { affected: updateResult?.affected };
+  }
 }
