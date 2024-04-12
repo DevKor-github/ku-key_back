@@ -1,18 +1,28 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/user/user.repository';
 import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
+import { EmailService } from './email.service';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -80,5 +90,35 @@ export class AuthService {
   async refreshToken(user: AuthorizedUserDto) {
     const accessToken = this.createAccessToken(user);
     return { accessToken };
+  }
+
+  async sendVerification(email: string) {
+    const verifyToken = this.generateRandomNumber();
+    console.log('caching data: ', email, verifyToken);
+    await this.cacheManager.set(email, verifyToken);
+    await this.emailService.sendVerityToken(email, verifyToken);
+    return {
+      sended: true,
+    };
+  }
+
+  async verifyEmail(email: string, verifyToken: number) {
+    const cache_verifyToken = await this.cacheManager.get(email);
+    if (!cache_verifyToken) {
+      throw new NotFoundException('해당 메일로 전송된 인증번호가 없습니다.');
+    } else if (cache_verifyToken !== verifyToken) {
+      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+    } else {
+      await this.cacheManager.del(email);
+      return {
+        verified: true,
+      };
+    }
+  }
+
+  private generateRandomNumber(): number {
+    const minm = 100000;
+    const maxm = 999999;
+    return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 }
