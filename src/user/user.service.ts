@@ -25,4 +25,17 @@ export class UserService {
       password: hashedPassword,
     });
   }
+
+  async checkUsernamePossible(username: string) {
+    const user = await this.userRepository.findUserByUsername(username);
+    if (!user) {
+      return {
+        possible: true,
+      };
+    } else {
+      return {
+        possible: false,
+      };
+    }
+  }
 }
