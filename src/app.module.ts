@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourseModule } from './course/course.module';
 import * as path from 'path';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import * as path from 'path';
         logging: true,
       }),
     }),
+    UserModule,
     CourseModule,
   ],
   controllers: [AppController],
