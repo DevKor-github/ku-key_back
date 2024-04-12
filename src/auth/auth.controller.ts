@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
 import { RefreshAuthGuard } from './guards/refresh-auth-guard';
@@ -21,5 +21,15 @@ export class AuthController {
   async refreshToken(@User() user: AuthorizedUserDto) {
     console.log('user : ', user);
     return await this.authService.refreshToken(user);
+  }
+
+  @Post('sendEmail')
+  async sendVerification(@Body() body) {
+    return await this.authService.sendVerification(body.email);
+  }
+
+  @Post('verifyEmail')
+  async VerifyEmailByToken(@Body() body) {
+    return await this.authService.verifyEmail(body.email, body.verifyToken);
   }
 }
