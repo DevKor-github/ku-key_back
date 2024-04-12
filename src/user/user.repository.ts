@@ -28,6 +28,13 @@ export class UserRepository extends Repository<UserEntity> {
     return user;
   }
 
+  async findUserByUsername(username: string) {
+    const user = await this.findOne({
+      where: { username: username },
+    });
+    return user;
+  }
+
   async setCurrentRefrestToken(id: number, newRefresthToken: string) {
     const updateResult = await this.update(
       { id: id },
