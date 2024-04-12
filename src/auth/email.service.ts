@@ -28,7 +28,7 @@ export class EmailService {
 
   async sendVerityToken(email: string, verifyToken: number) {
     const mailOptions: EmailOptions = {
-      from: 'kimsh4265@naver.com',
+      from: this.configService.get('EMAIL_USER'),
       to: email,
       subject: '[Ku-Key] 인증코드를 확인해주세요',
       html: `인증번호 : ${verifyToken}`,
