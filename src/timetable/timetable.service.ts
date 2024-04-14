@@ -23,4 +23,10 @@ export class TimetableService {
     async createTimeTableCourse(timeTableId: number, courseId: number): Promise<TimeTableCourseEntity> {
         return await this.timeTableCourseRepository.createTimeTableCourse(timeTableId, courseId);
     }
+
+    async getTimeTable(timeTableId: number): Promise<TimeTableEntity> {
+        return await this.timeTableRepository.findOne({
+            where : { id : timeTableId },
+        });
+    }
 }

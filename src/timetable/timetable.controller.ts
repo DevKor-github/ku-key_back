@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { TimetableService } from './timetable.service';
@@ -25,4 +25,9 @@ export class TimetableController {
         return await this.timeTableService.createTimeTable(createTimeTableDto);
     }
 
+    // 특정 시간표 가져오기 (시간표 틀만, 시간표에 등록된 강의 조회 아님)
+    @Get('/:timeTableId')
+    async getTimeTable(@Param('timeTableId') timeTableId : number) : Promise<TimeTableEntity> {
+        return await this.timeTableService.getTimeTable(timeTableId);
+    }
 }
