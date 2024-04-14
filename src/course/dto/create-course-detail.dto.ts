@@ -21,4 +21,8 @@ export class CreateCourseDetailDto {
     @IsString()
     @IsOptional()
     classroom?: string;
+
+    @IsString()
+    @IsOptional()
+    period?: string;
 }
