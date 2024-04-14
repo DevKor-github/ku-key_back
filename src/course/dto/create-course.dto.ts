@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateCourseDto {
     @IsString()
@@ -10,7 +10,8 @@ export class CreateCourseDto {
     category : string;
 
     @IsString()
-    college : string;
+    @IsOptional()
+    college?: string;
 
     @IsString()
     @IsNotEmpty()
@@ -25,7 +26,8 @@ export class CreateCourseDto {
     credit : number;
 
     @IsString()
-    major: string;
+    @IsOptional()
+    major?: string;
 
     @IsBoolean()
     @IsNotEmpty()
