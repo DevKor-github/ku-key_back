@@ -6,6 +6,7 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
 import { VerificationRequestDto } from './dto/verification-request.dto';
 import { VerifyEmailRequestDto } from './dto/verify-email-request.dto';
+import { JwtTokenDto } from './dto/jwtToken.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -13,7 +14,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async logIn(@User() user: AuthorizedUserDto) {
+  async logIn(@User() user: AuthorizedUserDto): Promise<JwtTokenDto> {
     console.log('user : ', user);
     return await this.authService.logIn(user);
   }
