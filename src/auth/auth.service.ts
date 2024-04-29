@@ -70,7 +70,7 @@ export class AuthService {
   async setCurrentRefresthToken(refreshToken: string, id: number) {
     const hashedToken = await hash(refreshToken, 10);
 
-    await this.userRepository.setCurrentRefrestToken(id, hashedToken);
+    await this.userRepository.setCurrentRefreshToken(id, hashedToken);
   }
 
   async refreshTokenMatches(refreshToken: string, id: number) {
