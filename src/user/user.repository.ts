@@ -35,7 +35,7 @@ export class UserRepository extends Repository<UserEntity> {
     return user;
   }
 
-  async setCurrentRefrestToken(id: number, newRefresthToken: string) {
+  async setCurrentRefreshToken(id: number, newRefresthToken: string) {
     const updateResult = await this.update(
       { id: id },
       {
