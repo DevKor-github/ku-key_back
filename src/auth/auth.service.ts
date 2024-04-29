@@ -25,7 +25,10 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<AuthorizedUserDto> {
     const user = await this.userRepository.findUserByEmail(email);
 
     if (!user) {
@@ -41,7 +44,7 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.email);
   }
 
-  async createToken(user: AuthorizedUserDto) {
+  async createToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
     const id = user.id;
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
@@ -51,14 +54,14 @@ export class AuthService {
     return tokenDto;
   }
 
-  createAccessToken(user: AuthorizedUserDto) {
+  createAccessToken(user: AuthorizedUserDto): string {
     const payload = { email: user.email, id: user.id };
     return this.jwtService.sign(payload, {
       expiresIn: '30m',
     });
   }
 
-  createRefreshToken(id: number) {
+  createRefreshToken(id: number): string {
     return this.jwtService.sign(
       { id },
       {
@@ -67,13 +70,19 @@ export class AuthService {
     );
   }
 
-  async setCurrentRefresthToken(refreshToken: string, id: number) {
+  async setCurrentRefresthToken(
+    refreshToken: string,
+    id: number,
+  ): Promise<void> {
     const hashedToken = await hash(refreshToken, 10);
 
     await this.userRepository.setCurrentRefreshToken(id, hashedToken);
   }
 
-  async refreshTokenMatches(refreshToken: string, id: number) {
+  async refreshTokenMatches(
+    refreshToken: string,
+    id: number,
+  ): Promise<AuthorizedUserDto> {
     const user = await this.userRepository.findUserById(id);
     const isMatches = await compare(refreshToken, user.refreshToken);
 
@@ -84,7 +93,7 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.email);
   }
 
-  async logIn(user: AuthorizedUserDto) {
+  async logIn(user: AuthorizedUserDto): Promise<JwtTokenDto> {
     return await this.createToken(user);
   }
 
