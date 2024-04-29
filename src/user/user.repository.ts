@@ -14,21 +14,21 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.save(user);
   }
 
-  async findUserByEmail(email: string) {
+  async findUserByEmail(email: string): Promise<UserEntity> {
     const user = await this.findOne({
       where: { email: email },
     });
     return user;
   }
 
-  async findUserById(id: number) {
+  async findUserById(id: number): Promise<UserEntity> {
     const user = await this.findOne({
       where: { id: id },
     });
     return user;
   }
 
-  async findUserByUsername(username: string) {
+  async findUserByUsername(username: string): Promise<UserEntity> {
     const user = await this.findOne({
       where: { username: username },
     });
