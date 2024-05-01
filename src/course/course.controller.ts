@@ -15,6 +15,7 @@ import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CreateCourseDetailDto } from './dto/create-course-detail.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
+import { SearchCourseDto } from './dto/search-course.dto';
 
 @Controller('course')
 export class CourseController {
@@ -36,9 +37,9 @@ export class CourseController {
 
   @Get()
   async getCourseSearch(
-    @Query('search') search: string,
+    @Body() searchCourseDto : SearchCourseDto,
   ): Promise<CourseEntity[]> {
-    return await this.courseService.getCourseSearch(search);
+    return await this.courseService.getCourseSearch(searchCourseDto);
   }
 
   @Get()
