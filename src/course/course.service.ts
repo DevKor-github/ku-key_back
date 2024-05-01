@@ -8,6 +8,8 @@ import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
+import { Like } from 'typeorm';
+import { SearchCourseDto } from './dto/search-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -51,19 +53,30 @@ export class CourseService {
     });
   }
 
-  async getCourseSearch(search: string): Promise<CourseEntity[]> {
+  async getCourseSearch(searchCourseDto: SearchCourseDto): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
-      where: {
-        major: search,
-      },
+      where: [
+        { courseCode: Like(`%${searchCourseDto.search}%`) },
+        { professorName: Like(`%${searchCourseDto.search}%`) },
+        { courseName: Like(`%${searchCourseDto.search}%`) },
+      ],
     });
   }
 
-  async updateCourseDetail(updateCourseDetailDto : UpdateCourseDetailDto, courseDetailId : number) : Promise<CourseDetailEntity> {
-    return await this.courseDetailRepository.updateCourseDetail(updateCourseDetailDto, courseDetailId);
+  async updateCourseDetail(
+    updateCourseDetailDto: UpdateCourseDetailDto,
+    courseDetailId: number,
+  ): Promise<CourseDetailEntity> {
+    return await this.courseDetailRepository.updateCourseDetail(
+      updateCourseDetailDto,
+      courseDetailId,
+    );
   }
 
-  async updateCourse(updateCourseDto : UpdateCourseDto, courseId: number) : Promise<CourseEntity> {
+  async updateCourse(
+    updateCourseDto: UpdateCourseDto,
+    courseId: number,
+  ): Promise<CourseEntity> {
     return await this.courseRepository.updateCourse(updateCourseDto, courseId);
   }
 }
