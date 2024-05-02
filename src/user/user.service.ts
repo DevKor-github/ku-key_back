@@ -2,9 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
-import { UserEntity } from 'src/entities/user.entity';
 import { hash } from 'bcrypt';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
+import { CreateUserResponseDto } from './dto/create-user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -13,7 +13,9 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
+  async createUser(
+    createUserDto: CreateUserRequestDto,
+  ): Promise<CreateUserResponseDto> {
     const user = await this.userRepository.findUserByEmail(createUserDto.email);
     if (user) {
       throw new BadRequestException('이미 해당 이메일이 존재합니다.');
@@ -21,10 +23,12 @@ export class UserService {
 
     const hashedPassword = await hash(createUserDto.password, 10);
 
-    return await this.userRepository.createUser({
+    await this.userRepository.createUser({
       ...createUserDto,
       password: hashedPassword,
     });
+
+    return new CreateUserResponseDto(true);
   }
 
   async checkUsernamePossible(
