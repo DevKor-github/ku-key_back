@@ -1,12 +1,12 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class VerifyEmailRequestDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @IsEmail()
   email: string;
 
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   verifyToken: number;
 }
