@@ -14,6 +14,9 @@ import { AuthorizedUserDto } from './dto/authorized-user-dto';
 import { EmailService } from './email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { AccessTokenDto } from './dto/accessToken.dto';
+import { VerificationResponseDto } from './dto/verification-response.dto';
+import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -97,22 +100,23 @@ export class AuthService {
     return await this.createToken(user);
   }
 
-  async refreshToken(user: AuthorizedUserDto) {
+  refreshToken(user: AuthorizedUserDto): AccessTokenDto {
     const accessToken = this.createAccessToken(user);
-    return { accessToken };
+    return new AccessTokenDto(accessToken);
   }
 
-  async sendVerification(email: string) {
+  async sendVerification(email: string): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
     await this.cacheManager.set(email, verifyToken);
     await this.emailService.sendVerityToken(email, verifyToken);
-    return {
-      sended: true,
-    };
+    return new VerificationResponseDto(true);
   }
 
-  async verifyEmail(email: string, verifyToken: number) {
+  async verifyEmail(
+    email: string,
+    verifyToken: number,
+  ): Promise<VerifyEmailResponseDto> {
     const cache_verifyToken = await this.cacheManager.get(email);
     if (!cache_verifyToken) {
       throw new NotFoundException('해당 메일로 전송된 인증번호가 없습니다.');
@@ -120,9 +124,7 @@ export class AuthService {
       throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
     } else {
       await this.cacheManager.del(email);
-      return {
-        verified: true,
-      };
+      return new VerifyEmailResponseDto(true);
     }
   }
 
