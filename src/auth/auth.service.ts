@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  NotImplementedException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -53,7 +54,10 @@ export class AuthService {
       this.createAccessToken(user),
       this.createRefreshToken(id),
     );
-    await this.setCurrentRefresthToken(tokenDto.refreshToken, id);
+    const isset = await this.setCurrentRefresthToken(tokenDto.refreshToken, id);
+    if (!isset) {
+      throw new NotImplementedException('update refresh token failed!');
+    }
     return tokenDto;
   }
 
@@ -76,10 +80,10 @@ export class AuthService {
   async setCurrentRefresthToken(
     refreshToken: string,
     id: number,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const hashedToken = await hash(refreshToken, 10);
 
-    await this.userRepository.setCurrentRefreshToken(id, hashedToken);
+    return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
   }
 
   async refreshTokenMatches(
