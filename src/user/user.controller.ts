@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 
@@ -9,7 +9,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  async register(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
+  async register(
+    @Body() createUserDto: CreateUserRequestDto,
+  ): Promise<UserEntity> {
     return await this.userService.createUser(createUserDto);
   }
 
