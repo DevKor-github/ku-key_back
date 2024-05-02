@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
-import { UserEntity } from 'src/entities/user.entity';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
+import { CreateUserResponseDto } from './dto/create-user-response.dto';
 
 @Controller('user')
 export class UserController {
@@ -11,7 +11,7 @@ export class UserController {
   @Post()
   async register(
     @Body() createUserDto: CreateUserRequestDto,
-  ): Promise<UserEntity> {
+  ): Promise<CreateUserResponseDto> {
     return await this.userService.createUser(createUserDto);
   }
 
