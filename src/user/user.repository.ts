@@ -1,6 +1,6 @@
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class UserRepository extends Repository<UserEntity> {
     super(UserEntity, dataSource.createEntityManager());
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
+  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
     const user = this.create({ ...createUserDto });
     return await this.save(user);
   }
