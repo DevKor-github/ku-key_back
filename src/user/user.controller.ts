@@ -15,14 +15,14 @@ export class UserController {
     return await this.userService.createUser(createUserDto);
   }
 
-  @Get('check/:username')
+  @Get('username/:username')
   async checkUsernamePossible(
     @Param('username') username: string,
   ): Promise<checkPossibleResponseDto> {
     return await this.userService.checkUsernamePossible(username);
   }
 
-  @Get('check/:email')
+  @Get('email/:email')
   async checkEmailPossible(
     @Param('email') email: string,
   ): Promise<checkPossibleResponseDto> {
