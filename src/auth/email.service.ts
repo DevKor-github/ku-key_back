@@ -26,7 +26,7 @@ export class EmailService {
     });
   }
 
-  async sendVerityToken(email: string, verifyToken: number) {
+  async sendVerityToken(email: string, verifyToken: number): Promise<any> {
     const mailOptions: EmailOptions = {
       from: this.configService.get('EMAIL_USER'),
       to: email,
