@@ -7,6 +7,9 @@ import { AuthorizedUserDto } from './dto/authorized-user-dto';
 import { VerificationRequestDto } from './dto/verification-request.dto';
 import { VerifyEmailRequestDto } from './dto/verify-email-request.dto';
 import { JwtTokenDto } from './dto/jwtToken.dto';
+import { AccessTokenDto } from './dto/accessToken.dto';
+import { VerificationResponseDto } from './dto/verification-response.dto';
+import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -21,18 +24,22 @@ export class AuthController {
 
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
-  async refreshToken(@User() user: AuthorizedUserDto) {
+  refreshToken(@User() user: AuthorizedUserDto): AccessTokenDto {
     console.log('user : ', user);
-    return await this.authService.refreshToken(user);
+    return this.authService.refreshToken(user);
   }
 
   @Post('verification-request')
-  async sendVerification(@Body() body: VerificationRequestDto) {
+  async sendVerification(
+    @Body() body: VerificationRequestDto,
+  ): Promise<VerificationResponseDto> {
     return await this.authService.sendVerification(body.email);
   }
 
   @Post('verify-email')
-  async VerifyEmailByToken(@Body() body: VerifyEmailRequestDto) {
+  async VerifyEmailByToken(
+    @Body() body: VerifyEmailRequestDto,
+  ): Promise<VerifyEmailResponseDto> {
     return await this.authService.verifyEmail(body.email, body.verifyToken);
   }
 }
