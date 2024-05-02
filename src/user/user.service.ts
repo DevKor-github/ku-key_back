@@ -4,6 +4,7 @@ import { UserRepository } from './user.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { hash } from 'bcrypt';
+import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 
 @Injectable()
 export class UserService {
@@ -26,16 +27,23 @@ export class UserService {
     });
   }
 
-  async checkUsernamePossible(username: string) {
+  async checkUsernamePossible(
+    username: string,
+  ): Promise<checkPossibleResponseDto> {
     const user = await this.userRepository.findUserByUsername(username);
     if (!user) {
-      return {
-        possible: true,
-      };
+      return new checkPossibleResponseDto(true);
     } else {
-      return {
-        possible: false,
-      };
+      return new checkPossibleResponseDto(false);
+    }
+  }
+
+  async checkEmailPossible(email: string): Promise<checkPossibleResponseDto> {
+    const user = await this.userRepository.findUserByEmail(email);
+    if (!user) {
+      return new checkPossibleResponseDto(true);
+    } else {
+      return new checkPossibleResponseDto(false);
     }
   }
 }
