@@ -35,7 +35,10 @@ export class UserRepository extends Repository<UserEntity> {
     return user;
   }
 
-  async setCurrentRefreshToken(id: number, newRefresthToken: string) {
+  async setCurrentRefreshToken(
+    id: number,
+    newRefresthToken: string,
+  ): Promise<boolean> {
     const updateResult = await this.update(
       { id: id },
       {
@@ -43,6 +46,6 @@ export class UserRepository extends Repository<UserEntity> {
       },
     );
 
-    return { affected: updateResult?.affected };
+    return updateResult.affected ? true : false;
   }
 }
