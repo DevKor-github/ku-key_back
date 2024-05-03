@@ -2,6 +2,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { Injectable } from '@nestjs/common';
+import { ProfileDto } from './dto/profile.dto';
 
 @Injectable()
 export class UserRepository extends Repository<UserEntity> {
@@ -45,6 +46,12 @@ export class UserRepository extends Repository<UserEntity> {
         refreshToken: newRefresthToken,
       },
     );
+
+    return updateResult.affected ? true : false;
+  }
+
+  async setProfile(id: number, profileDto: ProfileDto): Promise<boolean> {
+    const updateResult = await this.update({ id: id }, profileDto);
 
     return updateResult.affected ? true : false;
   }
