@@ -1,10 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash } from 'bcrypt';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
+import { ProfileDto } from './dto/profile.dto';
+import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 
 @Injectable()
 export class UserService {
@@ -49,5 +55,31 @@ export class UserService {
     } else {
       return new checkPossibleResponseDto(false);
     }
+  }
+
+  async setProfile(
+    id: number,
+    profileDto: ProfileDto,
+  ): Promise<SetProfileResponseDto> {
+    const isset = await this.userRepository.setProfile(id, profileDto);
+    if (!isset) {
+      throw new NotImplementedException('Profile setting failed!');
+    }
+
+    return new SetProfileResponseDto(true);
+  }
+
+  async getProfile(id: number): Promise<ProfileDto> {
+    const user = await this.userRepository.findUserById(id);
+    const profile: ProfileDto = {
+      name: user.name,
+      country: user.country,
+      homeUniversity: user.homeUniversity,
+      language: user.language,
+      major: user.major,
+      startDay: user.startDay,
+      endDay: user.endDay,
+    };
+    return profile;
   }
 }
