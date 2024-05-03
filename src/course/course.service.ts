@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CourseRepository } from './course.repository';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -53,13 +57,28 @@ export class CourseService {
     });
   }
 
-  async getCourseSearch(searchCourseDto: SearchCourseDto): Promise<CourseEntity[]> {
+  async getCourseSearch(
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
       where: [
         { courseCode: Like(`%${searchCourseDto.search}%`) },
         { professorName: Like(`%${searchCourseDto.search}%`) },
         { courseName: Like(`%${searchCourseDto.search}%`) },
       ],
+    });
+  }
+
+  async getGeneralCourses(): Promise<CourseEntity[]> {
+    return await this.courseRepository.find({
+      where: { category: '교양' },
+    });
+  }
+
+  async getMajorCourses(major: string): Promise<CourseEntity[]> {
+    if (!major) throw new BadRequestException('Major is required!');
+    return await this.courseRepository.find({
+      where: { category: '전공', major: major },
     });
   }
 
