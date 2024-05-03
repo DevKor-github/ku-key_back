@@ -1,17 +1,16 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class AuthorizedUserDto {
-  constructor(id: number, email: string) {
+  constructor(id: number, username: string) {
     this.id = id;
-    this.email = email;
+    this.username = username;
   }
 
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   id: number;
 
-  @IsString()
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsString()
+  username: string;
 }

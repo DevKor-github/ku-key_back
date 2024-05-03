@@ -18,6 +18,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { AccessTokenDto } from './dto/accessToken.dto';
 import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -45,7 +46,7 @@ export class AuthService {
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     }
 
-    return new AuthorizedUserDto(user.id, user.email);
+    return new AuthorizedUserDto(user.id, user.username);
   }
 
   async createToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
@@ -62,7 +63,10 @@ export class AuthService {
   }
 
   createAccessToken(user: AuthorizedUserDto): string {
-    const payload = { email: user.email, id: user.id };
+    const payload = {
+      id: user.id,
+      username: user.username,
+    };
     return this.jwtService.sign(payload, {
       expiresIn: '30m',
     });
@@ -97,11 +101,14 @@ export class AuthService {
       throw new BadRequestException('refreshToken is not matched!');
     }
 
-    return new AuthorizedUserDto(user.id, user.email);
+    return new AuthorizedUserDto(user.id, user.username);
   }
 
-  async logIn(user: AuthorizedUserDto): Promise<JwtTokenDto> {
-    return await this.createToken(user);
+  async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
+    const token = await this.createToken(user);
+    const verified = (await this.userRepository.findUserById(user.id))
+      .isVerified;
+    return new LoginResponseDto(token, verified);
   }
 
   refreshToken(user: AuthorizedUserDto): AccessTokenDto {
