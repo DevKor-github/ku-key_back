@@ -3,8 +3,8 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -43,7 +43,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('/profile')
+  @Patch('/profile')
   async setProfile(
     @Body() profileDto: ProfileDto,
     @User() user: AuthorizedUserDto,
