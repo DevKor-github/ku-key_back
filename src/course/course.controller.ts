@@ -35,16 +35,17 @@ export class CourseController {
     return await this.courseService.createCourseDetail(createCourseDetailDto);
   }
 
-  @Get()
-  async getCourseSearch(
-    @Body() searchCourseDto : SearchCourseDto,
-  ): Promise<CourseEntity[]> {
-    return await this.courseService.getCourseSearch(searchCourseDto);
-  }
 
   @Get()
   async getAllCourses(): Promise<CourseEntity[]> {
     return await this.courseService.getAllCourses();
+  }
+
+  @Get('search')
+  async getCourseSearch(
+    @Body() searchCourseDto : SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    return await this.courseService.getCourseSearch(searchCourseDto);
   }
 
   @Get('/:courseId')
