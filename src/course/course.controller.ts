@@ -48,6 +48,18 @@ export class CourseController {
     return await this.courseService.getCourseSearch(searchCourseDto);
   }
 
+  @Get('general')
+  async getGeneralCourses(): Promise<CourseEntity[]> {
+    return await this.courseService.getGeneralCourses();
+  }
+
+  @Get('major')
+  async getMajorCourses(
+    @Query('major') major: string,
+  ): Promise<CourseEntity[]> {
+    return await this.courseService.getMajorCourses(major);
+  }
+
   @Get('/:courseId')
   async getCourse(@Param('courseId') courseId: number): Promise<CourseEntity> {
     return await this.courseService.getCourse(courseId);
