@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { TimetableService } from './timetable.service';
@@ -29,5 +29,10 @@ export class TimetableController {
     @Get('/:timeTableId')
     async getTimeTable(@Param('timeTableId') timeTableId : number) : Promise<TimeTableEntity> {
         return await this.timeTableService.getTimeTable(timeTableId);
+    }
+
+    @Delete('/:timeTableId')
+    async deleteTimeTable(@Param('timeTableId') timeTableId : number) : Promise<void> {
+        return await this.timeTableService.deleteTimeTable(timeTableId);
     }
 }

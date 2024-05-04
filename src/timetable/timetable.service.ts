@@ -29,4 +29,8 @@ export class TimetableService {
             where : { id : timeTableId },
         });
     }
+
+    async deleteTimeTable(timeTableId: number): Promise<void> {
+        await this.timeTableRepository.delete({ id : timeTableId });
+    }
 }
