@@ -6,6 +6,6 @@ export class LoginResponseDto {
     this.verified = verified;
   }
 
-  token: JwtTokenDto;
+  token?: JwtTokenDto;
   verified: boolean;
 }
