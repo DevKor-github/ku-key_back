@@ -105,9 +105,9 @@ export class AuthService {
   }
 
   async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
-    const token = await this.createToken(user);
     const verified = (await this.userRepository.findUserById(user.id))
       .isVerified;
+    const token = verified ? await this.createToken(user) : null;
     return new LoginResponseDto(token, verified);
   }
 
