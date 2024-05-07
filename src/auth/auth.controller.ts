@@ -29,11 +29,11 @@ export class AuthController {
     return this.authService.refreshToken(user);
   }
 
-  @Post('verification-request')
-  async sendVerification(
+  @Post('request-email-verification')
+  async requestEmailVerification(
     @Body() body: VerificationRequestDto,
   ): Promise<VerificationResponseDto> {
-    return await this.authService.sendVerification(body.email);
+    return await this.authService.requestEmailVerification(body.email);
   }
 
   @Post('verify-email')
