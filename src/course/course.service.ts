@@ -57,15 +57,12 @@ export class CourseService {
     });
   }
 
+  // 학수번호 검색
   async getCourseSearch(
     searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
-      where: [
-        { courseCode: Like(`%${searchCourseDto.search}%`) },
-        { professorName: Like(`%${searchCourseDto.search}%`) },
-        { courseName: Like(`%${searchCourseDto.search}%`) },
-      ],
+      where: { courseCode : searchCourseDto.courseCode }
     });
   }
 

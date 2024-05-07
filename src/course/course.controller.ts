@@ -41,6 +41,7 @@ export class CourseController {
     return await this.courseService.getAllCourses();
   }
 
+  // 학수번호 검색
   @Get('search')
   async getCourseSearch(
     @Body() searchCourseDto : SearchCourseDto,
