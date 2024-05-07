@@ -116,7 +116,9 @@ export class AuthService {
     return new AccessTokenDto(accessToken);
   }
 
-  async sendVerification(email: string): Promise<VerificationResponseDto> {
+  async requestEmailVerification(
+    email: string,
+  ): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
     await this.cacheManager.set(email, verifyToken);
