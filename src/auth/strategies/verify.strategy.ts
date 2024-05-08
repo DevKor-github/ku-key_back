@@ -3,14 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthorizedUserDto } from '../dto/authorized-user-dto';
-import { AuthService } from '../auth.service';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly authService: AuthService,
-  ) {
+export class VerifyStrategy extends PassportStrategy(Strategy, 'verify') {
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -19,7 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: any): Promise<AuthorizedUserDto> {
-    const user = this.authService.checkUserVerified(payload.id);
-    return user;
+    return new AuthorizedUserDto(payload.id, payload.username);
   }
 }
