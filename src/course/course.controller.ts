@@ -57,6 +57,15 @@ export class CourseController {
     return await this.courseService.searchCourseName(major, searchCourseDto);
   }
 
+  // 교수님 성함 검색
+  @Get('searchProfessorName')
+  async searchProfessorName(
+    @Query('major') major: string,
+    @Body() searchCourseDto : SearchCourseDto,
+  ) : Promise<CourseEntity[]> {
+    return await this.courseService.searchProfessorName(major, searchCourseDto);
+  }
+
   // 교양 리스트
   @Get('general')
   async getGeneralCourses(): Promise<CourseEntity[]> {
