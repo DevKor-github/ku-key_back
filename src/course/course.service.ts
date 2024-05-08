@@ -68,7 +68,7 @@ export class CourseService {
 
   // 과목명 검색 (띄어쓰기로 단어 구분)
   async searchCourseName(
-    college: string,
+    major: string,
     searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
     const words = searchCourseDto.courseName
@@ -80,29 +80,30 @@ export class CourseService {
       .where(`course.courseName REGEXP :pattern`, {
         pattern: `^${searchPattern}.*$`,
       })
-      .andWhere('course.college = :college', { college })
+      .andWhere('course.major = :major', { major })
       .getMany();
   }
 
   // 교양 리스트 반환
   async getGeneralCourses(): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
-      where: { category: '교양' },
+      where: { category: 'General Studies' },
     });
   }
 
   // 전공 리스트 반환
-  async getMajorCourses(college: string): Promise<CourseEntity[]> {
-    if (!college) throw new BadRequestException('College is required!');
+  async getMajorCourses(major: string): Promise<CourseEntity[]> {
+    if (!major) throw new BadRequestException('Major is required!');
     return await this.courseRepository.find({
-      where: { category: '전공', college: college },
+      where: { category: 'Major', major: major },
     });
   }
 
   // 학문의 기초 리스트 반환
-  async getBasicsOfAcademicsCourses(): Promise<CourseEntity[]> {
+  async getAcademicFoundationCourses(college: string): Promise<CourseEntity[]> {
+    if (!college) throw new BadRequestException('College is required!');
     return await this.courseRepository.find({
-      where: { category: '학문의 기초' },
+      where: { category: 'Academic Foundations', college: college },
     });
   }
 
