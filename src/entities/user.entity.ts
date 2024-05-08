@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { KuVerificationEntity } from './ku-verification.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -47,4 +48,7 @@ export class UserEntity extends CommonEntity {
 
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
+
+  @OneToOne(() => KuVerificationEntity, (kuVerification) => kuVerification.user)
+  kuVerification: KuVerificationEntity;
 }
