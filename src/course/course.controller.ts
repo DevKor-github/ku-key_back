@@ -35,7 +35,6 @@ export class CourseController {
     return await this.courseService.createCourseDetail(createCourseDetailDto);
   }
 
-
   @Get()
   async getAllCourses(): Promise<CourseEntity[]> {
     return await this.courseService.getAllCourses();
@@ -44,21 +43,29 @@ export class CourseController {
   // 학수번호 검색
   @Get('search')
   async getCourseSearch(
-    @Body() searchCourseDto : SearchCourseDto,
+    @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
     return await this.courseService.getCourseSearch(searchCourseDto);
   }
 
+  // 교양 리스트
   @Get('general')
   async getGeneralCourses(): Promise<CourseEntity[]> {
     return await this.courseService.getGeneralCourses();
   }
 
+  // 전공 리스트
   @Get('major')
   async getMajorCourses(
     @Query('major') major: string,
   ): Promise<CourseEntity[]> {
     return await this.courseService.getMajorCourses(major);
+  }
+
+  // 학문의 기초 리스트
+  @Get('basicsOfAcademics')
+  async getBasicsOfAcademicsCourses(): Promise<CourseEntity[]> {
+    return await this.courseService.getBasicsOfAcademicsCourses();
   }
 
   @Get('/:courseId')
@@ -71,7 +78,10 @@ export class CourseController {
     @Param('courseDetailId') courseDetailId: number,
     @Body() updateCourseDetailDto: UpdateCourseDetailDto,
   ): Promise<CourseDetailEntity> {
-    return await this.courseService.updateCourseDetail(updateCourseDetailDto,courseDetailId);
+    return await this.courseService.updateCourseDetail(
+      updateCourseDetailDto,
+      courseDetailId,
+    );
   }
 
   @Patch('/:courseId')
