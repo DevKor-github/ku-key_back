@@ -10,4 +10,9 @@ export class SearchCourseDto {
   @Length(2)
   @IsOptional()
   courseName?: string;
+
+  @IsString()
+  @Length(3)
+  @IsOptional()
+  professorName?: string;
 }

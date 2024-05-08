@@ -84,6 +84,19 @@ export class CourseService {
       .getMany();
   }
 
+  // 교수님 성함 검색
+  async searchProfessorName(
+    major: string,
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    return await this.courseRepository.find({
+      where: {
+        professorName: Like(`%${searchCourseDto.professorName}%`),
+        major: major,
+      },
+    });
+  }
+
   // 교양 리스트 반환
   async getGeneralCourses(): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
