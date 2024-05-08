@@ -51,10 +51,10 @@ export class CourseController {
   // 과목명 검색
   @Get('searchCourseName')
   async searchCourseName(
-    @Query('college') college: string,
+    @Query('major') major: string,
     @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
-    return await this.courseService.searchCourseName(college, searchCourseDto);
+    return await this.courseService.searchCourseName(major, searchCourseDto);
   }
 
   // 교양 리스트
@@ -66,15 +66,17 @@ export class CourseController {
   // 전공 리스트 (학부별)
   @Get('major')
   async getMajorCourses(
-    @Query('college') college: string,
+    @Query('major') major: string,
   ): Promise<CourseEntity[]> {
-    return await this.courseService.getMajorCourses(college);
+    return await this.courseService.getMajorCourses(major);
   }
 
   // 학문의 기초 리스트
-  @Get('basicsOfAcademics')
-  async getBasicsOfAcademicsCourses(): Promise<CourseEntity[]> {
-    return await this.courseService.getBasicsOfAcademicsCourses();
+  @Get('academicFoundation')
+  async getAcademicFoundationCourses(
+    @Query('college') college: string,
+  ): Promise<CourseEntity[]> {
+    return await this.courseService.getAcademicFoundationCourses(college);
   }
 
   @Get('/:courseId')
