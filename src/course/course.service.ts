@@ -66,16 +66,25 @@ export class CourseService {
     });
   }
 
+  // 교양 리스트 반환
   async getGeneralCourses(): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
       where: { category: '교양' },
     });
   }
 
+  // 전공 리스트 반환
   async getMajorCourses(major: string): Promise<CourseEntity[]> {
     if (!major) throw new BadRequestException('Major is required!');
     return await this.courseRepository.find({
       where: { category: '전공', major: major },
+    });
+  }
+
+  // 학문의 기초 리스트 반환
+  async getBasicsOfAcademicsCourses(): Promise<CourseEntity[]> {
+    return await this.courseRepository.find({
+      where: { category: '학문의 기초' },
     });
   }
 
