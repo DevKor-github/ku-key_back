@@ -28,7 +28,7 @@ export class CourseDetailEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   period: string;
 
-  @Column({nullable: false})
+  @Column({ nullable: false })
   courseId: number;
 
   @JoinColumn({ name: 'courseId' })
