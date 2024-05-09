@@ -15,7 +15,10 @@ export class CourseRepository extends Repository<CourseEntity> {
     return await this.save(course);
   }
 
-  async updateCourse(updateCourseDto : UpdateCourseDto, courseId: number): Promise<CourseEntity> {
+  async updateCourse(
+    updateCourseDto: UpdateCourseDto,
+    courseId: number,
+  ): Promise<CourseEntity> {
     const course = await this.findOne({
       where: { id: courseId },
     });

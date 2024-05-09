@@ -61,8 +61,8 @@ export class CourseController {
   @Get('searchProfessorName')
   async searchProfessorName(
     @Query('major') major: string,
-    @Body() searchCourseDto : SearchCourseDto,
-  ) : Promise<CourseEntity[]> {
+    @Body() searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
     return await this.courseService.searchProfessorName(major, searchCourseDto);
   }
 

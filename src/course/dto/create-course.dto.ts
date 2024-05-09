@@ -1,43 +1,49 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateCourseDto {
-    @IsString()
-    @IsNotEmpty()
-    professorName: string;
-    
-    @IsString()
-    @IsNotEmpty()
-    category : string;
+  @IsString()
+  @IsNotEmpty()
+  professorName: string;
 
-    @IsString()
-    @IsOptional()
-    college?: string;
+  @IsString()
+  @IsNotEmpty()
+  category: string;
 
-    @IsString()
-    @IsNotEmpty()
-    courseName : string;
+  @IsString()
+  @IsOptional()
+  college?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    courseCode : string;
+  @IsString()
+  @IsNotEmpty()
+  courseName: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    credit : number;
+  @IsString()
+  @IsNotEmpty()
+  courseCode: string;
 
-    @IsString()
-    @IsOptional()
-    major?: string;
+  @IsNumber()
+  @IsNotEmpty()
+  credit: number;
 
-    @IsBoolean()
-    @IsNotEmpty()
-    hasExchangeSeat: boolean;
+  @IsString()
+  @IsOptional()
+  major?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    year : string;
+  @IsBoolean()
+  @IsNotEmpty()
+  hasExchangeSeat: boolean;
 
-    @IsString()
-    @IsNotEmpty()
-    semester: string;
+  @IsString()
+  @IsNotEmpty()
+  year: string;
+
+  @IsString()
+  @IsNotEmpty()
+  semester: string;
 }
