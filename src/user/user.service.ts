@@ -9,8 +9,8 @@ import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash } from 'bcrypt';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
-import { ProfileDto } from './dto/profile.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
+import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 
 @Injectable()
 export class UserService {
@@ -78,9 +78,9 @@ export class UserService {
     return new SetProfileResponseDto(true);
   }
 
-  async getProfile(id: number): Promise<ProfileDto> {
+  async getProfile(id: number): Promise<GetProfileResponseDto> {
     const user = await this.userRepository.findUserById(id);
-    const profile: ProfileDto = {
+    const profile: GetProfileResponseDto = {
       name: user.name,
       country: user.country,
       homeUniversity: user.homeUniversity,
