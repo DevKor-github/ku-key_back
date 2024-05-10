@@ -23,6 +23,7 @@ import { KuVerificationRepository } from './ku-verification.repository';
 import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
+import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -195,7 +196,7 @@ export class AuthService {
           user,
         );
       if (!isModified) {
-        throw new NotImplementedException('Profile setting failed!');
+        throw new NotImplementedException('verify request failed!');
       }
       return new ScreenshotVerificationResponseDto(true, studentNumber);
     }
@@ -210,10 +211,6 @@ export class AuthService {
   }
 
   validateAdmin(id: string, password: string): boolean {
-    console.log(id);
-    console.log(password);
-    console.log(this.configService.get('ADMIN_ID'));
-    console.log(this.configService.get('ADMIN_PASSWORD'));
     return (
       id === this.configService.get('ADMIN_ID') &&
       password === this.configService.get('ADMIN_PASSWORD')
@@ -223,5 +220,44 @@ export class AuthService {
   async getScreenshotVerifyRequests(): Promise<KuVerificationEntity[]> {
     const requests = this.kuVerificationRepository.getRequests();
     return requests;
+  }
+
+  async verifyScreenshotReqeust(
+    id: number,
+    verify: boolean,
+  ): Promise<VerifyScreenshotResponseDto> {
+    if (verify) {
+      const request = await this.kuVerificationRepository.findRequestById(id);
+      const userId = request.user.id;
+      const isVerified = await this.userRepository.verifyUser(userId, verify);
+      if (!isVerified) {
+        throw new NotImplementedException('reqeust allow failed!');
+      }
+      const requests =
+        await this.kuVerificationRepository.findRequestsByStudentNumber(
+          request.studentNumber,
+        );
+      for (const otherRequest of requests) {
+        if (otherRequest.id === request.id) {
+          continue;
+        }
+        const isDeleted =
+          await this.kuVerificationRepository.deleteVerificationRequest(
+            otherRequest.id,
+          );
+        if (!isDeleted) {
+          throw new NotImplementedException(
+            'remove other reqeusts with same student number failed!',
+          );
+        }
+      }
+    } else {
+      const isDeleted =
+        await this.kuVerificationRepository.deleteVerificationRequest(id);
+      if (!isDeleted) {
+        throw new NotImplementedException('reqeust refection failed!');
+      }
+    }
+    return new VerifyScreenshotResponseDto(true);
   }
 }

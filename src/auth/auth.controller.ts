@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   UploadedFile,
   UseGuards,
@@ -24,6 +25,9 @@ import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-
 ('./guards/jwt-auth.guard');
 import { VerifyAuthGuard } from './guards/verify-auth.guard';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
+import { VerifyScreenshotRequestDto } from './dto/verify-screenshot-request.dto';
+import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
+import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -77,7 +81,16 @@ export class AuthController {
 
   @UseGuards(AdminAuthGuard)
   @Get('admin/requests')
-  async getScreenshotVerifyRequests() {
+  async getScreenshotVerifyRequests(): Promise<KuVerificationEntity[]> {
     return this.authService.getScreenshotVerifyRequests();
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Post('admin/request/:id')
+  async verifyScreenshotReqeust(
+    @Param('id') id: number,
+    @Body() body: VerifyScreenshotRequestDto,
+  ): Promise<VerifyScreenshotResponseDto> {
+    return await this.authService.verifyScreenshotReqeust(id, body.verify);
   }
 }
