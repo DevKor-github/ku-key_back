@@ -22,9 +22,18 @@ export class UserService {
   async createUser(
     createUserDto: CreateUserRequestDto,
   ): Promise<CreateUserResponseDto> {
-    const user = await this.userRepository.findUserByEmail(createUserDto.email);
-    if (user) {
+    const userByEmail = await this.userRepository.findUserByEmail(
+      createUserDto.email,
+    );
+    if (userByEmail) {
       throw new BadRequestException('이미 해당 이메일이 존재합니다.');
+    }
+
+    const userByUsername = await this.userRepository.findUserByUsername(
+      createUserDto.username,
+    );
+    if (userByUsername) {
+      throw new BadRequestException('이미 해당 아이디가 존재합니다.');
     }
 
     const hashedPassword = await hash(createUserDto.password, 10);
