@@ -19,12 +19,15 @@ import { AccessTokenDto } from './dto/accessToken.dto';
 import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { KuVerificationRepository } from './ku-verification.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
+    @InjectRepository(KuVerificationRepository)
+    private readonly kuVerificationRepository: KuVerificationRepository,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -107,7 +110,7 @@ export class AuthService {
   async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
     const verified = (await this.userRepository.findUserById(user.id))
       .isVerified;
-    const token = verified ? await this.createToken(user) : null;
+    const token = await this.createToken(user);
     return new LoginResponseDto(token, verified);
   }
 
@@ -145,5 +148,57 @@ export class AuthService {
     const minm = 100000;
     const maxm = 999999;
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
+  }
+
+  async checkUserVerified(userId: number) {
+    const user = await this.userRepository.findUserById(userId);
+    if (!user.isVerified) {
+      throw new BadRequestException('user is not verified!');
+    } else {
+      return new AuthorizedUserDto(user.id, user.username);
+    }
+  }
+
+  async createScreenshotRequest(
+    screenshot: Express.Multer.File,
+    studentNumber: number,
+    userId: number,
+  ) {
+    const requests =
+      await this.kuVerificationRepository.findRequestsByStudentNumber(
+        studentNumber,
+      );
+    if (requests) {
+      for (const request of requests) {
+        console.log(request);
+        if (request.user.isVerified) {
+          throw new BadRequestException('student number already exists!');
+        }
+      }
+    }
+
+    const user = await this.userRepository.findUserById(userId);
+    const userRequest =
+      await this.kuVerificationRepository.findRequestByUser(user);
+    if (userRequest) {
+      //원래 스크린샷 파일 삭제 코드 필요
+      console.log('2');
+      await this.kuVerificationRepository.modifyVerificationRequest(
+        userRequest,
+        screenshot.path,
+        studentNumber,
+        user,
+      );
+      return new VerificationResponseDto(true);
+    }
+
+    console.log('3');
+    await this.kuVerificationRepository.createVerificationRequest(
+      screenshot.path,
+      studentNumber,
+      user,
+    );
+
+    return new VerificationResponseDto(true);
   }
 }
