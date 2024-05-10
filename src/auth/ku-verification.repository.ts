@@ -26,6 +26,14 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
     return request;
   }
 
+  async findRequestById(id: number): Promise<KuVerificationEntity> {
+    const request = await this.findOne({
+      where: { id: id },
+      relations: ['user'],
+    });
+    return request;
+  }
+
   async createVerificationRequest(
     imgDir: string,
     studentNumber: number,
@@ -58,5 +66,13 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
   async getRequests(): Promise<KuVerificationEntity[]> {
     const requests = await this.find();
     return requests;
+  }
+
+  async deleteVerificationRequest(id: number): Promise<boolean> {
+    const updateResult = await this.delete({
+      id: id,
+    });
+
+    return updateResult.affected ? true : false;
   }
 }
