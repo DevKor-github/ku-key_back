@@ -88,6 +88,7 @@ export class UserService {
       major: user.major,
       startDay: user.startDay,
       endDay: user.endDay,
+      point: user.point,
     };
     return profile;
   }
