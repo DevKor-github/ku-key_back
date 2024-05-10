@@ -155,13 +155,9 @@ export class AuthService {
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 
-  async checkUserVerified(userId: number): Promise<AuthorizedUserDto> {
+  async checkUserVerified(userId: number): Promise<boolean> {
     const user = await this.userRepository.findUserById(userId);
-    if (!user.isVerified) {
-      throw new BadRequestException('user is not verified!');
-    } else {
-      return new AuthorizedUserDto(user.id, user.username);
-    }
+    return user.isVerified;
   }
 
   async createScreenshotRequest(
