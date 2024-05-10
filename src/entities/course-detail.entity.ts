@@ -13,19 +13,22 @@ export class CourseDetailEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column('varchar', { nullable: false })
+  @Column('varchar', { nullable: true })
   day: string;
 
-  @Column('time', { nullable: false })
+  @Column('time', { nullable: true })
   startTime: string;
 
-  @Column('time', { nullable: false })
+  @Column('time', { nullable: true })
   endTime: string;
 
-  @Column('varchar', { nullable: false })
+  @Column('varchar', { nullable: true })
   classroom: string;
 
-  @Column({nullable: false})
+  @Column('varchar', { nullable: true })
+  period: string;
+
+  @Column({ nullable: false })
   courseId: number;
 
   @JoinColumn({ name: 'courseId' })
