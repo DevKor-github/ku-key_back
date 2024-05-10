@@ -150,7 +150,7 @@ export class AuthService {
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 
-  async checkUserVerified(userId: number) {
+  async checkUserVerified(userId: number): Promise<AuthorizedUserDto> {
     const user = await this.userRepository.findUserById(userId);
     if (!user.isVerified) {
       throw new BadRequestException('user is not verified!');
@@ -163,7 +163,7 @@ export class AuthService {
     screenshot: Express.Multer.File,
     studentNumber: number,
     userId: number,
-  ) {
+  ): Promise<VerificationResponseDto> {
     const requests =
       await this.kuVerificationRepository.findRequestsByStudentNumber(
         studentNumber,
