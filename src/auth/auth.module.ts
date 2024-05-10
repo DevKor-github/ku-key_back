@@ -14,6 +14,7 @@ import { VerifyStrategy } from './strategies/verify.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 import { KuVerificationRepository } from './ku-verification.repository';
+import { AdminStrategy } from './strategies/admin.strategy';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { KuVerificationRepository } from './ku-verification.repository';
     JwtStrategy,
     RefreshStrategy,
     VerifyStrategy,
+    AdminStrategy,
   ],
 })
 export class AuthModule {}
