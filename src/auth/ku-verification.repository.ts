@@ -14,6 +14,7 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
   ): Promise<KuVerificationEntity[]> {
     const requests = await this.find({
       where: { studentNumber: studentNumber },
+      relations: ['user'],
     });
     return requests;
   }
