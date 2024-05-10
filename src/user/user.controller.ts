@@ -12,10 +12,11 @@ import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ProfileDto } from './dto/profile.dto';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
+import { SetProfileRequestDto } from './dto/set-profile-request.dto';
+import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 
 @Controller('user')
 export class UserController {
@@ -45,7 +46,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Patch('/profile')
   async setProfile(
-    @Body() profileDto: ProfileDto,
+    @Body() profileDto: SetProfileRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SetProfileResponseDto> {
     const id = user.id;
@@ -54,7 +55,9 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/profile')
-  async getProfile(@User() user: AuthorizedUserDto): Promise<ProfileDto> {
+  async getProfile(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetProfileResponseDto> {
     const id = user.id;
     return await this.userService.getProfile(id);
   }

@@ -1,12 +1,6 @@
-import {
-  IsDate,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class ProfileDto {
+export class GetProfileResponseDto {
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -35,7 +29,7 @@ export class ProfileDto {
   @IsDate()
   endDay: Date;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   point: number;
 }
