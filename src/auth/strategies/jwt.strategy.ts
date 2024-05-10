@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -19,7 +19,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: any): Promise<AuthorizedUserDto> {
-    const user = this.authService.checkUserVerified(payload.id);
-    return user;
+    const isVerified = this.authService.checkUserVerified(payload.id);
+    if (!isVerified) {
+      throw new BadRequestException('user is not verified!');
+    }
+    return new AuthorizedUserDto(payload.id, payload.username);
   }
 }
