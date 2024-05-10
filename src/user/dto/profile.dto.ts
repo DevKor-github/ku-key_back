@@ -1,4 +1,10 @@
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class ProfileDto {
   @IsNotEmpty()
@@ -28,4 +34,8 @@ export class ProfileDto {
   @IsNotEmpty()
   @IsDate()
   endDay: Date;
+
+  @IsOptional()
+  @IsNumber()
+  point: number;
 }
