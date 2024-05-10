@@ -53,4 +53,9 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
     );
     return updateResult.affected ? true : false;
   }
+
+  async getRequests(): Promise<KuVerificationEntity[]> {
+    const requests = await this.find();
+    return requests;
+  }
 }
