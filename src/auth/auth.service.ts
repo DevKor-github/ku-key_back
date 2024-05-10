@@ -20,6 +20,7 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
+import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -193,7 +194,7 @@ export class AuthService {
       if (!isModified) {
         throw new NotImplementedException('Profile setting failed!');
       }
-      return new VerificationResponseDto(true);
+      return new ScreenshotVerificationResponseDto(true, studentNumber);
     }
 
     await this.kuVerificationRepository.createVerificationRequest(
@@ -202,6 +203,6 @@ export class AuthService {
       user,
     );
 
-    return new VerificationResponseDto(true);
+    return new ScreenshotVerificationResponseDto(true, studentNumber);
   }
 }
