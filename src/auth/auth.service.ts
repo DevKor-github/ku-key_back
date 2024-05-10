@@ -21,6 +21,7 @@ import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
 import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +33,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly configService: ConfigService,
   ) {}
 
   async validateUser(
@@ -204,5 +206,16 @@ export class AuthService {
     );
 
     return new ScreenshotVerificationResponseDto(true, studentNumber);
+  }
+
+  validateAdmin(id: string, password: string): boolean {
+    console.log(id);
+    console.log(password);
+    console.log(this.configService.get('ADMIN_ID'));
+    console.log(this.configService.get('ADMIN_PASSWORD'));
+    return (
+      id === this.configService.get('ADMIN_ID') &&
+      password === this.configService.get('ADMIN_PASSWORD')
+    );
   }
 }
