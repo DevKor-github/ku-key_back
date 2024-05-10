@@ -183,12 +183,16 @@ export class AuthService {
       //
       //원래 스크린샷 파일 삭제 코드 필요
       //
-      await this.kuVerificationRepository.modifyVerificationRequest(
-        userRequest,
-        screenshot.path,
-        studentNumber,
-        user,
-      );
+      const isModified =
+        await this.kuVerificationRepository.modifyVerificationRequest(
+          userRequest,
+          screenshot.path,
+          studentNumber,
+          user,
+        );
+      if (!isModified) {
+        throw new NotImplementedException('Profile setting failed!');
+      }
       return new VerificationResponseDto(true);
     }
 
