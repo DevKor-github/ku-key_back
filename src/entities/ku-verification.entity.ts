@@ -16,10 +16,10 @@ export class KuVerificationEntity extends CommonEntity {
   @Column('varchar')
   imgDir: string;
 
-  @Column('int', { unique: true })
+  @Column('int')
   studentNumber: number;
 
-  @OneToOne(() => UserEntity, (user) => user.kuVerification)
+  @OneToOne(() => UserEntity, (user) => user.kuVerification, { eager: true })
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: UserEntity;
 }
