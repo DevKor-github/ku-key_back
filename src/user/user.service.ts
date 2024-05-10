@@ -11,6 +11,7 @@ import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
+import { SetProfileRequestDto } from './dto/set-profile-request.dto';
 
 @Injectable()
 export class UserService {
@@ -68,7 +69,7 @@ export class UserService {
 
   async setProfile(
     id: number,
-    profileDto: ProfileDto,
+    profileDto: SetProfileRequestDto,
   ): Promise<SetProfileResponseDto> {
     const isset = await this.userRepository.setProfile(id, profileDto);
     if (!isset) {
