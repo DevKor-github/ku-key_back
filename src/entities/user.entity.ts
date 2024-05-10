@@ -28,9 +28,6 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   major: string | null;
 
-  @Column('varchar', { nullable: true })
-  gender: string | null;
-
   @Column('tinyint', { default: false })
   isVerified: boolean;
 
@@ -49,6 +46,10 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
-  @OneToOne(() => KuVerificationEntity, (kuVerification) => kuVerification.user)
+  @OneToOne(
+    () => KuVerificationEntity,
+    (kuVerification) => kuVerification.user,
+    { cascade: true },
+  )
   kuVerification: KuVerificationEntity;
 }
