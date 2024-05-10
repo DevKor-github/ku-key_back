@@ -170,7 +170,6 @@ export class AuthService {
       );
     if (requests) {
       for (const request of requests) {
-        console.log(request);
         if (request.user.isVerified) {
           throw new BadRequestException('student number already exists!');
         }
@@ -181,8 +180,9 @@ export class AuthService {
     const userRequest =
       await this.kuVerificationRepository.findRequestByUser(user);
     if (userRequest) {
+      //
       //원래 스크린샷 파일 삭제 코드 필요
-      console.log('2');
+      //
       await this.kuVerificationRepository.modifyVerificationRequest(
         userRequest,
         screenshot.path,
@@ -192,7 +192,6 @@ export class AuthService {
       return new VerificationResponseDto(true);
     }
 
-    console.log('3');
     await this.kuVerificationRepository.createVerificationRequest(
       screenshot.path,
       studentNumber,
