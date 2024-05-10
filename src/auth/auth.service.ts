@@ -22,8 +22,8 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
 import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
 import { ConfigService } from '@nestjs/config';
-import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
+import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -213,9 +213,20 @@ export class AuthService {
     );
   }
 
-  async getScreenshotVerifyRequests(): Promise<KuVerificationEntity[]> {
+  async getScreenshotVerifyRequests(): Promise<
+    GetScreenshotVerificationsResponseDto[]
+  > {
     const requests = this.kuVerificationRepository.getRequests();
-    return requests;
+    const results = (await requests).map((request) => {
+      const result: GetScreenshotVerificationsResponseDto = {
+        id: request.id,
+        imgDir: request.imgDir,
+        studentNumber: request.studentNumber,
+        lastUpdated: request.updatedAt,
+      };
+      return result;
+    });
+    return results;
   }
 
   async verifyScreenshotReqeust(
