@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   UploadedFile,
   UseGuards,
@@ -22,6 +23,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-request.dto';
 ('./guards/jwt-auth.guard');
 import { VerifyAuthGuard } from './guards/verify-auth.guard';
+import { AdminAuthGuard } from './guards/admin-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -71,5 +73,11 @@ export class AuthController {
       body.studentNumber,
       user.id,
     );
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Get('admin/requests')
+  async getScreenshotVerifyRequests() {
+    return this.authService.getScreenshotVerifyRequests();
   }
 }

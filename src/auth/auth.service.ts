@@ -22,6 +22,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
 import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
 import { ConfigService } from '@nestjs/config';
+import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 
 @Injectable()
 export class AuthService {
@@ -217,5 +218,10 @@ export class AuthService {
       id === this.configService.get('ADMIN_ID') &&
       password === this.configService.get('ADMIN_PASSWORD')
     );
+  }
+
+  async getScreenshotVerifyRequests(): Promise<KuVerificationEntity[]> {
+    const requests = this.kuVerificationRepository.getRequests();
+    return requests;
   }
 }
