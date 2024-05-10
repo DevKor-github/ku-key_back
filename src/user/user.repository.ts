@@ -55,4 +55,15 @@ export class UserRepository extends Repository<UserEntity> {
 
     return updateResult.affected ? true : false;
   }
+
+  async verifyUser(id: number, verify: boolean): Promise<boolean> {
+    const updateResult = await this.update(
+      { id: id },
+      {
+        isVerified: verify,
+      },
+    );
+
+    return updateResult.affected ? true : false;
+  }
 }
