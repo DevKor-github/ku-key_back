@@ -19,7 +19,7 @@ export class KuVerificationEntity extends CommonEntity {
   @Column('int')
   studentNumber: number;
 
-  @OneToOne(() => UserEntity, (user) => user.kuVerification, { eager: true })
+  @OneToOne(() => UserEntity, (user) => user.kuVerification)
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: UserEntity;
 }
