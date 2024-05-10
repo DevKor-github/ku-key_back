@@ -62,7 +62,7 @@ export class AuthController {
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: ScreenshotVerificationRequestDto,
     @User() user: AuthorizedUserDto,
-  ) {
+  ): Promise<VerificationResponseDto> {
     if (!screenshot) {
       throw new BadRequestException('screenshot should be uploaded');
     }
