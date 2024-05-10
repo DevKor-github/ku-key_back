@@ -19,7 +19,9 @@ export class KuVerificationEntity extends CommonEntity {
   @Column('int')
   studentNumber: number;
 
-  @OneToOne(() => UserEntity, (user) => user.kuVerification)
+  @OneToOne(() => UserEntity, (user) => user.kuVerification, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: UserEntity;
 }
