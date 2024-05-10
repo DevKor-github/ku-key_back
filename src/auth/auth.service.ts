@@ -216,16 +216,18 @@ export class AuthService {
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {
-    const requests = this.kuVerificationRepository.getRequests();
-    const results = (await requests).map((request) => {
-      const result: GetScreenshotVerificationsResponseDto = {
-        id: request.id,
-        imgDir: request.imgDir,
-        studentNumber: request.studentNumber,
-        lastUpdated: request.updatedAt,
-      };
-      return result;
-    });
+    const requests = await this.kuVerificationRepository.getRequests();
+    const results = requests
+      .filter((request) => !request.user.isVerified)
+      .map((request) => {
+        const result: GetScreenshotVerificationsResponseDto = {
+          id: request.id,
+          imgDir: request.imgDir,
+          studentNumber: request.studentNumber,
+          lastUpdated: request.updatedAt,
+        };
+        return result;
+      });
     return results;
   }
 

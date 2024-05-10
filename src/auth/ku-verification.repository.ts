@@ -64,7 +64,9 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
   }
 
   async getRequests(): Promise<KuVerificationEntity[]> {
-    const requests = await this.find();
+    const requests = await this.find({
+      relations: ['user'],
+    });
     return requests;
   }
 
