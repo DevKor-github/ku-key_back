@@ -37,3 +37,5 @@ lerna-debug.log*
 # dotenv environment variable files
 .env
 
+# storage file
+/screenshots
