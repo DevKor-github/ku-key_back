@@ -14,7 +14,6 @@ export class AdminStrategy extends PassportStrategy(Strategy, 'admin') {
 
   async validate(id: string, password: string): Promise<boolean> {
     const isAdmin = this.authService.validateAdmin(id, password);
-    console.log(isAdmin);
     if (!isAdmin) {
       throw new UnauthorizedException();
     }
