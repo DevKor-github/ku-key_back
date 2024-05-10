@@ -29,7 +29,7 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
     imgDir: string,
     studentNumber: number,
     user: UserEntity,
-  ) {
+  ): Promise<KuVerificationEntity> {
     const newRequest = this.create({
       imgDir: imgDir,
       studentNumber: studentNumber,
@@ -43,13 +43,14 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
     imgDir: string,
     studentNumber: number,
     user: UserEntity,
-  ) {
-    return await this.update(
+  ): Promise<boolean> {
+    const updateResult = await this.update(
       { id: originReqeust.id, user: user },
       {
         imgDir: imgDir,
         studentNumber: studentNumber,
       },
     );
+    return updateResult.affected ? true : false;
   }
 }
