@@ -30,7 +30,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       }),
     }),
     CacheModule.register({
-      ttl: 60000,
+      ttl: 300000,
       max: 100,
       isGlobal: true,
     }),
