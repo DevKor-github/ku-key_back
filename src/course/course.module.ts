@@ -8,8 +8,8 @@ import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([CourseEntity,CourseDetailEntity])],
+  imports: [TypeOrmModule.forFeature([CourseEntity, CourseDetailEntity])],
   controllers: [CourseController],
-  providers: [CourseService,CourseRepository,CourseDetailRepository]
+  providers: [CourseService, CourseRepository, CourseDetailRepository],
 })
 export class CourseModule {}

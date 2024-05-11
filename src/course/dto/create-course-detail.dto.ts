@@ -1,24 +1,27 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateCourseDetailDto {
+  @IsNumber()
+  @IsNotEmpty()
+  courseId: number;
 
-    @IsNumber()
-    @IsNotEmpty()
-    courseId : number;
-    
-    @IsString()
-    @IsNotEmpty()
-    day : string;
+  @IsString()
+  @IsOptional()
+  day?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    startTime : string;
+  @IsString()
+  @IsOptional()
+  startTime?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    endTime : string;
+  @IsString()
+  @IsOptional()
+  endTime?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    classroom : string;
+  @IsString()
+  @IsOptional()
+  classroom?: string;
+
+  @IsString()
+  @IsOptional()
+  period?: string;
 }
