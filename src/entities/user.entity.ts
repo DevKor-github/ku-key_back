@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { FriendEntity } from './friend.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -47,4 +48,10 @@ export class UserEntity extends CommonEntity {
 
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
+
+  @OneToMany(() => FriendEntity, (friend) => friend.fromUserId)
+  sentFriendRequests: FriendEntity[];
+
+  @OneToMany(() => FriendEntity, (friend) => friend.toUserId)
+  receivedFriendRequests: FriendEntity[];
 }
