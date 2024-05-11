@@ -19,7 +19,7 @@ export class VerifyStrategy extends PassportStrategy(Strategy, 'verify') {
   }
 
   async validate(payload: any): Promise<AuthorizedUserDto> {
-    const isVerified = this.authService.checkUserVerified(payload.id);
+    const isVerified = await this.authService.checkUserVerified(payload.id);
     if (isVerified) {
       throw new BadRequestException('user is already verified!');
     }
