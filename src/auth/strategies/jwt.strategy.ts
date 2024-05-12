@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: any): Promise<AuthorizedUserDto> {
-    const isVerified = this.authService.checkUserVerified(payload.id);
+    const isVerified = await this.authService.checkUserVerified(payload.id);
     if (!isVerified) {
       throw new BadRequestException('user is not verified!');
     }
