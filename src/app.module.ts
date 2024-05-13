@@ -5,6 +5,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourseModule } from './course/course.module';
 import * as path from 'path';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -26,6 +29,13 @@ import * as path from 'path';
         logging: true,
       }),
     }),
+    CacheModule.register({
+      ttl: 300000,
+      max: 100,
+      isGlobal: true,
+    }),
+    UserModule,
+    AuthModule,
     CourseModule,
   ],
   controllers: [AppController],
