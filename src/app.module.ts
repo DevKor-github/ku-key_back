@@ -8,6 +8,7 @@ import * as path from 'path';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { FriendshipModule } from './friendship/friendship.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     UserModule,
     AuthModule,
     CourseModule,
+    FriendshipModule,
   ],
   controllers: [AppController],
   providers: [AppService],
