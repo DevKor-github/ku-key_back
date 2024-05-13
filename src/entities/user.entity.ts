@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
-import { FriendEntity } from './friend.entity';
+import { FriendshipEntity } from './friendship.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -60,9 +60,9 @@ export class UserEntity extends CommonEntity {
   )
   kuVerification: KuVerificationEntity;
 
-  @OneToMany(() => FriendEntity, (friend) => friend.fromUserId)
-  sentFriendRequests: FriendEntity[];
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUserId)
+  sentFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => FriendEntity, (friend) => friend.toUserId)
-  receivedFriendRequests: FriendEntity[];
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUserId)
+  receivedFriendRequests: FriendshipEntity[];
 }
