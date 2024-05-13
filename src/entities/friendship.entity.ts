@@ -2,8 +2,8 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 
-@Entity('friend')
-export class FriendEntity extends CommonEntity {
+@Entity('friendship')
+export class FriendshipEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
