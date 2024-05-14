@@ -10,6 +10,7 @@ import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { CourseDetailRepository } from 'src/course/course-detail.repository';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 
 @Injectable()
 export class TimeTableService {
@@ -132,8 +133,15 @@ export class TimeTableService {
 
   async createTimeTable(
     createTimeTableDto: CreateTimeTableDto,
+    user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableRepository.createTimeTable(createTimeTableDto);
+    try {
+      const existTimeTable = await this.timeTableRepository.findOne({
+        where: { userId: user.id },
+      });
+      
+      return await this.timeTableRepository.createTimeTable(createTimeTableDto);
+    } catch (error) {}
   }
 
   async getTimeTable(timeTableId: number): Promise<TimeTableEntity> {

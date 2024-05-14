@@ -6,13 +6,18 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { TimeTableService } from './timetable.service';
 import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { User } from 'src/decorators/user.decorator';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 
 @Controller('timetable')
+@UseGuards(JwtAuthGuard) // 시간표 관련 API는 인증 필요해서 JwtAuthGuard 사용
 export class TimeTableController {
   constructor(private readonly timeTableService: TimeTableService) {}
 
@@ -28,14 +33,16 @@ export class TimeTableController {
     );
   }
 
+  // 시간표 생성 (시간표 틀)
   @Post()
   async createTimeTable(
     @Body() createTimeTableDto: CreateTimeTableDto,
+    @User() user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableService.createTimeTable(createTimeTableDto);
+    return await this.timeTableService.createTimeTable(createTimeTableDto,user);
   }
 
-  // 특정 시간표 가져오기
+  // 특정 시간표 가져오기 (1안, 2안)
   @Get('/:timeTableId')
   async getTimeTable(
     @Param('timeTableId') timeTableId: number,
@@ -43,6 +50,7 @@ export class TimeTableController {
     return await this.timeTableService.getTimeTable(timeTableId);
   }
 
+  // 시간표 삭제
   @Delete('/:timeTableId')
   async deleteTimeTable(
     @Param('timeTableId') timeTableId: number,

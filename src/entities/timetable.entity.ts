@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 import { TimeTableCourseEntity } from './timetable-course.entity';
@@ -8,24 +15,30 @@ export class TimeTableEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({nullable:false})
+  @Column({ nullable: false })
   userId: number;
 
-  @Column('varchar',{nullable:false})
+  @Column('varchar', { nullable: false })
   tableName: string;
 
-  @Column('varchar',{nullable:false})
+  @Column('varchar', { nullable: false })
   semester: string;
 
-  @Column('varchar', {nullable:false})
+  @Column('varchar', { nullable: false })
   year: string;
 
-  @JoinColumn({name: 'userId'})
-  @ManyToOne(()=>UserEntity, userEntity => userEntity.timeTable,{
+  @Column('tinyint', { nullable: false })
+  mainTimeTable: boolean;
+
+  @JoinColumn({ name: 'userId' })
+  @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTable, {
     onDelete: 'CASCADE',
   })
   user: UserEntity;
 
-  @OneToMany(()=> TimeTableCourseEntity, timeTableCourseEntity => timeTableCourseEntity.timeTable)
+  @OneToMany(
+    () => TimeTableCourseEntity,
+    (timeTableCourseEntity) => timeTableCourseEntity.timeTable,
+  )
   timeTableCourse: TimeTableCourseEntity[];
 }

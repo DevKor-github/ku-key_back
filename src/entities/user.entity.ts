@@ -1,5 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  OneToMany,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { KuVerificationEntity } from './ku-verification.entity';
 import { TimeTableEntity } from './timetable.entity';
 
 @Entity('user')
@@ -28,9 +35,6 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   major: string | null;
 
-  @Column('varchar', { nullable: true })
-  gender: string | null;
-
   @Column('tinyint', { default: false })
   isVerified: boolean;
 
@@ -49,6 +53,12 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
-  @OneToMany(()=> TimeTableEntity, timeTableEntity => timeTableEntity.user)
+  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
   timeTable: TimeTableEntity[];
+  @OneToOne(
+    () => KuVerificationEntity,
+    (kuVerification) => kuVerification.user,
+    { cascade: true },
+  )
+  kuVerification: KuVerificationEntity;
 }
