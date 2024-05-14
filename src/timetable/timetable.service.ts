@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { TimeTableRepository } from './timetable.repository';
@@ -136,12 +137,40 @@ export class TimeTableService {
     user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
     try {
-      const existTimeTable = await this.timeTableRepository.findOne({
-        where: { userId: user.id },
+      // 해당 user가 해당 년도, 해당 학기에 몇 개의 시간표를 가지고 있는 지 확인
+      const existingTimeTableNumber = await this.timeTableRepository.count({
+        where: {
+          userId: user.id,
+          year: createTimeTableDto.year,
+          semester: createTimeTableDto.semester,
+        },
       });
-      
-      return await this.timeTableRepository.createTimeTable(createTimeTableDto);
-    } catch (error) {}
+      if (existingTimeTableNumber >= 3) {
+        throw new ConflictException('Maximum number of TimeTables reached');
+      }
+
+      const isFirstTable = existingTimeTableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
+      const tableNumber = existingTimeTableNumber + 1; // 시간표 갯수 + 1
+      const tableName = `${createTimeTableDto.year}-${createTimeTableDto.semester}(${tableNumber})`; // 시간표 이름
+
+      const newTimeTable = this.timeTableRepository.create({
+        userId: user.id,
+        tableName,
+        semester: createTimeTableDto.semester,
+        year: createTimeTableDto.year,
+        mainTimeTable: isFirstTable,
+        tableNumber,
+      });
+
+      return await this.timeTableRepository.save(newTimeTable);
+    } catch (error) {
+      console.error('Failed to create TimeTable:', error);
+      if (error instanceof ConflictException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('An internal error occurred');
+      }
+    }
   }
 
   async getTimeTable(timeTableId: number): Promise<TimeTableEntity> {
