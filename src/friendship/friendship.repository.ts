@@ -42,4 +42,13 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       relations: ['fromUser', 'toUser'],
     });
   }
+
+  async findReceivedFriendshipsByUserId(
+    userId: number,
+  ): Promise<FriendshipEntity[]> {
+    return await this.find({
+      where: [{ toUser: { id: userId }, areWeFriend: false }],
+      relations: ['fromUser', 'toUser'],
+    });
+  }
 }
