@@ -13,8 +13,8 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SendFriendshipRequestDto } from './dto/send-friendship-request.dto';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { User } from 'src/decorators/user.decorator';
-import { getFriendResponseDto } from './dto/get-friend-response.dto';
-import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { GetFriendResponseDto } from './dto/get-friend-response.dto';
+import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 
 @Controller('friendship')
@@ -25,7 +25,7 @@ export class FriendshipController {
   @Get()
   async getFriendList(
     @User() user: AuthorizedUserDto,
-  ): Promise<getFriendResponseDto[]> {
+  ): Promise<GetFriendResponseDto[]> {
     const id = user.id;
     return await this.friendshipService.getFriendList(id);
   }
@@ -48,7 +48,7 @@ export class FriendshipController {
   @Get('received')
   async getWaitingFriendList(
     @User() user: AuthorizedUserDto,
-  ): Promise<getWaitingFriendResponseDto[]> {
+  ): Promise<GetWaitingFriendResponseDto[]> {
     const id = user.id;
     return await this.friendshipService.getWaitingFriendList(id);
   }
