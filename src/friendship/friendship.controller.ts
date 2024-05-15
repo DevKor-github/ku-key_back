@@ -75,6 +75,14 @@ export class FriendshipController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:friendshipId')
+  async deleteFriendship(
+    @Param('friendshipId') friendshipId: string,
+  ): Promise<DeleteFriendshipResponseDto> {
+    return await this.friendshipService.deleteFriendship(Number(friendshipId));
+  }
+
   @UseGuards()
   @Get('/:friendId/timetable')
   async getFriendTimetable() {}
