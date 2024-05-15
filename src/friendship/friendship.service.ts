@@ -4,6 +4,7 @@ import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { UserRepository } from 'src/user/user.repository';
 import { getFriendResponseDto } from './dto/get-friend-response.dto';
+import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -74,5 +75,30 @@ export class FriendshipService {
         return new SendFriendshipResponseDto(true);
       }
     }
+  }
+
+  async getWaitingFriendList(
+    id: number,
+  ): Promise<getWaitingFriendResponseDto[]> {
+    const friendshipRequests =
+      await this.friendshipRepository.findReceivedFriendshipsByUserId(id);
+
+    if (friendshipRequests.length === 0) {
+      return [];
+    }
+
+    const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
+      const waitingFriend = friendshipRequest.fromUser;
+      return {
+        friendshipId: friendshipRequest.id,
+        userId: waitingFriend.id,
+        name: waitingFriend.name,
+        username: waitingFriend.username,
+        major: waitingFriend.major,
+        language: waitingFriend.language,
+      };
+    });
+
+    return waitingFriendList;
   }
 }

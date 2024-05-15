@@ -6,6 +6,7 @@ import { SendFriendshipRequestDto } from './dto/send-friendship-request.dto';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { User } from 'src/decorators/user.decorator';
 import { getFriendResponseDto } from './dto/get-friend-response.dto';
+import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -34,12 +35,17 @@ export class FriendshipController {
     );
   }
 
-  @UseGuards()
+  @UseGuards(JwtAuthGuard)
   @Get('received')
-  async getFriendshipRequests() {}
+  async getWaitingFriendList(
+    @User() user: AuthorizedUserDto,
+  ): Promise<getWaitingFriendResponseDto[]> {
+    const id = user.id;
+    return await this.friendshipService.getWaitingFriendList(id);
+  }
 
   @UseGuards()
-  @Patch('received/:friendId')
+  @Patch('received/:friendshipId')
   async acceptFriendshipRequest() {}
 
   @UseGuards()
