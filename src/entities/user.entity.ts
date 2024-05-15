@@ -60,9 +60,9 @@ export class UserEntity extends CommonEntity {
   )
   kuVerification: KuVerificationEntity;
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUserId)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser)
   sentFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUserId)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
   receivedFriendRequests: FriendshipEntity[];
 }
