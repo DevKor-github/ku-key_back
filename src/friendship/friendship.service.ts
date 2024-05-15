@@ -1,10 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { UserRepository } from 'src/user/user.repository';
 import { getFriendResponseDto } from './dto/get-friend-response.dto';
 import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -100,5 +105,20 @@ export class FriendshipService {
     });
 
     return waitingFriendList;
+  }
+
+  async acceptFriendshipRequest(
+    friendshipId: number,
+  ): Promise<UpdateFriendshipResponseDto> {
+    const isUpdated = await this.friendshipRepository.updateFriendship(
+      friendshipId,
+      true,
+    );
+
+    if (!isUpdated) {
+      throw new NotImplementedException('친구 요청 수락에 실패했습니다.');
+    } else {
+      return new UpdateFriendshipResponseDto(true);
+    }
   }
 }

@@ -51,4 +51,16 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       relations: ['fromUser', 'toUser'],
     });
   }
+
+  async updateFriendship(
+    friendshipId: number,
+    areWeFriend: boolean,
+  ): Promise<boolean> {
+    const updateResult = await this.update(
+      { id: friendshipId },
+      { areWeFriend: areWeFriend },
+    );
+
+    return updateResult.affected ? true : false;
+  }
 }
