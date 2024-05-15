@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class getWaitingFriendResponseDto {
+export class GetWaitingFriendResponseDto {
   @IsNumber()
   @IsNotEmpty()
   friendshipId: number;

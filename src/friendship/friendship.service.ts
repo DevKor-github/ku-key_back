@@ -7,8 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { UserRepository } from 'src/user/user.repository';
-import { getFriendResponseDto } from './dto/get-friend-response.dto';
-import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { GetFriendResponseDto } from './dto/get-friend-response.dto';
+import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class FriendshipService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async getFriendList(id: number): Promise<getFriendResponseDto[]> {
+  async getFriendList(id: number): Promise<GetFriendResponseDto[]> {
     const friendships =
       await this.friendshipRepository.findFriendshipsByUserId(id);
 
@@ -84,7 +84,7 @@ export class FriendshipService {
 
   async getWaitingFriendList(
     id: number,
-  ): Promise<getWaitingFriendResponseDto[]> {
+  ): Promise<GetWaitingFriendResponseDto[]> {
     const friendshipRequests =
       await this.friendshipRepository.findReceivedFriendshipsByUserId(id);
 
