@@ -1,12 +1,21 @@
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FriendshipService } from './friendship.service';
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SendFriendshipRequestDto } from './dto/send-friendship-request.dto';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { User } from 'src/decorators/user.decorator';
 import { getFriendResponseDto } from './dto/get-friend-response.dto';
 import { getWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -44,9 +53,15 @@ export class FriendshipController {
     return await this.friendshipService.getWaitingFriendList(id);
   }
 
-  @UseGuards()
+  @UseGuards(JwtAuthGuard)
   @Patch('received/:friendshipId')
-  async acceptFriendshipRequest() {}
+  async acceptFriendshipRequest(
+    @Param('friendshipId') friendshipId: string,
+  ): Promise<UpdateFriendshipResponseDto> {
+    return await this.friendshipService.acceptFriendshipRequest(
+      Number(friendshipId),
+    );
+  }
 
   @UseGuards()
   @Get('/:friendId/timetable')
