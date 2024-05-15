@@ -12,10 +12,10 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   async createFriendship(
     createFriendshipDto: CreateFriendshipDto,
   ): Promise<FriendshipEntity> {
-    const { fromUserId, toUsername } = createFriendshipDto;
+    const { fromUserId, toUserId } = createFriendshipDto;
     const friendship = this.create({
-      fromUserId: { id: fromUserId },
-      toUserId: { username: toUsername },
+      fromUser: { id: fromUserId },
+      toUser: { id: toUserId },
       areWeFriend: false,
     });
     return await this.save(friendship);
@@ -27,8 +27,8 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity> {
     return await this.findOne({
       where: [
-        { fromUserId: { id: fromUserId }, toUserId: { id: toUserId } },
-        { fromUserId: { id: toUserId }, toUserId: { id: fromUserId } },
+        { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
+        { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
       ],
     });
   }
