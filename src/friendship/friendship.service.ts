@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { UserRepository } from 'src/user/user.repository';
+import { getFriendResponseDto } from './dto/get-friend-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -12,6 +13,30 @@ export class FriendshipService {
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
   ) {}
+
+  async getFriendList(id: number): Promise<getFriendResponseDto[]> {
+    const friendships =
+      await this.friendshipRepository.findFriendshipsByUserId(id);
+
+    // 현재 친구가 없는 경우
+    if (friendships.length === 0) {
+      return [];
+    }
+
+    const friendList = friendships.map((friendship) => {
+      const friend =
+        friendship.fromUser.id === id ? friendship.toUser : friendship.fromUser;
+      return {
+        id: friend.id,
+        name: friend.name,
+        username: friend.username,
+        major: friend.major,
+        language: friend.language,
+      };
+    });
+
+    return friendList;
+  }
 
   async sendFriendshipRequest(
     fromUserId: number,

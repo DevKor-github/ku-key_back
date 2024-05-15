@@ -32,4 +32,14 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       ],
     });
   }
+
+  async findFriendshipsByUserId(userId: number): Promise<FriendshipEntity[]> {
+    return await this.find({
+      where: [
+        { fromUser: { id: userId }, areWeFriend: true },
+        { toUser: { id: userId }, areWeFriend: true },
+      ],
+      relations: ['fromUser', 'toUser'],
+    });
+  }
 }

@@ -5,6 +5,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SendFriendshipRequestDto } from './dto/send-friendship-request.dto';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { User } from 'src/decorators/user.decorator';
+import { getFriendResponseDto } from './dto/get-friend-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -12,7 +13,12 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getFriendList() {}
+  async getFriendList(
+    @User() user: AuthorizedUserDto,
+  ): Promise<getFriendResponseDto[]> {
+    const id = user.id;
+    return await this.friendshipService.getFriendList(id);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()
