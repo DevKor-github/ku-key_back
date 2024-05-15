@@ -10,7 +10,7 @@ import { User } from 'src/decorators/user.decorator';
 export class FriendshipController {
   constructor(private readonly friendshipService: FriendshipService) {}
 
-  @UseGuards()
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getFriendList() {}
 
@@ -22,10 +22,10 @@ export class FriendshipController {
   ): Promise<SendFriendshipResponseDto> {
     const fromUserId = user.id;
     const toUsername = sendFriendDto.toUsername;
-    return await this.friendshipService.sendFriendshipRequest({
-      fromUserId: fromUserId,
-      toUsername: toUsername,
-    });
+    return await this.friendshipService.sendFriendshipRequest(
+      fromUserId,
+      toUsername,
+    );
   }
 
   @UseGuards()
