@@ -8,10 +8,10 @@ export class FriendshipEntity extends CommonEntity {
   id: number;
 
   @ManyToOne(() => UserEntity, (user) => user.sentFriendRequests)
-  fromUserId: UserEntity;
+  fromUser: UserEntity;
 
   @ManyToOne(() => UserEntity, (user) => user.receivedFriendRequests)
-  toUserId: UserEntity;
+  toUser: UserEntity;
 
   @Column('tinyint', { nullable: false })
   areWeFriend: boolean;
