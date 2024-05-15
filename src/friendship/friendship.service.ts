@@ -147,4 +147,27 @@ export class FriendshipService {
       return new DeleteFriendshipResponseDto(true);
     }
   }
+
+  async deleteFriendship(
+    friendshipId: number,
+  ): Promise<DeleteFriendshipResponseDto> {
+    const friendship =
+      await this.friendshipRepository.getFriendshipByfriendshipId(friendshipId);
+
+    if (!friendship) {
+      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+    }
+
+    if (!friendship.areWeFriend) {
+      throw new BadRequestException('이미 친구인 경우에만 삭제할 수 있습니다.');
+    }
+
+    const isDeleted =
+      await this.friendshipRepository.deleteFriendship(friendshipId);
+    if (!isDeleted) {
+      throw new NotFoundException('친구 삭제에 실패했습니다.');
+    } else {
+      return new DeleteFriendshipResponseDto(true);
+    }
+  }
 }
