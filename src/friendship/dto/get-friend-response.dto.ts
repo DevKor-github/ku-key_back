@@ -3,6 +3,10 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class GetFriendResponseDto {
   @IsNumber()
   @IsNotEmpty()
+  friendshipId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
   userId: number;
 
   @IsString()
