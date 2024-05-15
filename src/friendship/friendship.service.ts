@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +11,7 @@ import { UserRepository } from 'src/user/user.repository';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
+import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -119,6 +121,29 @@ export class FriendshipService {
       throw new NotImplementedException('친구 요청 수락에 실패했습니다.');
     } else {
       return new UpdateFriendshipResponseDto(true);
+    }
+  }
+
+  async rejectFriendshipRequest(
+    friendshipId: number,
+  ): Promise<DeleteFriendshipResponseDto> {
+    const friendship =
+      await this.friendshipRepository.getFriendshipByfriendshipId(friendshipId);
+    if (!friendship) {
+      throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
+    }
+
+    if (friendship.areWeFriend) {
+      throw new BadRequestException(
+        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+      );
+    }
+    const isDeleted =
+      await this.friendshipRepository.deleteFriendship(friendshipId);
+    if (!isDeleted) {
+      throw new NotFoundException('친구 요청 거절에 실패했습니다.');
+    } else {
+      return new DeleteFriendshipResponseDto(true);
     }
   }
 }
