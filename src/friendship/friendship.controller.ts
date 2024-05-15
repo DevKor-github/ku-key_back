@@ -3,6 +3,7 @@ import { FriendshipService } from './friendship.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -16,6 +17,7 @@ import { User } from 'src/decorators/user.decorator';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
+import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -59,6 +61,16 @@ export class FriendshipController {
     @Param('friendshipId') friendshipId: string,
   ): Promise<UpdateFriendshipResponseDto> {
     return await this.friendshipService.acceptFriendshipRequest(
+      Number(friendshipId),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('received/:friendshipId')
+  async rejectFriendshipRequest(
+    @Param('friendshipId') friendshipId: string,
+  ): Promise<DeleteFriendshipResponseDto> {
+    return await this.friendshipService.rejectFriendshipRequest(
       Number(friendshipId),
     );
   }

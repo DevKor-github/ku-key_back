@@ -63,4 +63,18 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
 
     return updateResult.affected ? true : false;
   }
+
+  async deleteFriendship(friendshipId: number): Promise<boolean> {
+    const deleteResult = await this.softDelete(friendshipId);
+
+    return deleteResult.affected ? true : false;
+  }
+
+  async getFriendshipByfriendshipId(
+    friendshipId: number,
+  ): Promise<FriendshipEntity> {
+    return await this.findOne({
+      where: { id: friendshipId },
+    });
+  }
 }
