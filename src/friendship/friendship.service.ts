@@ -28,7 +28,7 @@ export class FriendshipService {
       const friend =
         friendship.fromUser.id === id ? friendship.toUser : friendship.fromUser;
       return {
-        id: friend.id,
+        userId: friend.id,
         name: friend.name,
         username: friend.username,
         major: friend.major,
