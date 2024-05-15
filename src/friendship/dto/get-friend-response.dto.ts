@@ -3,7 +3,7 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 export class getFriendResponseDto {
   @IsNumber()
   @IsNotEmpty()
-  id: number;
+  userId: number;
 
   @IsString()
   @IsOptional()
