@@ -48,22 +48,43 @@ export class CourseController {
     return await this.courseService.searchCourseCode(searchCourseDto);
   }
 
-  // 과목명 검색
-  @Get('searchCourseName')
-  async searchCourseName(
+  // 전공과목 과목명 검색
+  @Get('searchMajorCourseName')
+  async searchMajorCourseName(
     @Query('major') major: string,
     @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
-    return await this.courseService.searchCourseName(major, searchCourseDto);
+    return await this.courseService.searchMajorCourseName(
+      major,
+      searchCourseDto,
+    );
   }
 
-  // 교수님 성함 검색
-  @Get('searchProfessorName')
-  async searchProfessorName(
+  // 전공과목 교수님 성함 검색
+  @Get('searchMajorProfessorName')
+  async searchMajorProfessorName(
     @Query('major') major: string,
     @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
-    return await this.courseService.searchProfessorName(major, searchCourseDto);
+    return await this.courseService.searchMajorProfessorName(
+      major,
+      searchCourseDto,
+    );
+  }
+
+  // 교양과목 과목명 검색
+  @Get('searchGeneralCourseName')
+  async searchGeneralCourseName(
+    @Body() searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    return await this.courseService.searchGeneralCourseName(searchCourseDto);
+  }
+  // 교양과목 교수님 성함 검색
+  @Get('searchGeneralProfessorName')
+  async searchGeneralProfessorName(
+    @Body() searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    return await this.courseService.searchGeneralProfessorName(searchCourseDto);
   }
 
   // 교양 리스트

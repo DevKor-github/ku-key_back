@@ -66,8 +66,8 @@ export class CourseService {
     });
   }
 
-  // 과목명 검색 (띄어쓰기로 단어 구분)
-  async searchCourseName(
+  // 전공 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchMajorCourseName(
     major: string,
     searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
@@ -84,8 +84,8 @@ export class CourseService {
       .getMany();
   }
 
-  // 교수님 성함 검색
-  async searchProfessorName(
+  // 전공 교수님 성함 검색
+  async searchMajorProfessorName(
     major: string,
     searchCourseDto: SearchCourseDto,
   ): Promise<CourseEntity[]> {
@@ -93,6 +93,35 @@ export class CourseService {
       where: {
         professorName: Like(`%${searchCourseDto.professorName}%`),
         major: major,
+      },
+    });
+  }
+
+  // 교양 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchGeneralCourseName(
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    const words = searchCourseDto.courseName
+      .split(/\s+/)
+      .filter((word) => word.length);
+    const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+    return await this.courseRepository
+      .createQueryBuilder('course')
+      .where(`course.courseName REGEXP :pattern`, {
+        pattern: `^${searchPattern}.*$`,
+      })
+      .andWhere('course.category = :category', { category: 'General Studies' })
+      .getMany();
+  }
+
+  // 교양 교수님 성함 검색
+  async searchGeneralProfessorName(
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    return await this.courseRepository.find({
+      where: {
+        professorName: Like(`%${searchCourseDto.professorName}%`),
+        category: 'General Studies',
       },
     });
   }
