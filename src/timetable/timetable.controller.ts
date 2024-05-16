@@ -4,17 +4,19 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
-import { CreateTimeTableDto } from './dto/create-timetable.dto';
+import { TimeTableDto } from './dto/timetable.dto';
 import { TimeTableService } from './timetable.service';
 import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { CreateTimeTableDto } from './dto/create-timetable.dto';
 
 @Controller('timetable')
 @UseGuards(JwtAuthGuard) // 시간표 관련 API는 인증 필요해서 JwtAuthGuard 사용
@@ -26,10 +28,12 @@ export class TimeTableController {
   async createTimeTableCourse(
     @Query('timeTableId') timeTableId: number,
     @Query('courseId') courseId: number,
+    @User() user: AuthorizedUserDto,
   ): Promise<TimeTableCourseEntity> {
     return await this.timeTableService.createTimeTableCourse(
       timeTableId,
       courseId,
+      user,
     );
   }
 
@@ -39,15 +43,28 @@ export class TimeTableController {
     @Body() createTimeTableDto: CreateTimeTableDto,
     @User() user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableService.createTimeTable(createTimeTableDto,user);
+    return await this.timeTableService.createTimeTable(
+      createTimeTableDto,
+      user,
+    );
+  }
+
+  // 대표시간표 가져오기
+  @Get('/mainTimeTable')
+  async getMainTimeTable(
+    @Body() timeTableDto: TimeTableDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableService.getMainTimeTable(timeTableDto, user);
   }
 
   // 특정 시간표 가져오기 (1안, 2안)
   @Get('/:timeTableId')
   async getTimeTable(
     @Param('timeTableId') timeTableId: number,
+    @User() user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableService.getTimeTable(timeTableId);
+    return await this.timeTableService.getTimeTable(timeTableId, user);
   }
 
   // 시간표 삭제
@@ -56,5 +73,19 @@ export class TimeTableController {
     @Param('timeTableId') timeTableId: number,
   ): Promise<void> {
     return await this.timeTableService.deleteTimeTable(timeTableId);
+  }
+
+  // 대표 시간표 변경
+  @Patch('/:timeTableId')
+  async updateMainTimeTable(
+    @Param('timeTableId') timeTableId: number,
+    @User() user: AuthorizedUserDto,
+    @Body() timeTableDto: TimeTableDto,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableService.updateMainTimeTable(
+      timeTableId,
+      user,
+      timeTableDto,
+    );
   }
 }
