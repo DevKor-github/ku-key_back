@@ -8,10 +8,12 @@ import { TimeTableRepository } from './timetable.repository';
 import { CourseRepository } from 'src/course/course.repository';
 import { TimeTableCourseRepository } from './timetable-course.repository';
 import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
-import { CreateTimeTableDto } from './dto/create-timetable.dto';
+import { TimeTableDto } from './dto/timetable.dto';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { CourseDetailRepository } from 'src/course/course-detail.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { DataSource } from 'typeorm';
+import { CreateTimeTableDto } from './dto/create-timetable.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -20,15 +22,17 @@ export class TimeTableService {
     private readonly courseRepository: CourseRepository,
     private readonly timeTableCourseRepository: TimeTableCourseRepository,
     private readonly courseDetailRepository: CourseDetailRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createTimeTableCourse(
     timeTableId: number,
     courseId: number,
+    user: AuthorizedUserDto,
   ): Promise<TimeTableCourseEntity> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
-        where: { id: timeTableId },
+        where: { id: timeTableId, userId: user.id },
       });
       if (!timeTable) {
         throw new NotFoundException('TimeTable not found');
@@ -58,13 +62,14 @@ export class TimeTableService {
         throw new ConflictException('Course conflicts with existing courses');
       }
 
-      const timeTableCourse = new TimeTableCourseEntity();
-      timeTableCourse.timeTableId = timeTableId;
-      timeTableCourse.courseId = courseId;
-      timeTableCourse.timeTable = timeTable;
-      timeTableCourse.course = course;
+      const timeTableCourse = this.timeTableCourseRepository.create({
+        timeTableId,
+        courseId,
+        timeTable,
+        course,
+      });
 
-      return this.timeTableCourseRepository.save(timeTableCourse);
+      return await this.timeTableCourseRepository.save(timeTableCourse);
     } catch (error) {
       console.error('Failed to create TimeTableCourse:', error);
       throw error;
@@ -151,11 +156,10 @@ export class TimeTableService {
 
       const isFirstTable = existingTimeTableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
       const tableNumber = existingTimeTableNumber + 1; // 시간표 갯수 + 1
-      const tableName = `${createTimeTableDto.year}-${createTimeTableDto.semester}(${tableNumber})`; // 시간표 이름
 
       const newTimeTable = this.timeTableRepository.create({
         userId: user.id,
-        tableName,
+        tableName: createTimeTableDto.tableName,
         semester: createTimeTableDto.semester,
         year: createTimeTableDto.year,
         mainTimeTable: isFirstTable,
@@ -173,13 +177,83 @@ export class TimeTableService {
     }
   }
 
-  async getTimeTable(timeTableId: number): Promise<TimeTableEntity> {
+  async getTimeTable(
+    timeTableId: number,
+    user: AuthorizedUserDto,
+  ): Promise<TimeTableEntity> {
     return await this.timeTableRepository.findOne({
-      where: { id: timeTableId },
+      where: { id: timeTableId, userId: user.id },
     });
   }
 
   async deleteTimeTable(timeTableId: number): Promise<void> {
     await this.timeTableRepository.delete({ id: timeTableId });
+  }
+
+  async getMainTimeTable(
+    timeTableDto: TimeTableDto,
+    user: AuthorizedUserDto,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableRepository.findOne({
+      where: {
+        userId: user.id,
+        mainTimeTable: true,
+        year: timeTableDto.year,
+        semester: timeTableDto.semester,
+      },
+    });
+  }
+
+  // 기존의 대표시간표의 mainTimeTable column을 false로 변경하고, 새로운 시간표의 mainTimeTable column을 true로 변경
+  async updateMainTimeTable(
+    timeTableId: number,
+    user: AuthorizedUserDto,
+    timeTableDto: TimeTableDto,
+  ): Promise<TimeTableEntity> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const oldMainTimeTable = await queryRunner.manager.findOne(
+        TimeTableEntity,
+        {
+          where: {
+            userId: user.id,
+            year: timeTableDto.year,
+            semester: timeTableDto.semester,
+            mainTimeTable: true,
+          },
+        },
+      );
+      const newMainTimeTable = await queryRunner.manager.findOne(
+        TimeTableEntity,
+        {
+          where: {
+            id: timeTableId,
+            userId: user.id,
+            year: timeTableDto.year,
+            semester: timeTableDto.semester,
+          },
+        },
+      );
+      if (!newMainTimeTable || !oldMainTimeTable) {
+        throw new NotFoundException('TimeTable not found');
+      } else if (oldMainTimeTable.id === newMainTimeTable.id) {
+        throw new ConflictException('Already main TimeTable');
+      }
+
+      oldMainTimeTable.mainTimeTable = false;
+      newMainTimeTable.mainTimeTable = true;
+      await queryRunner.manager.save(oldMainTimeTable);
+      await queryRunner.manager.save(newMainTimeTable);
+      await queryRunner.commitTransaction();
+
+      return newMainTimeTable;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

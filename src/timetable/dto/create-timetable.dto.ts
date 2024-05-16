@@ -1,11 +1,9 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { TimeTableDto } from './timetable.dto';
 
-export class CreateTimeTableDto {
+export class CreateTimeTableDto extends TimeTableDto {
   @IsString()
   @IsNotEmpty()
-  semester: string;
-
-  @IsString()
-  @IsNotEmpty()
-  year: string;
+  @MaxLength(20)
+  tableName: string;
 }
