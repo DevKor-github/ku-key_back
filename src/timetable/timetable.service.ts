@@ -181,9 +181,18 @@ export class TimeTableService {
     timeTableId: number,
     user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableRepository.findOne({
-      where: { id: timeTableId, userId: user.id },
-    });
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: { id: timeTableId, userId: user.id },
+      });
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+      return timeTable;
+    } catch (error) {
+      console.error('Failed to get TimeTable: ', error);
+      throw error;
+    }
   }
 
   async deleteTimeTable(timeTableId: number): Promise<void> {
