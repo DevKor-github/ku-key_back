@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 export class FileService {
   private readonly s3: S3Client;
   private readonly bucketName: string;
+  private readonly mode: string;
 
   constructor(private readonly configService: ConfigService) {
     this.s3 = new S3Client({
@@ -20,6 +21,7 @@ export class FileService {
       },
     });
     this.bucketName = this.configService.get('AWS_BUCKET_NAME');
+    this.mode = process.env.NODE_ENV;
   }
 
   async uploadFile(
@@ -29,7 +31,7 @@ export class FileService {
   ): Promise<string> {
     const splitedFileNames = file.originalname.split('.');
     const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    const filename = `${resource}/${path}/${new Date().getTime()}.${extension}`;
+    const filename = `${this.mode}/${resource}/${path}/${new Date().getTime()}.${extension}`;
     const params = {
       Key: filename,
       Body: file.buffer,
