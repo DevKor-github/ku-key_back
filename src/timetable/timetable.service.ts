@@ -155,7 +155,6 @@ export class TimeTableService {
       }
 
       const isFirstTable = existingTimeTableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
-      const tableNumber = existingTimeTableNumber + 1; // 시간표 갯수 + 1
 
       const newTimeTable = this.timeTableRepository.create({
         userId: user.id,
@@ -163,7 +162,6 @@ export class TimeTableService {
         semester: createTimeTableDto.semester,
         year: createTimeTableDto.year,
         mainTimeTable: isFirstTable,
-        tableNumber,
       });
 
       return await this.timeTableRepository.save(newTimeTable);
@@ -195,8 +193,53 @@ export class TimeTableService {
     }
   }
 
-  async deleteTimeTable(timeTableId: number): Promise<void> {
-    await this.timeTableRepository.delete({ id: timeTableId });
+  async deleteTimeTable(
+    timeTableId: number,
+    user: AuthorizedUserDto,
+  ): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const timeTable = await queryRunner.manager.findOne(TimeTableEntity, {
+        where: { id: timeTableId, userId: user.id },
+      });
+
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+
+      if (timeTable.mainTimeTable) {
+        const nextMainTimeTable = await queryRunner.manager.findOne(
+          TimeTableEntity,
+          {
+            where: {
+              userId: user.id,
+              year: timeTable.year,
+              semester: timeTable.semester,
+              mainTimeTable: false,
+            },
+            order: { createdAt: 'ASC' },
+          },
+        );
+
+        if (nextMainTimeTable) {
+          nextMainTimeTable.mainTimeTable = true;
+          await queryRunner.manager.save(nextMainTimeTable);
+        }
+      }
+      await queryRunner.manager.softDelete(TimeTableEntity, {
+        id: timeTableId,
+      });
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Failed to delete TimeTable: ', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getMainTimeTable(

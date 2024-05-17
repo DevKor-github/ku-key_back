@@ -30,9 +30,6 @@ export class TimeTableEntity extends CommonEntity {
   @Column('tinyint', { nullable: false, default: false })
   mainTimeTable: boolean;
 
-  @Column('int', { nullable: false })
-  tableNumber: number;
-
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTable, {
     onDelete: 'CASCADE',

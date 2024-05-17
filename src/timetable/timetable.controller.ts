@@ -71,8 +71,9 @@ export class TimeTableController {
   @Delete('/:timeTableId')
   async deleteTimeTable(
     @Param('timeTableId') timeTableId: number,
+    @User() user: AuthorizedUserDto,
   ): Promise<void> {
-    return await this.timeTableService.deleteTimeTable(timeTableId);
+    return await this.timeTableService.deleteTimeTable(timeTableId, user);
   }
 
   // 대표 시간표 변경
