@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
   Param,
   Post,
   UploadedFile,
@@ -80,7 +79,7 @@ export class AuthController {
   }
 
   @UseGuards(AdminAuthGuard)
-  @Get('admin/requests')
+  @Post('admin/requests')
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {

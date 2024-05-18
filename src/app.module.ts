@@ -29,6 +29,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
         entities: [path.join(__dirname, '/entities/**/*.entity.{js, ts}')],
         synchronize: true,
         logging: true,
+        timezone: 'Asia/Seoul',
       }),
     }),
     CacheModule.register({
