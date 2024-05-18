@@ -29,14 +29,14 @@ export class UserController {
     return await this.userService.createUser(createUserDto);
   }
 
-  @Get('username/:username')
+  @Post('username/:username')
   async checkUsernamePossible(
     @Param('username') username: string,
   ): Promise<checkPossibleResponseDto> {
     return await this.userService.checkUsernamePossible(username);
   }
 
-  @Get('email/:email')
+  @Post('email/:email')
   async checkEmailPossible(
     @Param('email') email: string,
   ): Promise<checkPossibleResponseDto> {
