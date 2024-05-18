@@ -24,6 +24,7 @@ import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
+import { FileService } from './file.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly kuVerificationRepository: KuVerificationRepository,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly fileService: FileService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService,
   ) {}
@@ -165,6 +167,7 @@ export class AuthService {
     studentNumber: number,
     userId: number,
   ): Promise<VerificationResponseDto> {
+    //이미 등록된 학번인지 확인
     const requests =
       await this.kuVerificationRepository.findRequestsByStudentNumber(
         studentNumber,
@@ -177,17 +180,23 @@ export class AuthService {
       }
     }
 
+    //이미 요청을 보냈던 유저인지 확인(그렇다면 원래 요청 수정)
     const user = await this.userRepository.findUserById(userId);
     const userRequest =
       await this.kuVerificationRepository.findRequestByUser(user);
     if (userRequest) {
-      //
-      //원래 스크린샷 파일 삭제 코드 필요
-      //
+      await this.fileService.deleteFile(userRequest.imgDir);
+
+      const filename = await this.fileService.uploadFile(
+        screenshot,
+        'KuVerification',
+        'screenshot',
+      );
+
       const isModified =
         await this.kuVerificationRepository.modifyVerificationRequest(
           userRequest,
-          screenshot.path,
+          filename,
           studentNumber,
           user,
         );
@@ -197,8 +206,15 @@ export class AuthService {
       return new ScreenshotVerificationResponseDto(true, studentNumber);
     }
 
+    //요청 생성
+    const filename = await this.fileService.uploadFile(
+      screenshot,
+      'KuVerification',
+      'screenshot',
+    );
+
     await this.kuVerificationRepository.createVerificationRequest(
-      screenshot.path,
+      filename,
       studentNumber,
       user,
     );
@@ -222,7 +238,8 @@ export class AuthService {
       .map((request) => {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
-          imgDir: request.imgDir,
+          imgDir:
+            'https://kukey.s3.ap-northeast-2.amazonaws.com/' + request.imgDir,
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
@@ -235,8 +252,8 @@ export class AuthService {
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
+    const request = await this.kuVerificationRepository.findRequestById(id);
     if (verify) {
-      const request = await this.kuVerificationRepository.findRequestById(id);
       const userId = request.user.id;
       const isVerified = await this.userRepository.verifyUser(userId, verify);
       if (!isVerified) {
@@ -250,6 +267,9 @@ export class AuthService {
         if (otherRequest.id === request.id) {
           continue;
         }
+
+        await this.fileService.deleteFile(otherRequest.imgDir);
+
         const isDeleted =
           await this.kuVerificationRepository.deleteVerificationRequest(
             otherRequest.id,
@@ -261,6 +281,7 @@ export class AuthService {
         }
       }
     } else {
+      await this.fileService.deleteFile(request.imgDir);
       const isDeleted =
         await this.kuVerificationRepository.deleteVerificationRequest(id);
       if (!isDeleted) {
