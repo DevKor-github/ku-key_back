@@ -30,9 +30,10 @@ export class FriendshipController {
   @Get()
   async getFriendList(
     @User() user: AuthorizedUserDto,
+    @Query('keyword') keyword?: string,
   ): Promise<GetFriendResponseDto[]> {
     const id = user.id;
-    return await this.friendshipService.getFriendList(id);
+    return await this.friendshipService.getFriendList(id, keyword);
   }
 
   @UseGuards(JwtAuthGuard)
