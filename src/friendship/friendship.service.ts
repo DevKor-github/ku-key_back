@@ -14,6 +14,7 @@ import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dt
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
 import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
+import { FriendshipEntity } from 'src/entities/friendship.entity';
 
 @Injectable()
 export class FriendshipService {
@@ -24,9 +25,21 @@ export class FriendshipService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async getFriendList(id: number): Promise<GetFriendResponseDto[]> {
-    const friendships =
-      await this.friendshipRepository.findFriendshipsByUserId(id);
+  async getFriendList(
+    id: number,
+    keyword?: string,
+  ): Promise<GetFriendResponseDto[]> {
+    let friendships: FriendshipEntity[];
+
+    if (keyword) {
+      friendships =
+        await this.friendshipRepository.findFriendshipByUserIdAndKeyword(
+          id,
+          keyword,
+        );
+    } else {
+      friendships = await this.friendshipRepository.findFriendshipsByUserId(id);
+    }
 
     // 현재 친구가 없는 경우
     if (friendships.length === 0) {
