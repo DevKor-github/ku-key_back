@@ -18,6 +18,7 @@ import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
+import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -69,7 +70,7 @@ export class FriendshipController {
   @Delete('received/:friendshipId')
   async rejectFriendshipRequest(
     @Param('friendshipId') friendshipId: string,
-  ): Promise<DeleteFriendshipResponseDto> {
+  ): Promise<RejectFriendshipResponseDto> {
     return await this.friendshipService.rejectFriendshipRequest(
       Number(friendshipId),
     );
@@ -82,8 +83,4 @@ export class FriendshipController {
   ): Promise<DeleteFriendshipResponseDto> {
     return await this.friendshipService.deleteFriendship(Number(friendshipId));
   }
-
-  @UseGuards()
-  @Get('/:friendId/timetable')
-  async getFriendTimetable() {}
 }
