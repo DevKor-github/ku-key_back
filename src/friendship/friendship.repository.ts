@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { CreateFriendshipDto } from './dto/create-friendship.dto';
 
 @Injectable()
@@ -41,6 +41,37 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       ],
       relations: ['fromUser', 'toUser'],
     });
+  }
+
+  async findFriendshipByUserIdAndKeyword(
+    userId: number,
+    keyword: string,
+  ): Promise<FriendshipEntity[]> {
+    return await this.createQueryBuilder('friendship')
+      .leftJoinAndSelect('friendship.fromUser', 'fromUser')
+      .leftJoinAndSelect('friendship.toUser', 'toUser')
+      .where('friendship.areWeFriend = :areWeFriend', { areWeFriend: true })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('fromUser.id = :userId', { userId }).orWhere(
+            'toUser.id = :userId',
+            { userId },
+          );
+        }),
+      )
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('fromUser.username LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          })
+            .orWhere('fromUser.name LIKE :keyword', { keyword: `%${keyword}%` })
+            .orWhere('toUser.username LIKE :keyword', {
+              keyword: `%${keyword}%`,
+            })
+            .orWhere('toUser.name LIKE :keyword', { keyword: `%${keyword}%` });
+        }),
+      )
+      .getMany();
   }
 
   async findReceivedFriendshipsByUserId(
