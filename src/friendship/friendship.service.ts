@@ -13,6 +13,7 @@ import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.d
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
 import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
+import { SearchUserResponseDto } from './dto/search-user-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -46,6 +47,29 @@ export class FriendshipService {
     });
 
     return friendList;
+  }
+
+  async searchUserForFriendshipRequest(
+    myUsername: string,
+    username: string,
+  ): Promise<SearchUserResponseDto> {
+    if (username === myUsername) {
+      throw new BadRequestException('올바르지 않은 상대입니다.');
+    }
+
+    const user = await this.userRepository.findUserByUsername(username);
+
+    if (!user) {
+      throw new BadRequestException('올바르지 않은 상대입니다.');
+    }
+
+    const userInfo = new SearchUserResponseDto();
+    userInfo.name = user.name;
+    userInfo.username = user.username;
+    userInfo.major = user.major;
+    userInfo.language = user.language;
+
+    return userInfo;
   }
 
   async sendFriendshipRequest(

@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -19,6 +20,7 @@ import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.d
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
 import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
+import { SearchUserResponseDto } from './dto/search-user-response.dto';
 
 @Controller('friendship')
 export class FriendshipController {
@@ -31,6 +33,19 @@ export class FriendshipController {
   ): Promise<GetFriendResponseDto[]> {
     const id = user.id;
     return await this.friendshipService.getFriendList(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('search-user')
+  async searchUserForFriendshipRequest(
+    @Query('username') username: string,
+    @User() user: AuthorizedUserDto,
+  ): Promise<SearchUserResponseDto> {
+    const myUsername = user.username;
+    return await this.friendshipService.searchUserForFriendshipRequest(
+      myUsername,
+      username,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
