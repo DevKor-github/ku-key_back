@@ -12,6 +12,7 @@ import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
+import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -127,7 +128,7 @@ export class FriendshipService {
 
   async rejectFriendshipRequest(
     friendshipId: number,
-  ): Promise<DeleteFriendshipResponseDto> {
+  ): Promise<RejectFriendshipResponseDto> {
     const friendship =
       await this.friendshipRepository.getFriendshipByfriendshipId(friendshipId);
     if (!friendship) {
@@ -144,7 +145,7 @@ export class FriendshipService {
     if (!isDeleted) {
       throw new NotFoundException('친구 요청 거절에 실패했습니다.');
     } else {
-      return new DeleteFriendshipResponseDto(true);
+      return new RejectFriendshipResponseDto(true);
     }
   }
 
