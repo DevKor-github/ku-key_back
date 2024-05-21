@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -17,6 +18,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { SetProfileRequestDto } from './dto/set-profile-request.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
+import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -32,15 +34,23 @@ export class UserController {
   @Post('username/:username')
   async checkUsernamePossible(
     @Param('username') username: string,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<checkPossibleResponseDto> {
-    return await this.userService.checkUsernamePossible(username);
+    const responseDto = await this.userService.checkUsernamePossible(username);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
   }
 
   @Post('email/:email')
   async checkEmailPossible(
     @Param('email') email: string,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<checkPossibleResponseDto> {
-    return await this.userService.checkEmailPossible(email);
+    const responseDto = await this.userService.checkEmailPossible(email);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
   }
 
   @UseGuards(JwtAuthGuard)
