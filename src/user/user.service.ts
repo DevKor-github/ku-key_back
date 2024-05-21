@@ -12,6 +12,7 @@ import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 import { SetProfileRequestDto } from './dto/set-profile-request.dto';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -92,5 +93,31 @@ export class UserService {
       point: user.point,
     };
     return profile;
+  }
+
+  async checkUserVerified(userId: number): Promise<boolean> {
+    const user = await this.userRepository.findUserById(userId);
+    return user.isVerified ? true : false;
+  }
+
+  async setCurrentRefresthToken(
+    refreshToken: string,
+    id: number,
+  ): Promise<boolean> {
+    const hashedToken = await hash(refreshToken, 10);
+
+    return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
+  }
+
+  async verifyUser(userId: number, verify: boolean): Promise<boolean> {
+    return await this.userRepository.verifyUser(userId, verify);
+  }
+
+  async findUserById(userId: number): Promise<UserEntity> {
+    return await this.userRepository.findUserById(userId);
+  }
+
+  async findUserByEmail(email: string): Promise<UserEntity> {
+    return await this.userRepository.findUserByEmail(email);
   }
 }
