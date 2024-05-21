@@ -110,10 +110,10 @@ export class FriendshipService {
         throw new BadRequestException('이미 친구인 유저입니다.');
       }
     } else {
-      const friendship = await this.friendshipRepository.createFriendship({
-        fromUserId: fromUserId,
-        toUserId: toUserId,
-      });
+      const friendship = await this.friendshipRepository.createFriendship(
+        fromUserId,
+        toUserId,
+      );
 
       if (!friendship) {
         return new SendFriendshipResponseDto(false);

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { Brackets, DataSource, Repository } from 'typeorm';
-import { CreateFriendshipDto } from './dto/create-friendship.dto';
 
 @Injectable()
 export class FriendshipRepository extends Repository<FriendshipEntity> {
@@ -10,9 +9,9 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   }
 
   async createFriendship(
-    createFriendshipDto: CreateFriendshipDto,
+    fromUserId: number,
+    toUserId: number,
   ): Promise<FriendshipEntity> {
-    const { fromUserId, toUserId } = createFriendshipDto;
     const friendship = this.create({
       fromUser: { id: fromUserId },
       toUser: { id: toUserId },
