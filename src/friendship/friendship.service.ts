@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
-import { UserRepository } from 'src/user/user.repository';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
@@ -15,14 +14,14 @@ import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dt
 import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class FriendshipService {
   constructor(
     @InjectRepository(FriendshipRepository)
     private readonly friendshipRepository: FriendshipRepository,
-    @InjectRepository(UserRepository)
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
   ) {}
 
   async getFriendList(
@@ -70,7 +69,7 @@ export class FriendshipService {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
-    const user = await this.userRepository.findUserByUsername(username);
+    const user = await this.userService.findUserByUsername(username);
 
     if (!user) {
       throw new BadRequestException('올바르지 않은 상대입니다.');
@@ -89,7 +88,7 @@ export class FriendshipService {
     fromUserId: number,
     toUsername: string,
   ): Promise<SendFriendshipResponseDto> {
-    const toUser = await this.userRepository.findUserByUsername(toUsername);
+    const toUser = await this.userService.findUserByUsername(toUsername);
 
     if (!toUser) {
       throw new BadRequestException('해당 유저를 찾을 수 없습니다.');
