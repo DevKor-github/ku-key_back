@@ -120,4 +120,7 @@ export class UserService {
   async findUserByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findUserByEmail(email);
   }
+  async findUserByUsername(username: string): Promise<UserEntity> {
+    return await this.userRepository.findUserByUsername(username);
+  }
 }
