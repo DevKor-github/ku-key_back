@@ -14,6 +14,7 @@ import { CourseDetailRepository } from 'src/course/course-detail.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
+import { UserTimeTableDto } from './dto/user-timetable.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -187,6 +188,24 @@ export class TimeTableService {
         throw new NotFoundException('TimeTable not found');
       }
       return timeTable;
+    } catch (error) {
+      console.error('Failed to get TimeTable: ', error);
+      throw error;
+    }
+  }
+
+  async getTimeTableByUserId(userId: number): Promise<UserTimeTableDto[]> {
+    try {
+      const userTimeTable = await this.timeTableRepository.find({
+        where: { userId },
+      });
+      if (!userTimeTable) throw new NotFoundException('TimeTable not found');
+      return userTimeTable.map((table) => ({
+        tableId: table.id,
+        semester: table.semester,
+        year: table.year,
+        mainTimeTable: table.mainTimeTable,
+      }));
     } catch (error) {
       console.error('Failed to get TimeTable: ', error);
       throw error;
