@@ -148,8 +148,24 @@ export class FriendshipService {
   }
 
   async acceptFriendshipRequest(
+    userId: number,
     friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
+    const friendship =
+      await this.friendshipRepository.findFriendshipByFriendshipId(
+        friendshipId,
+      );
+
+    if (friendship.fromUser.id !== userId && friendship.toUser.id !== userId) {
+      throw new BadRequestException(
+        '나에게 온 친구 요청만 수락할 수 있습니다.',
+      );
+    }
+
+    if (friendship.areWeFriend) {
+      throw new BadRequestException('이미 수락한 요청입니다.');
+    }
+
     const isUpdated = await this.friendshipRepository.updateFriendship(
       friendshipId,
       true,
