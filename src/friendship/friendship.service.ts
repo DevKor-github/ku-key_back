@@ -41,6 +41,10 @@ export class FriendshipService {
         await this.friendshipRepository.findFriendshipsByUserId(userId);
     }
 
+    if (!friendships) {
+      throw new NotFoundException('친구 목록을 불러오는데 실패했습니다.');
+    }
+
     // 현재 친구가 없는 경우
     if (friendships.length === 0) {
       return [];
