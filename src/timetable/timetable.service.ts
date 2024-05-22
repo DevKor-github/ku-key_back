@@ -14,7 +14,11 @@ import { CourseDetailRepository } from 'src/course/course-detail.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
-import { UserTimeTableDto } from './dto/user-timetable.dto';
+import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
+import {
+  DayType,
+  GetTimeTableByTimeTableIdResponseDto,
+} from './dto/timetableId-timetable.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -176,25 +180,51 @@ export class TimeTableService {
     }
   }
 
-  async getTimeTable(
+  async getTimeTableByTimeTableId(
     timeTableId: number,
     user: AuthorizedUserDto,
-  ): Promise<TimeTableEntity> {
+  ): Promise<GetTimeTableByTimeTableIdResponseDto[]> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId: user.id },
+        relations: [
+          'timeTableCourse',
+          'timeTableCourse.course',
+          'timeTableCourse.course.courseDetail',
+        ],
       });
       if (!timeTable) {
         throw new NotFoundException('TimeTable not found');
       }
-      return timeTable;
+
+      const GetTimeTableByTimeTableIdResponse = timeTable.timeTableCourse
+        .map((courseEntry) => {
+          const { professorName, courseName, courseCode } = courseEntry.course;
+          return courseEntry.course.courseDetail.map((detailEntry) => {
+            const { day, startTime, endTime, classroom } = detailEntry;
+            return {
+              professorName,
+              courseName,
+              courseCode,
+              day: day as DayType,
+              startTime,
+              endTime,
+              classroom,
+            };
+          });
+        })
+        .flat(); // flat으로 다차원 배열 평탄화
+
+      return GetTimeTableByTimeTableIdResponse;
     } catch (error) {
       console.error('Failed to get TimeTable: ', error);
       throw error;
     }
   }
 
-  async getTimeTableByUserId(userId: number): Promise<UserTimeTableDto[]> {
+  async getTimeTableByUserId(
+    userId: number,
+  ): Promise<GetTimeTableByUserIdResponseDto[]> {
     try {
       const userTimeTable = await this.timeTableRepository.find({
         where: { userId },
