@@ -10,10 +10,12 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 
+console.log(`.env.${process.env.NODE_ENV}`);
+
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env',
+      envFilePath: `.env.${process.env.NODE_ENV}`,
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -28,6 +30,7 @@ import { CacheModule } from '@nestjs/cache-manager';
         entities: [path.join(__dirname, '/entities/**/*.entity.{js, ts}')],
         synchronize: true,
         logging: true,
+        timezone: 'Asia/Seoul',
       }),
     }),
     CacheModule.register({

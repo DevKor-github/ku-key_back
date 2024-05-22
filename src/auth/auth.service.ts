@@ -7,8 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepository } from 'src/user/user.repository';
-import { compare, hash } from 'bcrypt';
+import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
@@ -24,16 +23,18 @@ import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
+import { FileService } from './file.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserRepository)
-    private readonly userRepository: UserRepository,
     @InjectRepository(KuVerificationRepository)
     private readonly kuVerificationRepository: KuVerificationRepository,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly fileService: FileService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService,
   ) {}
@@ -42,7 +43,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<AuthorizedUserDto> {
-    const user = await this.userRepository.findUserByEmail(email);
+    const user = await this.userService.findUserByEmail(email);
 
     if (!user) {
       throw new BadRequestException('이메일이 잘못되었습니다.');
@@ -63,7 +64,10 @@ export class AuthService {
       this.createAccessToken(user),
       this.createRefreshToken(id),
     );
-    const isset = await this.setCurrentRefresthToken(tokenDto.refreshToken, id);
+    const isset = await this.userService.setCurrentRefresthToken(
+      tokenDto.refreshToken,
+      id,
+    );
     if (!isset) {
       throw new NotImplementedException('update refresh token failed!');
     }
@@ -89,20 +93,11 @@ export class AuthService {
     );
   }
 
-  async setCurrentRefresthToken(
-    refreshToken: string,
-    id: number,
-  ): Promise<boolean> {
-    const hashedToken = await hash(refreshToken, 10);
-
-    return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
-  }
-
   async refreshTokenMatches(
     refreshToken: string,
     id: number,
   ): Promise<AuthorizedUserDto> {
-    const user = await this.userRepository.findUserById(id);
+    const user = await this.userService.findUserById(id);
     const isMatches = await compare(refreshToken, user.refreshToken);
 
     if (!isMatches) {
@@ -113,8 +108,7 @@ export class AuthService {
   }
 
   async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
-    const verified = (await this.userRepository.findUserById(user.id))
-      .isVerified;
+    const verified = await this.userService.checkUserVerified(user.id);
     const token = await this.createToken(user);
     return new LoginResponseDto(token, verified);
   }
@@ -155,16 +149,12 @@ export class AuthService {
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 
-  async checkUserVerified(userId: number): Promise<boolean> {
-    const user = await this.userRepository.findUserById(userId);
-    return user.isVerified;
-  }
-
   async createScreenshotRequest(
     screenshot: Express.Multer.File,
     studentNumber: number,
     userId: number,
   ): Promise<VerificationResponseDto> {
+    //이미 등록된 학번인지 확인
     const requests =
       await this.kuVerificationRepository.findRequestsByStudentNumber(
         studentNumber,
@@ -177,17 +167,23 @@ export class AuthService {
       }
     }
 
-    const user = await this.userRepository.findUserById(userId);
+    //이미 요청을 보냈던 유저인지 확인(그렇다면 원래 요청 수정)
+    const user = await this.userService.findUserById(userId);
     const userRequest =
       await this.kuVerificationRepository.findRequestByUser(user);
     if (userRequest) {
-      //
-      //원래 스크린샷 파일 삭제 코드 필요
-      //
+      await this.fileService.deleteFile(userRequest.imgDir);
+
+      const filename = await this.fileService.uploadFile(
+        screenshot,
+        'KuVerification',
+        'screenshot',
+      );
+
       const isModified =
         await this.kuVerificationRepository.modifyVerificationRequest(
           userRequest,
-          screenshot.path,
+          filename,
           studentNumber,
           user,
         );
@@ -197,8 +193,15 @@ export class AuthService {
       return new ScreenshotVerificationResponseDto(true, studentNumber);
     }
 
+    //요청 생성
+    const filename = await this.fileService.uploadFile(
+      screenshot,
+      'KuVerification',
+      'screenshot',
+    );
+
     await this.kuVerificationRepository.createVerificationRequest(
-      screenshot.path,
+      filename,
       studentNumber,
       user,
     );
@@ -222,7 +225,8 @@ export class AuthService {
       .map((request) => {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
-          imgDir: request.imgDir,
+          imgDir:
+            'https://kukey.s3.ap-northeast-2.amazonaws.com/' + request.imgDir,
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
@@ -235,10 +239,10 @@ export class AuthService {
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
+    const request = await this.kuVerificationRepository.findRequestById(id);
     if (verify) {
-      const request = await this.kuVerificationRepository.findRequestById(id);
       const userId = request.user.id;
-      const isVerified = await this.userRepository.verifyUser(userId, verify);
+      const isVerified = await this.userService.verifyUser(userId, verify);
       if (!isVerified) {
         throw new NotImplementedException('reqeust allow failed!');
       }
@@ -250,6 +254,9 @@ export class AuthService {
         if (otherRequest.id === request.id) {
           continue;
         }
+
+        await this.fileService.deleteFile(otherRequest.imgDir);
+
         const isDeleted =
           await this.kuVerificationRepository.deleteVerificationRequest(
             otherRequest.id,
@@ -261,6 +268,7 @@ export class AuthService {
         }
       }
     } else {
+      await this.fileService.deleteFile(request.imgDir);
       const isDeleted =
         await this.kuVerificationRepository.deleteVerificationRequest(id);
       if (!isDeleted) {
