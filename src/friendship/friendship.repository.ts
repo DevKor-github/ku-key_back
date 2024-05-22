@@ -108,12 +108,4 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
 
     return deleteResult.affected ? true : false;
   }
-
-  async getFriendshipByfriendshipId(
-    friendshipId: number,
-  ): Promise<FriendshipEntity> {
-    return await this.findOne({
-      where: { id: friendshipId },
-    });
-  }
 }

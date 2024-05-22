@@ -88,9 +88,12 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @Delete('received/:friendshipId')
   async rejectFriendshipRequest(
+    @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: string,
   ): Promise<RejectFriendshipResponseDto> {
+    const userId = user.id;
     return await this.friendshipService.rejectFriendshipRequest(
+      userId,
       Number(friendshipId),
     );
   }
@@ -98,8 +101,13 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @Delete('/:friendshipId')
   async deleteFriendship(
+    @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: string,
   ): Promise<DeleteFriendshipResponseDto> {
-    return await this.friendshipService.deleteFriendship(Number(friendshipId));
+    const userId = user.id;
+    return await this.friendshipService.deleteFriendship(
+      userId,
+      Number(friendshipId),
+    );
   }
 }
