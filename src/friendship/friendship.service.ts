@@ -25,7 +25,7 @@ export class FriendshipService {
   ) {}
 
   async getFriendList(
-    id: number,
+    userId: number,
     keyword?: string,
   ): Promise<GetFriendResponseDto[]> {
     let friendships: FriendshipEntity[];
@@ -33,11 +33,12 @@ export class FriendshipService {
     if (keyword) {
       friendships =
         await this.friendshipRepository.findFriendshipByUserIdAndKeyword(
-          id,
+          userId,
           keyword,
         );
     } else {
-      friendships = await this.friendshipRepository.findFriendshipsByUserId(id);
+      friendships =
+        await this.friendshipRepository.findFriendshipsByUserId(userId);
     }
 
     // 현재 친구가 없는 경우
@@ -47,7 +48,9 @@ export class FriendshipService {
 
     const friendList = friendships.map((friendship) => {
       const friend =
-        friendship.fromUser.id === id ? friendship.toUser : friendship.fromUser;
+        friendship.fromUser.id === userId
+          ? friendship.toUser
+          : friendship.fromUser;
       return {
         friendshipId: friendship.id,
         userId: friend.id,
@@ -129,10 +132,10 @@ export class FriendshipService {
   }
 
   async getWaitingFriendList(
-    id: number,
+    userId: number,
   ): Promise<GetWaitingFriendResponseDto[]> {
     const friendshipRequests =
-      await this.friendshipRepository.findReceivedFriendshipsByUserId(id);
+      await this.friendshipRepository.findReceivedFriendshipsByUserId(userId);
 
     if (friendshipRequests.length === 0) {
       return [];

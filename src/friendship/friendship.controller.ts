@@ -32,8 +32,8 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Query('keyword') keyword?: string,
   ): Promise<GetFriendResponseDto[]> {
-    const id = user.id;
-    return await this.friendshipService.getFriendList(id, keyword);
+    const userId = user.id;
+    return await this.friendshipService.getFriendList(userId, keyword);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -68,8 +68,8 @@ export class FriendshipController {
   async getWaitingFriendList(
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    const id = user.id;
-    return await this.friendshipService.getWaitingFriendList(id);
+    const userId = user.id;
+    return await this.friendshipService.getWaitingFriendList(userId);
   }
 
   @UseGuards(JwtAuthGuard)
