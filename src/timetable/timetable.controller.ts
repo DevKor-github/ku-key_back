@@ -17,7 +17,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
-import { UserTimeTableDto } from './dto/user-timetable.dto';
+import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
+import { GetTimeTableByTimeTableIdResponseDto } from './dto/timetableId-timetable.dto';
 
 @Controller('timetable')
 @UseGuards(JwtAuthGuard) // 시간표 관련 API는 인증 필요해서 JwtAuthGuard 사용
@@ -61,17 +62,22 @@ export class TimeTableController {
 
   // 유저id -> 유저가 가지고 있는 시간표 id 리스트, 각각의 학기, 대표 시간표 여부
   @Get('/user')
-  async getTimeTableByUserId(@User() user: AuthorizedUserDto) : Promise<UserTimeTableDto[]>{
+  async getTimeTableByUserId(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetTimeTableByUserIdResponseDto[]> {
     return await this.timeTableService.getTimeTableByUserId(user.id);
   }
 
   // 특정 시간표 가져오기 (1안, 2안)
   @Get('/:timeTableId')
-  async getTimeTable(
+  async getTimeTableByTimeTableId(
     @Param('timeTableId') timeTableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<TimeTableEntity> {
-    return await this.timeTableService.getTimeTable(timeTableId, user);
+  ): Promise<GetTimeTableByTimeTableIdResponseDto[]> {
+    return await this.timeTableService.getTimeTableByTimeTableId(
+      timeTableId,
+      user,
+    );
   }
 
   // 시간표 삭제

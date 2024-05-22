@@ -1,6 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class UserTimeTableDto {
+export class GetTimeTableByUserIdResponseDto {
   @IsNumber()
   @IsNotEmpty()
   tableId: number;
