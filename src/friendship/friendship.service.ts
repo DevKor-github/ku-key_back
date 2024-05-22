@@ -1,8 +1,8 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
@@ -185,7 +185,7 @@ export class FriendshipService {
     );
 
     if (!isUpdated) {
-      throw new NotImplementedException('친구 요청 수락에 실패했습니다.');
+      throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
     } else {
       return new UpdateFriendshipResponseDto(true);
     }
@@ -208,7 +208,7 @@ export class FriendshipService {
     const isDeleted =
       await this.friendshipRepository.deleteFriendship(friendshipId);
     if (!isDeleted) {
-      throw new NotFoundException('친구 요청 거절에 실패했습니다.');
+      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
     } else {
       return new RejectFriendshipResponseDto(true);
     }
@@ -231,7 +231,7 @@ export class FriendshipService {
     const isDeleted =
       await this.friendshipRepository.deleteFriendship(friendshipId);
     if (!isDeleted) {
-      throw new NotFoundException('친구 삭제에 실패했습니다.');
+      throw new InternalServerErrorException('친구 삭제에 실패했습니다.');
     } else {
       return new DeleteFriendshipResponseDto(true);
     }
