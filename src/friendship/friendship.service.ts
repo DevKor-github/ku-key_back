@@ -169,7 +169,7 @@ export class FriendshipService {
         friendshipId,
       );
 
-    if (friendship.fromUser.id !== userId && friendship.toUser.id !== userId) {
+    if (friendship.toUser.id !== userId) {
       throw new BadRequestException(
         '나에게 온 친구 요청만 수락할 수 있습니다.',
       );
@@ -192,19 +192,30 @@ export class FriendshipService {
   }
 
   async rejectFriendshipRequest(
+    userId: number,
     friendshipId: number,
   ): Promise<RejectFriendshipResponseDto> {
     const friendship =
-      await this.friendshipRepository.getFriendshipByfriendshipId(friendshipId);
+      await this.friendshipRepository.findFriendshipByFriendshipId(
+        friendshipId,
+      );
+
     if (!friendship) {
       throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
     }
 
-    if (friendship.areWeFriend) {
+    if (friendship.toUser.id !== userId) {
       throw new BadRequestException(
-        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+        '나에게 온 친구 요청만 거절할 수 있습니다.',
       );
     }
+
+    if (friendship.toUser.id)
+      if (friendship.areWeFriend) {
+        throw new BadRequestException(
+          '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+        );
+      }
     const isDeleted =
       await this.friendshipRepository.deleteFriendship(friendshipId);
     if (!isDeleted) {
@@ -215,13 +226,20 @@ export class FriendshipService {
   }
 
   async deleteFriendship(
+    userId: number,
     friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
     const friendship =
-      await this.friendshipRepository.getFriendshipByfriendshipId(friendshipId);
+      await this.friendshipRepository.findFriendshipByFriendshipId(
+        friendshipId,
+      );
 
     if (!friendship) {
       throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+    }
+
+    if (friendship.toUser.id !== userId && friendship.fromUser.id !== userId) {
+      throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
     }
 
     if (!friendship.areWeFriend) {
