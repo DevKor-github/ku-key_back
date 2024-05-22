@@ -96,6 +96,12 @@ export class FriendshipService {
 
     const toUserId = toUser.id;
 
+    if (fromUserId === toUserId) {
+      throw new BadRequestException(
+        '자기 자신에게는 친구 요청을 보낼 수 없습니다.',
+      );
+    }
+
     const checkFriendship =
       await this.friendshipRepository.findFriendshipBetweenUsers(
         fromUserId,
@@ -115,7 +121,7 @@ export class FriendshipService {
       );
 
       if (!friendship) {
-        return new SendFriendshipResponseDto(false);
+        throw new BadRequestException('친구 요청 보내기에 실패했습니다.');
       } else {
         return new SendFriendshipResponseDto(true);
       }
