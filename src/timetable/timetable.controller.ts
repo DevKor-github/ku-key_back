@@ -80,6 +80,17 @@ export class TimeTableController {
     );
   }
 
+   // 시간표에 등록한 강의 삭제
+   @Delete('/course')
+   async deleteTimeTableCourse(
+    @Query('timeTableId') timeTableId: number,
+    @Query('courseId') courseId: number,
+    @User() user: AuthorizedUserDto,
+   ) : Promise<void> {
+      return await this.timeTableService.deleteTimeTableCourse(timeTableId, courseId, user);
+   }
+
+
   // 시간표 삭제
   @Delete('/:timeTableId')
   async deleteTimeTable(
