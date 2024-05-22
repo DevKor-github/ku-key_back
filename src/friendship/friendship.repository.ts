@@ -20,6 +20,15 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     return await this.save(friendship);
   }
 
+  async findFriendshipByFriendshipId(
+    friendshipId: number,
+  ): Promise<FriendshipEntity> {
+    return await this.findOne({
+      where: { id: friendshipId },
+      relations: ['fromUser', 'toUser'],
+    });
+  }
+
   async findFriendshipBetweenUsers(
     fromUserId: number,
     toUserId: number,

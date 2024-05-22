@@ -75,9 +75,12 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @Patch('received/:friendshipId')
   async acceptFriendshipRequest(
+    @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: string,
   ): Promise<UpdateFriendshipResponseDto> {
+    const userId = user.id;
     return await this.friendshipService.acceptFriendshipRequest(
+      userId,
       Number(friendshipId),
     );
   }
