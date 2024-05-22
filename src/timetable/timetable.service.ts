@@ -242,6 +242,39 @@ export class TimeTableService {
     }
   }
 
+  // 시간표에 등록한 강의 삭제
+  async deleteTimeTableCourse(
+    timeTableId: number,
+    courseId: number,
+    user: AuthorizedUserDto,
+  ): Promise<void> {
+    try {
+      // 해당 유저가 만든 시간표인지 확인
+      const timeTable = await this.timeTableRepository.findOne({
+        where: { id: timeTableId, userId: user.id },
+      });
+
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+
+      const timeTableCourse = await this.timeTableCourseRepository.findOne({
+        where: { timeTableId, courseId },
+      });
+      if (!timeTableCourse) {
+        throw new NotFoundException('There is no course in this timetable!');
+      }
+
+      await this.timeTableCourseRepository.softDelete({
+        timeTableId,
+        courseId,
+      });
+    } catch (error) {
+      console.error('Failed to delete TimeTableCourse: ', error);
+      throw error;
+    }
+  }
+
   async deleteTimeTable(
     timeTableId: number,
     user: AuthorizedUserDto,
