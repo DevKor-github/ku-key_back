@@ -9,9 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
-import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -23,13 +21,6 @@ import { Response } from 'express';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Post()
-  async register(
-    @Body() createUserDto: CreateUserRequestDto,
-  ): Promise<CreateUserResponseDto> {
-    return await this.userService.createUser(createUserDto);
-  }
 
   @Post('username/:username')
   async checkUsernamePossible(

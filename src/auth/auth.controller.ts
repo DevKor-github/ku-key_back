@@ -4,6 +4,7 @@ import {
   Controller,
   Param,
   Post,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -22,11 +23,12 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-request.dto';
 ('./guards/jwt-auth.guard');
-import { VerifyAuthGuard } from './guards/verify-auth.guard';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { VerifyScreenshotRequestDto } from './dto/verify-screenshot-request.dto';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
+import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -60,21 +62,18 @@ export class AuthController {
     return await this.authService.verifyEmail(body.email, body.verifyToken);
   }
 
-  @UseGuards(VerifyAuthGuard)
-  @Post('request-screenshot-verification')
+  @Post('sign-up')
   @UseInterceptors(FileInterceptor('screenshot'))
-  async requestScreenshotVerification(
+  async createUserandScreenshotRequest(
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: ScreenshotVerificationRequestDto,
-    @User() user: AuthorizedUserDto,
   ): Promise<VerificationResponseDto> {
     if (!screenshot) {
       throw new BadRequestException('screenshot should be uploaded');
     }
-    return await this.authService.createScreenshotRequest(
+    return await this.authService.createUserandScreenshotRequest(
       screenshot,
-      body.studentNumber,
-      user.id,
+      body,
     );
   }
 
@@ -93,5 +92,17 @@ export class AuthController {
     @Body() body: VerifyScreenshotRequestDto,
   ): Promise<VerifyScreenshotResponseDto> {
     return await this.authService.verifyScreenshotReqeust(id, body.verify);
+  }
+
+  @Post('studentNumber/:studentNumber')
+  async checkStudentNumberPossible(
+    @Param('studentNumber') studentNumber: number,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto =
+      await this.authService.checkStudentNumberPossible(studentNumber);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
   }
 }
