@@ -61,22 +61,30 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       .where('friendship.areWeFriend = :areWeFriend', { areWeFriend: true })
       .andWhere(
         new Brackets((qb) => {
-          qb.where('fromUser.id = :userId', { userId }).orWhere(
-            'toUser.id = :userId',
-            { userId },
-          );
-        }),
-      )
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('fromUser.username LIKE :keyword', {
-            keyword: `%${keyword}%`,
-          })
-            .orWhere('fromUser.name LIKE :keyword', { keyword: `%${keyword}%` })
-            .orWhere('toUser.username LIKE :keyword', {
-              keyword: `%${keyword}%`,
-            })
-            .orWhere('toUser.name LIKE :keyword', { keyword: `%${keyword}%` });
+          qb.where('fromUser.id = :userId', { userId })
+            .andWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('toUser.username LIKE :keyword', {
+                    keyword: `%${keyword}%`,
+                  })
+                  .orWhere('toUser.name LIKE :keyword', {
+                    keyword: `%${keyword}%`,
+                  });
+              }),
+            )
+            .orWhere('toUser.id = :userId', { userId })
+            .andWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('fromUser.username LIKE :keyword', {
+                    keyword: `%${keyword}%`,
+                  })
+                  .orWhere('fromUser.name LIKE :keyword', {
+                    keyword: `%${keyword}%`,
+                  });
+              }),
+            );
         }),
       )
       .getMany();
