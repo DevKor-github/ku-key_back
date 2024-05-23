@@ -19,6 +19,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
 import { GetTimeTableByTimeTableIdResponseDto } from './dto/timetableId-timetable.dto';
+import { UpdateTimeTableNameDto } from './dto/update-timetable-name.dto';
 
 @Controller('timetable')
 @UseGuards(JwtAuthGuard) // 시간표 관련 API는 인증 필요해서 JwtAuthGuard 사용
@@ -68,7 +69,7 @@ export class TimeTableController {
     return await this.timeTableService.getTimeTableByUserId(user.id);
   }
 
-  // 특정 시간표 가져오기 (1안, 2안)
+  // 특정 시간표 가져오기
   @Get('/:timeTableId')
   async getTimeTableByTimeTableId(
     @Param('timeTableId') timeTableId: number,
@@ -80,16 +81,19 @@ export class TimeTableController {
     );
   }
 
-   // 시간표에 등록한 강의 삭제
-   @Delete('/course')
-   async deleteTimeTableCourse(
+  // 시간표에 등록한 강의 삭제
+  @Delete('/course')
+  async deleteTimeTableCourse(
     @Query('timeTableId') timeTableId: number,
     @Query('courseId') courseId: number,
     @User() user: AuthorizedUserDto,
-   ) : Promise<void> {
-      return await this.timeTableService.deleteTimeTableCourse(timeTableId, courseId, user);
-   }
-
+  ): Promise<void> {
+    return await this.timeTableService.deleteTimeTableCourse(
+      timeTableId,
+      courseId,
+      user,
+    );
+  }
 
   // 시간표 삭제
   @Delete('/:timeTableId')
@@ -98,6 +102,20 @@ export class TimeTableController {
     @User() user: AuthorizedUserDto,
   ): Promise<void> {
     return await this.timeTableService.deleteTimeTable(timeTableId, user);
+  }
+
+  // 시간표 이름 변경
+  @Patch('/name/:timeTableId')
+  async updateTimeTableName(
+    @Param('timeTableId') timeTableId: number,
+    @User() user: AuthorizedUserDto,
+    @Body() updateTimeTableNameDto: UpdateTimeTableNameDto,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableService.updateTimeTableName(
+      timeTableId,
+      user,
+      updateTimeTableNameDto.tableName,
+    );
   }
 
   // 대표 시간표 변경

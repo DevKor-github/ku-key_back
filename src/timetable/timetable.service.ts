@@ -338,6 +338,31 @@ export class TimeTableService {
     });
   }
 
+  // 시간표 이름 변경
+  async updateTimeTableName(
+    tileTableId: number,
+    user: AuthorizedUserDto,
+    tableName: string,
+  ): Promise<TimeTableEntity> {
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: {
+          id: tileTableId,
+          userId: user.id,
+        },
+      });
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+
+      timeTable.tableName = tableName;
+      return await this.timeTableRepository.save(timeTable);
+    } catch (error) {
+      console.error('Failed to update TimeTable name: ', error);
+      throw error;
+    }
+  }
+
   // 기존의 대표시간표의 mainTimeTable column을 false로 변경하고, 새로운 시간표의 mainTimeTable column을 true로 변경
   async updateMainTimeTable(
     timeTableId: number,
