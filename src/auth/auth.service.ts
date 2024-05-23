@@ -19,14 +19,14 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
-import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
+import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
 import { FileService } from './file.service';
 import { UserService } from 'src/user/user.service';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
-import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-request.dto';
+import { SignUpRequestDto } from './dto/sign-up-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -171,8 +171,8 @@ export class AuthService {
 
   async createUserandScreenshotRequest(
     screenshot: Express.Multer.File,
-    requestDto: ScreenshotVerificationRequestDto,
-  ): Promise<VerificationResponseDto> {
+    requestDto: SignUpRequestDto,
+  ): Promise<SignUpResponseDto> {
     //유저생성
     const user = await this.userService.createUser({
       email: requestDto.email,
@@ -195,7 +195,7 @@ export class AuthService {
       user,
     );
 
-    return new ScreenshotVerificationResponseDto(true, studentNumber);
+    return new SignUpResponseDto(true, studentNumber);
   }
 
   validateAdmin(id: string, password: string): boolean {
