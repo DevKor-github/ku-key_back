@@ -21,7 +21,7 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-request.dto';
+import { SignUpRequestDto } from './dto/sign-up-request.dto';
 ('./guards/jwt-auth.guard');
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { VerifyScreenshotRequestDto } from './dto/verify-screenshot-request.dto';
@@ -29,6 +29,7 @@ import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dt
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { Response } from 'express';
+import { SignUpResponseDto } from './dto/sign-up-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -66,8 +67,8 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('screenshot'))
   async createUserandScreenshotRequest(
     @UploadedFile() screenshot: Express.Multer.File,
-    @Body() body: ScreenshotVerificationRequestDto,
-  ): Promise<VerificationResponseDto> {
+    @Body() body: SignUpRequestDto,
+  ): Promise<SignUpResponseDto> {
     if (!screenshot) {
       throw new BadRequestException('screenshot should be uploaded');
     }
