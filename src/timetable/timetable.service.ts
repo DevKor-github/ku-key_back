@@ -45,7 +45,7 @@ export class TimeTableService {
 
       const course = await this.courseRepository.findOne({
         where: { id: courseId },
-        relations: ['courseDetail'],
+        relations: ['courseDetails'],
       });
       if (!course) {
         throw new NotFoundException('Course not found');
@@ -60,11 +60,17 @@ export class TimeTableService {
         throw new ConflictException('Already exists in TimeTable');
       }
 
-      // 시간표에 존재하는 강의들이랑 추가하려는 강의랑 시간 겹치는지 확인
-      const isConflict = await this.checkCourseConflict(timeTableId, courseId);
+      // 시간표에 존재하는 강의와 추가하려는 강의가 시간 겹치는지 확인
+      const isConflict = await this.checkTimeConflict(
+        timeTableId,
+        courseId,
+        undefined,
+      );
 
       if (isConflict) {
-        throw new ConflictException('Course conflicts with existing courses');
+        throw new ConflictException(
+          'Course conflicts with existing courses and schedules',
+        );
       }
 
       const timeTableCourse = this.timeTableCourseRepository.create({
@@ -81,65 +87,82 @@ export class TimeTableService {
     }
   }
 
-  async checkCourseConflict(
+  async checkTimeConflict(
     timeTableId: number,
-    courseId: number,
+    courseId?: number,
+    scheduleId?: number,
   ): Promise<boolean> {
-    const existingCoursesInfo = await this.getCourseDaysAndPeriods(timeTableId);
+    const existingTableInfo = await this.getTableInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
     const newCourseInfo = await this.courseDetailRepository.find({
       where: { courseId: courseId },
     });
 
     for (const newDetail of newCourseInfo) {
-      for (const existingInfo of existingCoursesInfo) {
+      for (const existingInfo of existingTableInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingPeriod(existingInfo.period, newDetail.period)
+          this.isConflictingTime(
+            existingInfo.startTime,
+            existingInfo.endTime,
+            newDetail.startTime,
+            newDetail.endTime,
+          )
         ) {
-          return true; // 겹치는 교시 존재
+          return true; // 겹치는 시간 존재
         }
       }
     }
 
-    return false; // 겹치는 교시 없음
+    return false; // 겹치는 시간 없음
   }
 
-  async getCourseDaysAndPeriods(
+  async getTableInfo(
     timeTableId: number,
-  ): Promise<{ day: string; period: string }[]> {
-    const courseDaysAndPeriods = await this.timeTableCourseRepository
+  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+    const daysAndTimes = await this.timeTableCourseRepository
       .createQueryBuilder('ttc') //time_table_course
       .leftJoinAndSelect('ttc.course', 'course')
-      .leftJoinAndSelect('course.courseDetail', 'courseDetail')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetail')
       .where('ttc.timeTableId = :timeTableId', { timeTableId })
-      .select(['courseDetail.day', 'courseDetail.period'])
+      .select([
+        'courseDetail.day as day',
+        'courseDetail.startTime as startTime',
+        'courseDetail.endTime as endTime',
+      ])
       .getRawMany();
 
-    const result = courseDaysAndPeriods.map((obj) => ({
-      day: obj.courseDetail_day,
-      period: obj.courseDetail_period,
+    const result = daysAndTimes.map((obj) => ({
+      day: obj.day,
+      startTime: obj.startTime,
+      endTime: obj.endTime,
     }));
 
     return result;
   }
 
-  private isConflictingPeriod(
-    existingPeriod: string,
-    newPeriod: string,
+  private isConflictingTime(
+    existingStartTime: string,
+    existingEndTime: string,
+    newStartTime: string,
+    newEndTime: string,
   ): boolean {
-    const existingRange = existingPeriod.split('-').map(Number);
-    const newRange = newPeriod.split('-').map(Number);
+    // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
+    const timeToNumber = (time: string): number => {
+      const [hours, minutes, seconds] = time.split(':').map(Number);
+      return hours * 3600 + minutes * 60 + seconds;
+    };
 
-    for (let i = newRange[0]; i <= newRange[newRange.length - 1]; i++) {
-      if (
-        i >= existingRange[0] &&
-        i <= existingRange[existingRange.length - 1]
-      ) {
-        return true; // 겹치는 교시가 존재
-      }
-    }
+    const existingStart = timeToNumber(existingStartTime);
+    const existingEnd = timeToNumber(existingEndTime);
+    const newStart = timeToNumber(newStartTime);
+    const newEnd = timeToNumber(newEndTime);
 
-    return false; // 겹치는 교시 없음
+    // 시간이 겹치는지 확인
+    return (
+      (newStart >= existingStart && newStart < existingEnd) ||
+      (newEnd > existingStart && newEnd <= existingEnd) ||
+      (newStart <= existingStart && newEnd >= existingEnd)
+    );
   }
 
   async createTimeTable(
