@@ -210,12 +210,11 @@ export class FriendshipService {
       );
     }
 
-    if (friendship.toUser.id)
-      if (friendship.areWeFriend) {
-        throw new BadRequestException(
-          '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
-        );
-      }
+    if (friendship.areWeFriend) {
+      throw new BadRequestException(
+        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+      );
+    }
     const isDeleted =
       await this.friendshipRepository.deleteFriendship(friendshipId);
     if (!isDeleted) {
