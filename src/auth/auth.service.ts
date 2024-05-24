@@ -19,12 +19,14 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
-import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
+import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
 import { FileService } from './file.service';
 import { UserService } from 'src/user/user.service';
+import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
+import { SignUpRequestDto } from './dto/sign-up-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -149,12 +151,9 @@ export class AuthService {
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 
-  async createScreenshotRequest(
-    screenshot: Express.Multer.File,
+  async checkStudentNumberPossible(
     studentNumber: number,
-    userId: number,
-  ): Promise<VerificationResponseDto> {
-    //이미 등록된 학번인지 확인
+  ): Promise<checkPossibleResponseDto> {
     const requests =
       await this.kuVerificationRepository.findRequestsByStudentNumber(
         studentNumber,
@@ -162,36 +161,26 @@ export class AuthService {
     if (requests) {
       for (const request of requests) {
         if (request.user.isVerified) {
-          throw new BadRequestException('student number already exists!');
+          return new checkPossibleResponseDto(false);
         }
       }
     }
 
-    //이미 요청을 보냈던 유저인지 확인(그렇다면 원래 요청 수정)
-    const user = await this.userService.findUserById(userId);
-    const userRequest =
-      await this.kuVerificationRepository.findRequestByUser(user);
-    if (userRequest) {
-      await this.fileService.deleteFile(userRequest.imgDir);
+    return new checkPossibleResponseDto(true);
+  }
 
-      const filename = await this.fileService.uploadFile(
-        screenshot,
-        'KuVerification',
-        'screenshot',
-      );
+  async createUserandScreenshotRequest(
+    screenshot: Express.Multer.File,
+    requestDto: SignUpRequestDto,
+  ): Promise<SignUpResponseDto> {
+    //유저생성
+    const user = await this.userService.createUser({
+      email: requestDto.email,
+      password: requestDto.password,
+      username: requestDto.username,
+    });
 
-      const isModified =
-        await this.kuVerificationRepository.modifyVerificationRequest(
-          userRequest,
-          filename,
-          studentNumber,
-          user,
-        );
-      if (!isModified) {
-        throw new NotImplementedException('verify request failed!');
-      }
-      return new ScreenshotVerificationResponseDto(true, studentNumber);
-    }
+    const studentNumber = requestDto.studentNumber;
 
     //요청 생성
     const filename = await this.fileService.uploadFile(
@@ -206,7 +195,7 @@ export class AuthService {
       user,
     );
 
-    return new ScreenshotVerificationResponseDto(true, studentNumber);
+    return new SignUpResponseDto(true, studentNumber);
   }
 
   validateAdmin(id: string, password: string): boolean {

@@ -4,6 +4,7 @@ import {
   Controller,
   Param,
   Post,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -20,17 +21,23 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ScreenshotVerificationRequestDto } from './dto/screenshot-verification-request.dto';
+import { SignUpRequestDto } from './dto/sign-up-request.dto';
 ('./guards/jwt-auth.guard');
-import { VerifyAuthGuard } from './guards/verify-auth.guard';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { VerifyScreenshotRequestDto } from './dto/verify-screenshot-request.dto';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
+import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
+import { Response } from 'express';
+import { SignUpResponseDto } from './dto/sign-up-response.dto';
+import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -60,21 +67,18 @@ export class AuthController {
     return await this.authService.verifyEmail(body.email, body.verifyToken);
   }
 
-  @UseGuards(VerifyAuthGuard)
-  @Post('request-screenshot-verification')
+  @Post('sign-up')
   @UseInterceptors(FileInterceptor('screenshot'))
-  async requestScreenshotVerification(
+  async createUserandScreenshotRequest(
     @UploadedFile() screenshot: Express.Multer.File,
-    @Body() body: ScreenshotVerificationRequestDto,
-    @User() user: AuthorizedUserDto,
-  ): Promise<VerificationResponseDto> {
+    @Body() body: SignUpRequestDto,
+  ): Promise<SignUpResponseDto> {
     if (!screenshot) {
       throw new BadRequestException('screenshot should be uploaded');
     }
-    return await this.authService.createScreenshotRequest(
+    return await this.authService.createUserandScreenshotRequest(
       screenshot,
-      body.studentNumber,
-      user.id,
+      body,
     );
   }
 
@@ -93,5 +97,39 @@ export class AuthController {
     @Body() body: VerifyScreenshotRequestDto,
   ): Promise<VerifyScreenshotResponseDto> {
     return await this.authService.verifyScreenshotReqeust(id, body.verify);
+  }
+
+  @Post('student-number/:studentNumber')
+  async checkStudentNumberPossible(
+    @Param('studentNumber') studentNumber: number,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto =
+      await this.authService.checkStudentNumberPossible(studentNumber);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
+  }
+
+  @Post('username/:username')
+  async checkUsernamePossible(
+    @Param('username') username: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto = await this.userService.checkUsernamePossible(username);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
+  }
+
+  @Post('email/:email')
+  async checkEmailPossible(
+    @Param('email') email: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto = await this.userService.checkEmailPossible(email);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
   }
 }
