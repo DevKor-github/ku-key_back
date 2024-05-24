@@ -95,7 +95,7 @@ export class AuthController {
     return await this.authService.verifyScreenshotReqeust(id, body.verify);
   }
 
-  @Post('studentNumber/:studentNumber')
+  @Post('student-number/:studentNumber')
   async checkStudentNumberPossible(
     @Param('studentNumber') studentNumber: number,
     @Res({ passthrough: true }) res: Response,
