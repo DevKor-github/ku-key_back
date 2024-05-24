@@ -8,6 +8,7 @@ import {
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
 import { FriendshipEntity } from './friendship.entity';
+import { TimeTableEntity } from './timetable.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -65,4 +66,7 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
   receivedFriendRequests: FriendshipEntity[];
+
+  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
+  timeTables: TimeTableEntity[];
 }
