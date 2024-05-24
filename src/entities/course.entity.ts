@@ -42,11 +42,11 @@ export class CourseEntity extends CommonEntity {
     () => CourseDetailEntity,
     (courseDetailEntity) => courseDetailEntity.course,
   )
-  courseDetail: CourseDetailEntity[];
+  courseDetails: CourseDetailEntity[];
 
   @OneToMany(
     () => TimeTableCourseEntity,
     (timeTableCourseEntity) => timeTableCourseEntity.course,
   )
-  timeTableCourse: TimeTableCourseEntity[];
+  timeTableCourses: TimeTableCourseEntity[];
 }

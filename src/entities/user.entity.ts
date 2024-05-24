@@ -2,8 +2,8 @@ import {
   Column,
   Entity,
   OneToOne,
-  PrimaryGeneratedColumn,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
@@ -53,12 +53,13 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
-  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
-  timeTable: TimeTableEntity[];
   @OneToOne(
     () => KuVerificationEntity,
     (kuVerification) => kuVerification.user,
     { cascade: true },
   )
   kuVerification: KuVerificationEntity;
+
+  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
+  timeTables: TimeTableEntity[];
 }

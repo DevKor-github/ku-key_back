@@ -31,7 +31,7 @@ export class TimeTableEntity extends CommonEntity {
   mainTimeTable: boolean;
 
   @JoinColumn({ name: 'userId' })
-  @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTable, {
+  @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTables, {
     onDelete: 'CASCADE',
   })
   user: UserEntity;
@@ -40,5 +40,5 @@ export class TimeTableEntity extends CommonEntity {
     () => TimeTableCourseEntity,
     (timeTableCourseEntity) => timeTableCourseEntity.timeTable,
   )
-  timeTableCourse: TimeTableCourseEntity[];
+  timeTableCourses: TimeTableCourseEntity[];
 }

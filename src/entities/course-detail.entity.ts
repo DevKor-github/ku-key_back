@@ -32,7 +32,7 @@ export class CourseDetailEntity extends CommonEntity {
   courseId: number;
 
   @JoinColumn({ name: 'courseId' })
-  @ManyToOne(() => CourseEntity, (courseEntity) => courseEntity.courseDetail, {
+  @ManyToOne(() => CourseEntity, (courseEntity) => courseEntity.courseDetails, {
     onDelete: 'CASCADE',
   })
   course: CourseEntity;

@@ -197,10 +197,10 @@ export class TimeTableService {
         throw new NotFoundException('TimeTable not found');
       }
 
-      const GetTimeTableByTimeTableIdResponse = timeTable.timeTableCourse
+      const GetTimeTableByTimeTableIdResponse = timeTable.timeTableCourses
         .map((courseEntry) => {
           const { professorName, courseName, courseCode } = courseEntry.course;
-          return courseEntry.course.courseDetail.map((detailEntry) => {
+          return courseEntry.course.courseDetails.map((detailEntry) => {
             const { day, startTime, endTime, classroom } = detailEntry;
             return {
               professorName,
@@ -328,14 +328,19 @@ export class TimeTableService {
     timeTableDto: TimeTableDto,
     user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
-    return await this.timeTableRepository.findOne({
-      where: {
-        userId: user.id,
-        mainTimeTable: true,
-        year: timeTableDto.year,
-        semester: timeTableDto.semester,
-      },
-    });
+    try {
+      return await this.timeTableRepository.findOne({
+        where: {
+          userId: user.id,
+          mainTimeTable: true,
+          year: timeTableDto.year,
+          semester: timeTableDto.semester,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to get MainTimeTable: ', error);
+      throw error;
+    }
   }
 
   // 시간표 이름 변경
