@@ -330,7 +330,7 @@ export class TimeTableService {
     user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
     try {
-      return await this.timeTableRepository.findOne({
+      const mainTimeTable = await this.timeTableRepository.findOne({
         where: {
           userId: user.id,
           mainTimeTable: true,
@@ -338,6 +338,11 @@ export class TimeTableService {
           semester: timeTableDto.semester,
         },
       });
+
+      if (!mainTimeTable) {
+        throw new NotFoundException('MainTimeTable not found');
+      }
+      return mainTimeTable;
     } catch (error) {
       console.error('Failed to get MainTimeTable: ', error);
       throw error;
