@@ -53,7 +53,7 @@ export class TimeTableController {
   }
 
   // 대표시간표 가져오기
-  @Get('/mainTimeTable')
+  @Get('/main-timetable')
   async getMainTimeTable(
     @Body() timeTableDto: TimeTableDto,
     @User() user: AuthorizedUserDto,
@@ -109,12 +109,12 @@ export class TimeTableController {
   async updateTimeTableName(
     @Param('timeTableId') timeTableId: number,
     @User() user: AuthorizedUserDto,
-    @Body() updateTimeTableNameDto : UpdateTimeTableNameDto,
+    @Body() updateTimeTableNameDto: UpdateTimeTableNameDto,
   ): Promise<TimeTableEntity> {
     return await this.timeTableService.updateTimeTableName(
       timeTableId,
       user,
-      updateTime
+      updateTimeTableNameDto.tableName,
     );
   }
 
