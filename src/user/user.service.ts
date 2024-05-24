@@ -8,7 +8,6 @@ import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash } from 'bcrypt';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
-import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 import { SetProfileRequestDto } from './dto/set-profile-request.dto';
@@ -21,9 +20,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async createUser(
-    createUserDto: CreateUserRequestDto,
-  ): Promise<CreateUserResponseDto> {
+  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findUserByEmail(
       createUserDto.email,
     );
@@ -40,12 +37,10 @@ export class UserService {
 
     const hashedPassword = await hash(createUserDto.password, 10);
 
-    await this.userRepository.createUser({
+    return await this.userRepository.createUser({
       ...createUserDto,
       password: hashedPassword,
     });
-
-    return new CreateUserResponseDto(true);
   }
 
   async checkUsernamePossible(
