@@ -10,7 +10,7 @@ import { CourseRepository } from 'src/course/course.repository';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TimeTableEntity]),AuthModule],
+  imports: [TypeOrmModule.forFeature([TimeTableEntity]), AuthModule],
   controllers: [TimeTableController],
   providers: [
     TimeTableService,
