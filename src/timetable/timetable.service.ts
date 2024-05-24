@@ -345,14 +345,14 @@ export class TimeTableService {
 
   // 시간표 이름 변경
   async updateTimeTableName(
-    tileTableId: number,
+    timeTableId: number,
     user: AuthorizedUserDto,
     tableName: string,
   ): Promise<TimeTableEntity> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: {
-          id: tileTableId,
+          id: timeTableId,
           userId: user.id,
         },
       });
