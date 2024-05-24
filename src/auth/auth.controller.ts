@@ -30,10 +30,14 @@ import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-veri
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { Response } from 'express';
 import { SignUpResponseDto } from './dto/sign-up-response.dto';
+import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -102,6 +106,28 @@ export class AuthController {
   ): Promise<checkPossibleResponseDto> {
     const responseDto =
       await this.authService.checkStudentNumberPossible(studentNumber);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
+  }
+
+  @Post('username/:username')
+  async checkUsernamePossible(
+    @Param('username') username: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto = await this.userService.checkUsernamePossible(username);
+    const code = responseDto.possible ? 200 : 403;
+    res.status(code);
+    return responseDto;
+  }
+
+  @Post('email/:email')
+  async checkEmailPossible(
+    @Param('email') email: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<checkPossibleResponseDto> {
+    const responseDto = await this.userService.checkEmailPossible(email);
     const code = responseDto.possible ? 200 : 403;
     res.status(code);
     return responseDto;
