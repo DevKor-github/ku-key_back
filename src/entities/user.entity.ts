@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
+import { FriendshipEntity } from './friendship.entity';
 import { TimeTableEntity } from './timetable.entity';
 
 @Entity('user')
@@ -59,6 +60,12 @@ export class UserEntity extends CommonEntity {
     { cascade: true },
   )
   kuVerification: KuVerificationEntity;
+
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser)
+  sentFriendRequests: FriendshipEntity[];
+
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
+  receivedFriendRequests: FriendshipEntity[];
 
   @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
   timeTables: TimeTableEntity[];
