@@ -235,6 +235,7 @@ export class TimeTableService {
         semester: table.semester,
         year: table.year,
         mainTimeTable: table.mainTimeTable,
+        tableName: table.tableName,
       }));
     } catch (error) {
       console.error('Failed to get TimeTable: ', error);

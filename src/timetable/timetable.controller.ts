@@ -61,7 +61,7 @@ export class TimeTableController {
     return await this.timeTableService.getMainTimeTable(timeTableDto, user);
   }
 
-  // 유저id -> 유저가 가지고 있는 시간표 id 리스트, 각각의 학기, 대표 시간표 여부
+  // 유저id -> 유저가 가지고 있는 시간표 id 리스트, 각각의 학기, 대표 시간표 여부, 시간표 이름
   @Get('/user')
   async getTimeTableByUserId(
     @User() user: AuthorizedUserDto,

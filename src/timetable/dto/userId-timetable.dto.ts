@@ -16,4 +16,8 @@ export class GetTimeTableByUserIdResponseDto {
   @IsBoolean()
   @IsNotEmpty()
   mainTimeTable: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  tableName: string;
 }
