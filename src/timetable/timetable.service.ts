@@ -1,8 +1,10 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { TimeTableRepository } from './timetable.repository';
 import { CourseRepository } from 'src/course/course.repository';
@@ -19,6 +21,7 @@ import {
   DayType,
   GetTimeTableByTimeTableIdResponseDto,
 } from './dto/timetableId-timetable.dto';
+import { ScheduleRepository } from 'src/schedule/schedule.repository';
 
 @Injectable()
 export class TimeTableService {
@@ -28,8 +31,11 @@ export class TimeTableService {
     private readonly timeTableCourseRepository: TimeTableCourseRepository,
     private readonly courseDetailRepository: CourseDetailRepository,
     private readonly dataSource: DataSource,
+    @Inject(forwardRef(() => ScheduleRepository))
+    private readonly scheduleRepository: ScheduleRepository,
   ) {}
 
+  // 시간표에 강의 추가 -> 강의랑 개인 스케쥴 둘 다 확인 필요
   async createTimeTableCourse(
     timeTableId: number,
     courseId: number,
@@ -60,12 +66,8 @@ export class TimeTableService {
         throw new ConflictException('Already exists in TimeTable');
       }
 
-      // 시간표에 존재하는 강의와 추가하려는 강의가 시간 겹치는지 확인
-      const isConflict = await this.checkTimeConflict(
-        timeTableId,
-        courseId,
-        undefined,
-      );
+      // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
+      const isConflict = await this.checkTimeConflict(timeTableId, courseId);
 
       if (isConflict) {
         throw new ConflictException(
@@ -89,16 +91,34 @@ export class TimeTableService {
 
   async checkTimeConflict(
     timeTableId: number,
-    courseId?: number,
-    scheduleId?: number,
+    courseId: number,
   ): Promise<boolean> {
-    const existingTableInfo = await this.getTableInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
+    // 강의시간 겹치는지 안겹치는지 확인
+    const existingCourseInfo = await this.getTableCourseInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
     const newCourseInfo = await this.courseDetailRepository.find({
       where: { courseId: courseId },
     });
 
     for (const newDetail of newCourseInfo) {
-      for (const existingInfo of existingTableInfo) {
+      for (const existingInfo of existingCourseInfo) {
+        if (
+          existingInfo.day === newDetail.day &&
+          this.isConflictingTime(
+            existingInfo.startTime,
+            existingInfo.endTime,
+            newDetail.startTime,
+            newDetail.endTime,
+          )
+        ) {
+          return true; // 겹치는 시간 존재
+        }
+      }
+    }
+
+    // 스케줄 시간 겹치는지 안겹치는지 확인
+    const existingScheduleInfo = await this.getTableScheduleInfo(timeTableId);
+    for (const newDetail of newCourseInfo) {
+      for (const existingInfo of existingScheduleInfo) {
         if (
           existingInfo.day === newDetail.day &&
           this.isConflictingTime(
@@ -116,7 +136,7 @@ export class TimeTableService {
     return false; // 겹치는 시간 없음
   }
 
-  async getTableInfo(
+  async getTableCourseInfo(
     timeTableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
     const daysAndTimes = await this.timeTableCourseRepository
@@ -138,6 +158,21 @@ export class TimeTableService {
     }));
 
     return result;
+  }
+
+  async getTableScheduleInfo(
+    timeTableId: number,
+  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+    const schedules = await this.scheduleRepository.find({
+      where: { timeTableId },
+      select: ['day', 'startTime', 'endTime'],
+    });
+
+    return schedules.map((schedule) => ({
+      day: schedule.day,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+    }));
   }
 
   private isConflictingTime(

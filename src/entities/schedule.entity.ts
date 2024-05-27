@@ -22,10 +22,10 @@ export class ScheduleEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   day: string;
 
-  @Column('time', { nullable: true })
+  @Column('time', { nullable: false })
   startTime: string;
 
-  @Column('time', { nullable: true })
+  @Column('time', { nullable: false })
   endTime: string;
 
   @Column('varchar', { nullable: true })
