@@ -44,4 +44,25 @@ export class ScheduleService {
       throw error;
     }
   }
+
+  async deleteSchedule(
+    scheduleId: number,
+    user: AuthorizedUserDto,
+  ): Promise<void> {
+    try {
+      const schedule = await this.scheduleRepository.findOne({
+        where: { id: scheduleId, timeTable: { userId: user.id } },
+        relations: ['timeTable'],
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Schedule not found');
+      }
+
+      await this.scheduleRepository.softDelete(scheduleId);
+    } catch (error) {
+      console.error('Fail to delete schedule', error);
+      throw error;
+    }
+  }
 }

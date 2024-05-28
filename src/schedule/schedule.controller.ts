@@ -1,4 +1,11 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ScheduleEntity } from 'src/entities/schedule.entity';
@@ -23,5 +30,14 @@ export class ScheduleController {
       createScheduleRequestDto,
       user,
     );
+  }
+
+  // 시간표에 등록된 스케쥴 삭제
+  @Delete('/:scheduleId')
+  async deleteSchedule(
+    @User() user: AuthorizedUserDto,
+    @Param('scheduleId') scheduleId: number,
+  ): Promise<void> {
+    return await this.scheduleService.deleteSchedule(scheduleId, user);
   }
 }
