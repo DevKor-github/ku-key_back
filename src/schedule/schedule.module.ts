@@ -6,6 +6,7 @@ import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ScheduleRepository } from './schedule.repository';
 import { TimeTableModule } from 'src/timetable/timetable.module';
+import { TimeTableCourseRepository } from 'src/timetable/timetable-course.repository';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { TimeTableModule } from 'src/timetable/timetable.module';
     forwardRef(() => TimeTableModule),
   ],
   controllers: [ScheduleController],
-  providers: [ScheduleService, ScheduleRepository],
+  providers: [ScheduleService, ScheduleRepository, TimeTableCourseRepository],
   exports: [ScheduleRepository],
 })
 export class ScheduleModule {}
