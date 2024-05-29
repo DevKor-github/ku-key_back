@@ -43,6 +43,13 @@ export class UserService {
     });
   }
 
+  async deleteUser(userId: number): Promise<void> {
+    const isdeleted = await this.userRepository.deleteUser(userId);
+    if (!isdeleted) {
+      throw new NotImplementedException('remove user failed!');
+    }
+  }
+
   async checkUsernamePossible(
     username: string,
   ): Promise<checkPossibleResponseDto> {
