@@ -16,12 +16,13 @@ export class EmailService {
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      service: 'naver',
-      host: 'smtp.naver.com',
-      port: 587,
+      service: 'gmail',
       auth: {
         user: configService.get('EMAIL_USER'),
         pass: configService.get('EMAIL_PASS'),
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
   }
