@@ -257,10 +257,5 @@ export class AuthService {
       await this.kuVerificationRepository.findRequestById(requestId);
     await this.userService.deleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
-    const isdeleted =
-      await this.kuVerificationRepository.deleteVerificationRequest(request.id);
-    if (!isdeleted) {
-      throw new NotImplementedException('remove request failed!');
-    }
   }
 }
