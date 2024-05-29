@@ -71,10 +71,10 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
   }
 
   async deleteVerificationRequest(id: number): Promise<boolean> {
-    const updateResult = await this.delete({
+    const deleteResult = await this.delete({
       id: id,
     });
 
-    return updateResult.affected ? true : false;
+    return deleteResult.affected ? true : false;
   }
 }

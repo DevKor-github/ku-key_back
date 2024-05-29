@@ -15,6 +15,14 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.save(user);
   }
 
+  async deleteUser(id: number): Promise<boolean> {
+    const deleteResult = await this.delete({
+      id: id,
+    });
+
+    return deleteResult.affected ? true : false;
+  }
+
   async findUserByEmail(email: string): Promise<UserEntity> {
     const user = await this.findOne({
       where: { email: email },
