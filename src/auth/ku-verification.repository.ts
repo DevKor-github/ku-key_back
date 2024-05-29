@@ -19,13 +19,6 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
     return requests;
   }
 
-  async findRequestByUser(user: UserEntity): Promise<KuVerificationEntity> {
-    const request = await this.findOne({
-      where: { user: { id: user.id } },
-    });
-    return request;
-  }
-
   async findRequestById(id: number): Promise<KuVerificationEntity> {
     const request = await this.findOne({
       where: { id: id },
@@ -45,22 +38,6 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
       user: user,
     });
     return await this.save(newRequest);
-  }
-
-  async modifyVerificationRequest(
-    originReqeust: KuVerificationEntity,
-    imgDir: string,
-    studentNumber: number,
-    user: UserEntity,
-  ): Promise<boolean> {
-    const updateResult = await this.update(
-      { id: originReqeust.id, user: user },
-      {
-        imgDir: imgDir,
-        studentNumber: studentNumber,
-      },
-    );
-    return updateResult.affected ? true : false;
   }
 
   async getRequests(): Promise<KuVerificationEntity[]> {
