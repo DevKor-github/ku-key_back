@@ -244,26 +244,23 @@ export class AuthService {
           continue;
         }
 
-        await this.fileService.deleteFile(otherRequest.imgDir);
-
-        const isDeleted =
-          await this.kuVerificationRepository.deleteVerificationRequest(
-            otherRequest.id,
-          );
-        if (!isDeleted) {
-          throw new NotImplementedException(
-            'remove other reqeusts with same student number failed!',
-          );
-        }
+        await this.deleteRequest(otherRequest.id);
       }
     } else {
-      await this.fileService.deleteFile(request.imgDir);
-      const isDeleted =
-        await this.kuVerificationRepository.deleteVerificationRequest(id);
-      if (!isDeleted) {
-        throw new NotImplementedException('reqeust refection failed!');
-      }
+      await this.deleteRequest(request.id);
     }
     return new VerifyScreenshotResponseDto(true);
+  }
+
+  async deleteRequest(requestId: number): Promise<void> {
+    const request =
+      await this.kuVerificationRepository.findRequestById(requestId);
+    await this.userService.deleteUser(request.user.id);
+    await this.fileService.deleteFile(request.imgDir);
+    const isdeleted =
+      await this.kuVerificationRepository.deleteVerificationRequest(request.id);
+    if (!isdeleted) {
+      throw new NotImplementedException('remove request failed!');
+    }
   }
 }
