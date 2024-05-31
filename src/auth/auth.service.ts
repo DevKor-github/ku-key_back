@@ -27,6 +27,7 @@ import { FileService } from './file.service';
 import { UserService } from 'src/user/user.service';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { SignUpRequestDto } from './dto/sign-up-request.dto';
+import { LogoutResponseDto } from './dto/logout-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,8 +68,8 @@ export class AuthService {
       this.createRefreshToken(id),
     );
     const isset = await this.userService.setCurrentRefresthToken(
-      tokenDto.refreshToken,
       id,
+      tokenDto.refreshToken,
     );
     if (!isset) {
       throw new NotImplementedException('update refresh token failed!');
@@ -100,6 +101,13 @@ export class AuthService {
     id: number,
   ): Promise<AuthorizedUserDto> {
     const user = await this.userService.findUserById(id);
+
+    if (user.refreshToken === null) {
+      throw new BadRequestException(
+        "There's no refresh token! Please login first",
+      );
+    }
+
     const isMatches = await compare(refreshToken, user.refreshToken);
 
     if (!isMatches) {
@@ -113,6 +121,14 @@ export class AuthService {
     const verified = await this.userService.checkUserVerified(user.id);
     const token = await this.createToken(user);
     return new LoginResponseDto(token, verified);
+  }
+
+  async logout(user: AuthorizedUserDto) {
+    const result = await this.userService.setCurrentRefresthToken(
+      user.id,
+      null,
+    );
+    return new LogoutResponseDto(result);
   }
 
   refreshToken(user: AuthorizedUserDto): AccessTokenDto {
