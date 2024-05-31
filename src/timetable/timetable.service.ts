@@ -7,12 +7,10 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { TimeTableRepository } from './timetable.repository';
-import { CourseRepository } from 'src/course/course.repository';
 import { TimeTableCourseRepository } from './timetable-course.repository';
 import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
 import { TimeTableDto } from './dto/timetable.dto';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
-import { CourseDetailRepository } from 'src/course/course-detail.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
@@ -21,18 +19,18 @@ import {
   DayType,
   GetTimeTableByTimeTableIdResponseDto,
 } from './dto/timetableId-timetable.dto';
-import { ScheduleRepository } from 'src/schedule/schedule.repository';
+import { CourseService } from 'src/course/course.service';
+import { ScheduleService } from 'src/schedule/schedule.service';
 
 @Injectable()
 export class TimeTableService {
   constructor(
     private readonly timeTableRepository: TimeTableRepository,
-    private readonly courseRepository: CourseRepository,
     private readonly timeTableCourseRepository: TimeTableCourseRepository,
-    private readonly courseDetailRepository: CourseDetailRepository,
+    private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
-    @Inject(forwardRef(() => ScheduleRepository))
-    private readonly scheduleRepository: ScheduleRepository,
+    @Inject(forwardRef(() => ScheduleService))
+    private readonly scheduleService: ScheduleService,
   ) {}
 
   // 시간표에 강의 추가 -> 강의랑 개인 스케쥴 둘 다 확인 필요
@@ -49,10 +47,9 @@ export class TimeTableService {
         throw new NotFoundException('TimeTable not found');
       }
 
-      const course = await this.courseRepository.findOne({
-        where: { id: courseId },
-        relations: ['courseDetails'],
-      });
+      const course =
+        await this.courseService.getCourseWithCourseDetails(courseId);
+
       if (!course) {
         throw new NotFoundException('Course not found');
       }
@@ -95,9 +92,7 @@ export class TimeTableService {
   ): Promise<boolean> {
     // 강의시간 겹치는지 안겹치는지 확인
     const existingCourseInfo = await this.getTableCourseInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
-    const newCourseInfo = await this.courseDetailRepository.find({
-      where: { courseId: courseId },
-    });
+    const newCourseInfo = await this.courseService.getCourseDetails(courseId);
 
     for (const newDetail of newCourseInfo) {
       for (const existingInfo of existingCourseInfo) {
@@ -136,10 +131,8 @@ export class TimeTableService {
     return false; // 겹치는 시간 없음
   }
 
-  async getTableCourseInfo(
-    timeTableId: number,
-  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
-    const daysAndTimes = await this.timeTableCourseRepository
+  async getDaysAndTime(timeTableId: number) {
+    return await this.timeTableCourseRepository
       .createQueryBuilder('ttc') //time_table_course
       .leftJoinAndSelect('ttc.course', 'course')
       .leftJoinAndSelect('course.courseDetails', 'courseDetail')
@@ -150,6 +143,11 @@ export class TimeTableService {
         'courseDetail.endTime as endTime',
       ])
       .getRawMany();
+  }
+  async getTableCourseInfo(
+    timeTableId: number,
+  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+    const daysAndTimes = await this.getDaysAndTime(timeTableId);
 
     const result = daysAndTimes.map((obj) => ({
       day: obj.day,
@@ -163,10 +161,8 @@ export class TimeTableService {
   async getTableScheduleInfo(
     timeTableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
-    const schedules = await this.scheduleRepository.find({
-      where: { timeTableId },
-      select: ['day', 'startTime', 'endTime'],
-    });
+    const schedules =
+      await this.scheduleService.getTableScheduleInfo(timeTableId);
 
     return schedules.map((schedule) => ({
       day: schedule.day,
@@ -236,6 +232,15 @@ export class TimeTableService {
         throw new InternalServerErrorException('An internal error occurred');
       }
     }
+  }
+
+  async getSimpleTimeTableByTimeTableId(
+    timeTableId: number,
+    userId: number,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableRepository.findOne({
+      where: { id: timeTableId, userId },
+    });
   }
 
   async getTimeTableByTimeTableId(

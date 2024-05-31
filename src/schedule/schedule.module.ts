@@ -16,6 +16,6 @@ import { TimeTableCourseRepository } from 'src/timetable/timetable-course.reposi
   ],
   controllers: [ScheduleController],
   providers: [ScheduleService, ScheduleRepository, TimeTableCourseRepository],
-  exports: [ScheduleRepository],
+  exports: [ScheduleService],
 })
 export class ScheduleModule {}
