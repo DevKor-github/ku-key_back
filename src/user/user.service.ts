@@ -103,9 +103,13 @@ export class UserService {
   }
 
   async setCurrentRefresthToken(
-    refreshToken: string,
     id: number,
+    refreshToken?: string,
   ): Promise<boolean> {
+    if (refreshToken === null) {
+      return await this.userRepository.setCurrentRefreshToken(id, refreshToken);
+    }
+
     const hashedToken = await hash(refreshToken, 10);
 
     return await this.userRepository.setCurrentRefreshToken(id, hashedToken);

@@ -31,6 +31,8 @@ import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.d
 import { Response } from 'express';
 import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { UserService } from 'src/user/user.service';
+import { LogoutResponseDto } from './dto/logout-response.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -51,6 +53,12 @@ export class AuthController {
   refreshToken(@User() user: AuthorizedUserDto): AccessTokenDto {
     console.log('user : ', user);
     return this.authService.refreshToken(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logOut(@User() user: AuthorizedUserDto): Promise<LogoutResponseDto> {
+    return await this.authService.logout(user);
   }
 
   @Post('request-email-verification')
