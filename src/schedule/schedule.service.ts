@@ -8,17 +8,15 @@ import {
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { TimeTableRepository } from 'src/timetable/timetable.repository';
 import { ScheduleRepository } from './schedule.repository';
-import { TimeTableCourseRepository } from 'src/timetable/timetable-course.repository';
+import { TimeTableService } from 'src/timetable/timetable.service';
 
 @Injectable()
 export class ScheduleService {
   constructor(
     private readonly scheduleRepository: ScheduleRepository,
-    @Inject(forwardRef(() => TimeTableRepository))
-    private readonly timeTableRepository: TimeTableRepository,
-    private readonly timeTableCourseRepository: TimeTableCourseRepository,
+    @Inject(forwardRef(() => TimeTableService))
+    private readonly timeTableService: TimeTableService,
   ) {}
 
   async createSchedule(
@@ -27,9 +25,11 @@ export class ScheduleService {
     user: AuthorizedUserDto,
   ): Promise<ScheduleEntity> {
     try {
-      const timeTable = await this.timeTableRepository.findOne({
-        where: { id: timeTableId, userId: user.id },
-      });
+      const timeTable =
+        await this.timeTableService.getSimpleTimeTableByTimeTableId(
+          timeTableId,
+          user.id,
+        );
       if (!timeTable) {
         throw new NotFoundException('TimeTable not found');
       }
@@ -102,7 +102,7 @@ export class ScheduleService {
 
     // 스케줄 시간과 겹치는지 안겹치는지 확인
     const existingScheduleInfo = await this.getTableScheduleInfo(timeTableId);
-    console.log(existingScheduleInfo)
+    console.log(existingScheduleInfo);
     for (const existingInfo of existingScheduleInfo) {
       if (
         existingInfo.day === schedule.day &&
@@ -123,17 +123,8 @@ export class ScheduleService {
   async getTableCourseInfo(
     timeTableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
-    const daysAndTimes = await this.timeTableCourseRepository
-      .createQueryBuilder('ttc') //time_table_course
-      .leftJoinAndSelect('ttc.course', 'course')
-      .leftJoinAndSelect('course.courseDetails', 'courseDetail')
-      .where('ttc.timeTableId = :timeTableId', { timeTableId })
-      .select([
-        'courseDetail.day as day',
-        'courseDetail.startTime as startTime',
-        'courseDetail.endTime as endTime',
-      ])
-      .getRawMany();
+    const daysAndTimes =
+      await this.timeTableService.getDaysAndTime(timeTableId);
 
     const result = daysAndTimes.map((obj) => ({
       day: obj.day,
