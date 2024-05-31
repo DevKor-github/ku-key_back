@@ -173,6 +173,12 @@ export class AuthService {
     screenshot: Express.Multer.File,
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
+    const splitedFileNames = screenshot.originalname.split('.');
+    const extension = splitedFileNames.at(splitedFileNames.length - 1);
+    if (!this.imagefilter(extension)) {
+      throw new BadRequestException('Only image file can be uploaded!');
+    }
+
     //유저생성
     const user = await this.userService.createUser({
       email: requestDto.email,
@@ -257,5 +263,10 @@ export class AuthService {
       await this.kuVerificationRepository.findRequestById(requestId);
     await this.userService.deleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
+  }
+
+  imagefilter(extension: string): boolean {
+    const validExtensions = ['jpg', 'jpeg', 'png'];
+    return validExtensions.includes(extension);
   }
 }
