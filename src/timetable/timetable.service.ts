@@ -188,9 +188,9 @@ export class TimeTableService {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId: user.id },
         relations: [
-          'timeTableCourse',
-          'timeTableCourse.course',
-          'timeTableCourse.course.courseDetail',
+          'timeTableCourses',
+          'timeTableCourses.course',
+          'timeTableCourses.course.courseDetails',
         ],
       });
       if (!timeTable) {
