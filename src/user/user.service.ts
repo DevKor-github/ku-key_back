@@ -132,8 +132,8 @@ export class UserService {
 
   async updatePassword(userId: number, newPassword: string): Promise<boolean> {
     const user = await this.userRepository.findUserById(userId);
-    const issame = await compare(newPassword, user.password);
-    if (issame) {
+    const isSame = await compare(newPassword, user.password);
+    if (isSame) {
       throw new BadRequestException('Same Password!');
     }
     const hashedPassword = await hash(newPassword, 10);
