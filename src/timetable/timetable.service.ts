@@ -1,16 +1,16 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { TimeTableRepository } from './timetable.repository';
-import { CourseRepository } from 'src/course/course.repository';
 import { TimeTableCourseRepository } from './timetable-course.repository';
 import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
 import { TimeTableDto } from './dto/timetable.dto';
 import { TimeTableEntity } from 'src/entities/timetable.entity';
-import { CourseDetailRepository } from 'src/course/course-detail.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
@@ -19,17 +19,21 @@ import {
   DayType,
   GetTimeTableByTimeTableIdResponseDto,
 } from './dto/timetableId-timetable.dto';
+import { CourseService } from 'src/course/course.service';
+import { ScheduleService } from 'src/schedule/schedule.service';
 
 @Injectable()
 export class TimeTableService {
   constructor(
     private readonly timeTableRepository: TimeTableRepository,
-    private readonly courseRepository: CourseRepository,
     private readonly timeTableCourseRepository: TimeTableCourseRepository,
-    private readonly courseDetailRepository: CourseDetailRepository,
+    private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
+    @Inject(forwardRef(() => ScheduleService))
+    private readonly scheduleService: ScheduleService,
   ) {}
 
+  // 시간표에 강의 추가 -> 강의랑 개인 스케쥴 둘 다 확인 필요
   async createTimeTableCourse(
     timeTableId: number,
     courseId: number,
@@ -43,10 +47,9 @@ export class TimeTableService {
         throw new NotFoundException('TimeTable not found');
       }
 
-      const course = await this.courseRepository.findOne({
-        where: { id: courseId },
-        relations: ['courseDetail'],
-      });
+      const course =
+        await this.courseService.getCourseWithCourseDetails(courseId);
+
       if (!course) {
         throw new NotFoundException('Course not found');
       }
@@ -60,11 +63,13 @@ export class TimeTableService {
         throw new ConflictException('Already exists in TimeTable');
       }
 
-      // 시간표에 존재하는 강의들이랑 추가하려는 강의랑 시간 겹치는지 확인
-      const isConflict = await this.checkCourseConflict(timeTableId, courseId);
+      // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
+      const isConflict = await this.checkTimeConflict(timeTableId, courseId);
 
       if (isConflict) {
-        throw new ConflictException('Course conflicts with existing courses');
+        throw new ConflictException(
+          'Course conflicts with existing courses and schedules',
+        );
       }
 
       const timeTableCourse = this.timeTableCourseRepository.create({
@@ -81,65 +86,114 @@ export class TimeTableService {
     }
   }
 
-  async checkCourseConflict(
+  async checkTimeConflict(
     timeTableId: number,
     courseId: number,
   ): Promise<boolean> {
-    const existingCoursesInfo = await this.getCourseDaysAndPeriods(timeTableId);
-    const newCourseInfo = await this.courseDetailRepository.find({
-      where: { courseId: courseId },
-    });
+    // 강의시간 겹치는지 안겹치는지 확인
+    const existingCourseInfo = await this.getTableCourseInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
+    const newCourseInfo = await this.courseService.getCourseDetails(courseId);
 
     for (const newDetail of newCourseInfo) {
-      for (const existingInfo of existingCoursesInfo) {
+      for (const existingInfo of existingCourseInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingPeriod(existingInfo.period, newDetail.period)
+          this.isConflictingTime(
+            existingInfo.startTime,
+            existingInfo.endTime,
+            newDetail.startTime,
+            newDetail.endTime,
+          )
         ) {
-          return true; // 겹치는 교시 존재
+          return true; // 겹치는 시간 존재
         }
       }
     }
 
-    return false; // 겹치는 교시 없음
+    // 스케줄 시간 겹치는지 안겹치는지 확인
+    const existingScheduleInfo = await this.getTableScheduleInfo(timeTableId);
+    for (const newDetail of newCourseInfo) {
+      for (const existingInfo of existingScheduleInfo) {
+        if (
+          existingInfo.day === newDetail.day &&
+          this.isConflictingTime(
+            existingInfo.startTime,
+            existingInfo.endTime,
+            newDetail.startTime,
+            newDetail.endTime,
+          )
+        ) {
+          return true; // 겹치는 시간 존재
+        }
+      }
+    }
+
+    return false; // 겹치는 시간 없음
   }
 
-  async getCourseDaysAndPeriods(
-    timeTableId: number,
-  ): Promise<{ day: string; period: string }[]> {
-    const courseDaysAndPeriods = await this.timeTableCourseRepository
+  async getDaysAndTime(timeTableId: number) {
+    return await this.timeTableCourseRepository
       .createQueryBuilder('ttc') //time_table_course
       .leftJoinAndSelect('ttc.course', 'course')
-      .leftJoinAndSelect('course.courseDetail', 'courseDetail')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetail')
       .where('ttc.timeTableId = :timeTableId', { timeTableId })
-      .select(['courseDetail.day', 'courseDetail.period'])
+      .select([
+        'courseDetail.day as day',
+        'courseDetail.startTime as startTime',
+        'courseDetail.endTime as endTime',
+      ])
       .getRawMany();
+  }
+  async getTableCourseInfo(
+    timeTableId: number,
+  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+    const daysAndTimes = await this.getDaysAndTime(timeTableId);
 
-    const result = courseDaysAndPeriods.map((obj) => ({
-      day: obj.courseDetail_day,
-      period: obj.courseDetail_period,
+    const result = daysAndTimes.map((obj) => ({
+      day: obj.day,
+      startTime: obj.startTime,
+      endTime: obj.endTime,
     }));
 
     return result;
   }
 
-  private isConflictingPeriod(
-    existingPeriod: string,
-    newPeriod: string,
+  async getTableScheduleInfo(
+    timeTableId: number,
+  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+    const schedules =
+      await this.scheduleService.getTableScheduleInfo(timeTableId);
+
+    return schedules.map((schedule) => ({
+      day: schedule.day,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+    }));
+  }
+
+  private isConflictingTime(
+    existingStartTime: string,
+    existingEndTime: string,
+    newStartTime: string,
+    newEndTime: string,
   ): boolean {
-    const existingRange = existingPeriod.split('-').map(Number);
-    const newRange = newPeriod.split('-').map(Number);
+    // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
+    const timeToNumber = (time: string): number => {
+      const [hours, minutes, seconds] = time.split(':').map(Number);
+      return hours * 3600 + minutes * 60 + seconds;
+    };
 
-    for (let i = newRange[0]; i <= newRange[newRange.length - 1]; i++) {
-      if (
-        i >= existingRange[0] &&
-        i <= existingRange[existingRange.length - 1]
-      ) {
-        return true; // 겹치는 교시가 존재
-      }
-    }
+    const existingStart = timeToNumber(existingStartTime);
+    const existingEnd = timeToNumber(existingEndTime);
+    const newStart = timeToNumber(newStartTime);
+    const newEnd = timeToNumber(newEndTime);
 
-    return false; // 겹치는 교시 없음
+    // 시간이 겹치는지 확인
+    return (
+      (newStart >= existingStart && newStart < existingEnd) ||
+      (newEnd > existingStart && newEnd <= existingEnd) ||
+      (newStart <= existingStart && newEnd >= existingEnd)
+    );
   }
 
   async createTimeTable(
@@ -180,6 +234,15 @@ export class TimeTableService {
     }
   }
 
+  async getSimpleTimeTableByTimeTableId(
+    timeTableId: number,
+    userId: number,
+  ): Promise<TimeTableEntity> {
+    return await this.timeTableRepository.findOne({
+      where: { id: timeTableId, userId },
+    });
+  }
+
   async getTimeTableByTimeTableId(
     timeTableId: number,
     user: AuthorizedUserDto,
@@ -188,9 +251,9 @@ export class TimeTableService {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId: user.id },
         relations: [
-          'timeTableCourse',
-          'timeTableCourse.course',
-          'timeTableCourse.course.courseDetail',
+          'timeTableCourses',
+          'timeTableCourses.course',
+          'timeTableCourses.course.courseDetails',
         ],
       });
       if (!timeTable) {
