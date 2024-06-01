@@ -19,6 +19,10 @@ const DayType = {
 export type DayType = (typeof DayType)[keyof typeof DayType];
 
 export class CreateScheduleRequestDto {
+  @IsNumber()
+  @IsNotEmpty()
+  timeTableId: number;
+
   @IsString()
   @IsNotEmpty()
   title: string;
