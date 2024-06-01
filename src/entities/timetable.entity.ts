@@ -9,6 +9,7 @@ import {
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 import { TimeTableCourseEntity } from './timetable-course.entity';
+import { ScheduleEntity } from './schedule.entity';
 
 @Entity('time_table')
 export class TimeTableEntity extends CommonEntity {
@@ -41,4 +42,7 @@ export class TimeTableEntity extends CommonEntity {
     (timeTableCourseEntity) => timeTableCourseEntity.timeTable,
   )
   timeTableCourses: TimeTableCourseEntity[];
+
+  @OneToMany(() => ScheduleEntity, (scheduleEntity) => scheduleEntity.timeTable)
+  schedules: ScheduleEntity[];
 }

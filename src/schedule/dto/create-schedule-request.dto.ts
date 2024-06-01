@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 const DayType = {
   Mon: 'Mon',
@@ -12,18 +18,18 @@ const DayType = {
 
 export type DayType = (typeof DayType)[keyof typeof DayType];
 
-export class GetTimeTableByTimeTableIdResponseDto {
-  @IsString()
+export class CreateScheduleRequestDto {
+  @IsNumber()
   @IsNotEmpty()
-  professorName: string;
+  timeTableId: number;
 
   @IsString()
   @IsNotEmpty()
-  courseName: string;
+  title: string;
 
-  @IsString()
+  @IsEnum(DayType)
   @IsNotEmpty()
-  courseCode: string;
+  day: DayType;
 
   @IsString()
   @IsNotEmpty()
@@ -34,10 +40,6 @@ export class GetTimeTableByTimeTableIdResponseDto {
   endTime: string;
 
   @IsString()
-  @IsNotEmpty()
-  classroom: string;
-
-  @IsEnum(DayType)
-  @IsNotEmpty()
-  day: DayType;
+  @IsOptional()
+  location: string;
 }
