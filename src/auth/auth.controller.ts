@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Param,
+  Patch,
   Post,
   Res,
   UploadedFile,
@@ -34,6 +35,8 @@ import { UserService } from 'src/user/user.service';
 import { LogoutResponseDto } from './dto/logout-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRequestDto } from './dto/login-request.dto';
+import { ChangePasswordRequestDto } from './dto/change-password-request.dto';
+import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -144,5 +147,14 @@ export class AuthController {
     const code = responseDto.possible ? 200 : 403;
     res.status(code);
     return responseDto;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('password')
+  async updatePassword(
+    @User() user: AuthorizedUserDto,
+    @Body() body: ChangePasswordRequestDto,
+  ): Promise<ChangePasswordResponseDto> {
+    return await this.authService.updatePassword(user.id, body.newPassword);
   }
 }
