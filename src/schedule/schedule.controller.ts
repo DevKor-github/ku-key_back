@@ -18,15 +18,13 @@ import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  // 스케쥴 추가 (강의 시간과 다른 스케쥴 시간과 안겹치게 추가하는 로직 구현 필요함)
-  @Post('/:timeTableId')
+  // 스케쥴 추가
+  @Post()
   async createSchedule(
     @User() user: AuthorizedUserDto,
-    @Param('timeTableId') timeTableId: number,
     @Body() createScheduleRequestDto: CreateScheduleRequestDto,
   ): Promise<ScheduleEntity> {
     return await this.scheduleService.createSchedule(
-      timeTableId,
       createScheduleRequestDto,
       user,
     );

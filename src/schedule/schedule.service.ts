@@ -20,14 +20,13 @@ export class ScheduleService {
   ) {}
 
   async createSchedule(
-    timeTableId: number,
     createScheduleRequestDto: CreateScheduleRequestDto,
     user: AuthorizedUserDto,
   ): Promise<ScheduleEntity> {
     try {
       const timeTable =
         await this.timeTableService.getSimpleTimeTableByTimeTableId(
-          timeTableId,
+          createScheduleRequestDto.timeTableId,
           user.id,
         );
       if (!timeTable) {
@@ -35,10 +34,7 @@ export class ScheduleService {
       }
 
       // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
-      const isConflict = await this.checkTimeConflict(
-        timeTableId,
-        createScheduleRequestDto,
-      );
+      const isConflict = await this.checkTimeConflict(createScheduleRequestDto);
 
       if (isConflict) {
         throw new ConflictException(
@@ -48,7 +44,6 @@ export class ScheduleService {
 
       const newSchedule = this.scheduleRepository.create({
         ...createScheduleRequestDto,
-        timeTableId,
       });
 
       return await this.scheduleRepository.save(newSchedule);
@@ -80,11 +75,12 @@ export class ScheduleService {
   }
 
   async checkTimeConflict(
-    timeTableId: number,
     schedule: CreateScheduleRequestDto,
   ): Promise<boolean> {
     // 강의시간과 안 겹치는지 확인
-    const existingCourseInfo = await this.getTableCourseInfo(timeTableId); //요일, 시작시간, 끝나는 시간 받아옴
+    const existingCourseInfo = await this.getTableCourseInfo(
+      schedule.timeTableId,
+    ); //요일, 시작시간, 끝나는 시간 받아옴
 
     for (const existingInfo of existingCourseInfo) {
       if (
@@ -101,7 +97,9 @@ export class ScheduleService {
     }
 
     // 스케줄 시간과 겹치는지 안겹치는지 확인
-    const existingScheduleInfo = await this.getTableScheduleInfo(timeTableId);
+    const existingScheduleInfo = await this.getTableScheduleInfo(
+      schedule.timeTableId,
+    );
     console.log(existingScheduleInfo);
     for (const existingInfo of existingScheduleInfo) {
       if (
