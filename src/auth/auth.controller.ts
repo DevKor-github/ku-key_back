@@ -33,6 +33,7 @@ import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { UserService } from 'src/user/user.service';
 import { LogoutResponseDto } from './dto/logout-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LoginRequestDto } from './dto/login-request.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -43,9 +44,13 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async logIn(@User() user: AuthorizedUserDto): Promise<LoginResponseDto> {
+  async logIn(
+    @User() user: AuthorizedUserDto,
+    @Body() body: LoginRequestDto,
+  ): Promise<LoginResponseDto> {
     console.log('user : ', user);
-    return await this.authService.logIn(user);
+    const keepingLogin = body.keepingLogin;
+    return await this.authService.logIn(user, keepingLogin);
   }
 
   @UseGuards(RefreshAuthGuard)

@@ -61,11 +61,14 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.username);
   }
 
-  async createToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
+  async createToken(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+  ): Promise<JwtTokenDto> {
     const id = user.id;
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id),
+      this.createRefreshToken(id, keepingLogin),
     );
     const isset = await this.userService.setCurrentRefresthToken(
       id,
@@ -83,15 +86,16 @@ export class AuthService {
       username: user.username,
     };
     return this.jwtService.sign(payload, {
-      expiresIn: '30m',
+      expiresIn: '5m',
     });
   }
 
-  createRefreshToken(id: number): string {
+  createRefreshToken(id: number, keepingLogin: boolean): string {
+    const expiresIn = keepingLogin ? '30d' : '1w';
     return this.jwtService.sign(
       { id },
       {
-        expiresIn: '2w',
+        expiresIn: expiresIn,
       },
     );
   }
@@ -117,9 +121,12 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.username);
   }
 
-  async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
+  async logIn(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+  ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    const token = await this.createToken(user);
+    const token = await this.createToken(user, keepingLogin);
     return new LoginResponseDto(token, verified);
   }
 
