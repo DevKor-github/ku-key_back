@@ -28,6 +28,7 @@ import { UserService } from 'src/user/user.service';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { SignUpRequestDto } from './dto/sign-up-request.dto';
 import { LogoutResponseDto } from './dto/logout-response.dto';
+import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -291,5 +292,20 @@ export class AuthService {
   imagefilter(extension: string): boolean {
     const validExtensions = ['jpg', 'jpeg', 'png'];
     return validExtensions.includes(extension);
+  }
+
+  async updatePassword(
+    userId: number,
+    newPassword: string,
+  ): Promise<ChangePasswordResponseDto> {
+    const updateResult = await this.userService.updatePassword(
+      userId,
+      newPassword,
+    );
+    if (!updateResult) {
+      throw new NotImplementedException('Change password failed!');
+    }
+
+    return new ChangePasswordResponseDto(updateResult);
   }
 }
