@@ -44,8 +44,8 @@ export class UserService {
   }
 
   async deleteUser(userId: number): Promise<void> {
-    const isdeleted = await this.userRepository.deleteUser(userId);
-    if (!isdeleted) {
+    const isDeleted = await this.userRepository.deleteUser(userId);
+    if (!isDeleted) {
       throw new NotImplementedException('remove user failed!');
     }
   }
@@ -74,8 +74,8 @@ export class UserService {
     id: number,
     profileDto: SetProfileRequestDto,
   ): Promise<SetProfileResponseDto> {
-    const isset = await this.userRepository.setProfile(id, profileDto);
-    if (!isset) {
+    const isSet = await this.userRepository.setProfile(id, profileDto);
+    if (!isSet) {
       throw new NotImplementedException('Profile setting failed!');
     }
 
