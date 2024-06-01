@@ -71,11 +71,11 @@ export class AuthService {
       this.createAccessToken(user),
       this.createRefreshToken(id, keepingLogin),
     );
-    const isset = await this.userService.setCurrentRefresthToken(
+    const isSet = await this.userService.setCurrentRefresthToken(
       id,
       tokenDto.refreshToken,
     );
-    if (!isset) {
+    if (!isSet) {
       throw new NotImplementedException('update refresh token failed!');
     }
     return tokenDto;
