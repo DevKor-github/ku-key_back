@@ -6,9 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
-import { hash } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
-import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 import { SetProfileRequestDto } from './dto/set-profile-request.dto';
@@ -21,9 +20,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async createUser(
-    createUserDto: CreateUserRequestDto,
-  ): Promise<CreateUserResponseDto> {
+  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findUserByEmail(
       createUserDto.email,
     );
@@ -40,12 +37,17 @@ export class UserService {
 
     const hashedPassword = await hash(createUserDto.password, 10);
 
-    await this.userRepository.createUser({
+    return await this.userRepository.createUser({
       ...createUserDto,
       password: hashedPassword,
     });
+  }
 
-    return new CreateUserResponseDto(true);
+  async deleteUser(userId: number): Promise<void> {
+    const isDeleted = await this.userRepository.deleteUser(userId);
+    if (!isDeleted) {
+      throw new NotImplementedException('remove user failed!');
+    }
   }
 
   async checkUsernamePossible(
@@ -72,8 +74,8 @@ export class UserService {
     id: number,
     profileDto: SetProfileRequestDto,
   ): Promise<SetProfileResponseDto> {
-    const isset = await this.userRepository.setProfile(id, profileDto);
-    if (!isset) {
+    const isSet = await this.userRepository.setProfile(id, profileDto);
+    if (!isSet) {
       throw new NotImplementedException('Profile setting failed!');
     }
 
@@ -101,9 +103,13 @@ export class UserService {
   }
 
   async setCurrentRefresthToken(
-    refreshToken: string,
     id: number,
+    refreshToken?: string,
   ): Promise<boolean> {
+    if (refreshToken === null) {
+      return await this.userRepository.setCurrentRefreshToken(id, refreshToken);
+    }
+
     const hashedToken = await hash(refreshToken, 10);
 
     return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
@@ -122,5 +128,15 @@ export class UserService {
   }
   async findUserByUsername(username: string): Promise<UserEntity> {
     return await this.userRepository.findUserByUsername(username);
+  }
+
+  async updatePassword(userId: number, newPassword: string): Promise<boolean> {
+    const user = await this.userRepository.findUserById(userId);
+    const isSame = await compare(newPassword, user.password);
+    if (isSame) {
+      throw new BadRequestException('Same Password!');
+    }
+    const hashedPassword = await hash(newPassword, 10);
+    return await this.userRepository.updatePassword(userId, hashedPassword);
   }
 }
