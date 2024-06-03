@@ -19,12 +19,16 @@ import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { KuVerificationRepository } from './ku-verification.repository';
-import { ScreenshotVerificationResponseDto } from './dto/screenshot-verification-response.dto';
+import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
 import { FileService } from './file.service';
 import { UserService } from 'src/user/user.service';
+import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
+import { SignUpRequestDto } from './dto/sign-up-request.dto';
+import { LogoutResponseDto } from './dto/logout-response.dto';
+import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -58,17 +62,20 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.username);
   }
 
-  async createToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
+  async createToken(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+  ): Promise<JwtTokenDto> {
     const id = user.id;
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id),
+      this.createRefreshToken(id, keepingLogin),
     );
-    const isset = await this.userService.setCurrentRefresthToken(
-      tokenDto.refreshToken,
+    const isSet = await this.userService.setCurrentRefresthToken(
       id,
+      tokenDto.refreshToken,
     );
-    if (!isset) {
+    if (!isSet) {
       throw new NotImplementedException('update refresh token failed!');
     }
     return tokenDto;
@@ -80,15 +87,16 @@ export class AuthService {
       username: user.username,
     };
     return this.jwtService.sign(payload, {
-      expiresIn: '30m',
+      expiresIn: '5m',
     });
   }
 
-  createRefreshToken(id: number): string {
+  createRefreshToken(id: number, keepingLogin: boolean): string {
+    const expiresIn = keepingLogin ? '30d' : '1w';
     return this.jwtService.sign(
       { id },
       {
-        expiresIn: '2w',
+        expiresIn: expiresIn,
       },
     );
   }
@@ -98,6 +106,13 @@ export class AuthService {
     id: number,
   ): Promise<AuthorizedUserDto> {
     const user = await this.userService.findUserById(id);
+
+    if (user.refreshToken === null) {
+      throw new BadRequestException(
+        "There's no refresh token! Please login first",
+      );
+    }
+
     const isMatches = await compare(refreshToken, user.refreshToken);
 
     if (!isMatches) {
@@ -107,10 +122,21 @@ export class AuthService {
     return new AuthorizedUserDto(user.id, user.username);
   }
 
-  async logIn(user: AuthorizedUserDto): Promise<LoginResponseDto> {
+  async logIn(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+  ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    const token = await this.createToken(user);
+    const token = await this.createToken(user, keepingLogin);
     return new LoginResponseDto(token, verified);
+  }
+
+  async logout(user: AuthorizedUserDto) {
+    const result = await this.userService.setCurrentRefresthToken(
+      user.id,
+      null,
+    );
+    return new LogoutResponseDto(result);
   }
 
   refreshToken(user: AuthorizedUserDto): AccessTokenDto {
@@ -149,12 +175,9 @@ export class AuthService {
     return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
   }
 
-  async createScreenshotRequest(
-    screenshot: Express.Multer.File,
+  async checkStudentNumberPossible(
     studentNumber: number,
-    userId: number,
-  ): Promise<VerificationResponseDto> {
-    //이미 등록된 학번인지 확인
+  ): Promise<checkPossibleResponseDto> {
     const requests =
       await this.kuVerificationRepository.findRequestsByStudentNumber(
         studentNumber,
@@ -162,36 +185,32 @@ export class AuthService {
     if (requests) {
       for (const request of requests) {
         if (request.user.isVerified) {
-          throw new BadRequestException('student number already exists!');
+          return new checkPossibleResponseDto(false);
         }
       }
     }
 
-    //이미 요청을 보냈던 유저인지 확인(그렇다면 원래 요청 수정)
-    const user = await this.userService.findUserById(userId);
-    const userRequest =
-      await this.kuVerificationRepository.findRequestByUser(user);
-    if (userRequest) {
-      await this.fileService.deleteFile(userRequest.imgDir);
+    return new checkPossibleResponseDto(true);
+  }
 
-      const filename = await this.fileService.uploadFile(
-        screenshot,
-        'KuVerification',
-        'screenshot',
-      );
-
-      const isModified =
-        await this.kuVerificationRepository.modifyVerificationRequest(
-          userRequest,
-          filename,
-          studentNumber,
-          user,
-        );
-      if (!isModified) {
-        throw new NotImplementedException('verify request failed!');
-      }
-      return new ScreenshotVerificationResponseDto(true, studentNumber);
+  async createUserandScreenshotRequest(
+    screenshot: Express.Multer.File,
+    requestDto: SignUpRequestDto,
+  ): Promise<SignUpResponseDto> {
+    const splitedFileNames = screenshot.originalname.split('.');
+    const extension = splitedFileNames.at(splitedFileNames.length - 1);
+    if (!this.imagefilter(extension)) {
+      throw new BadRequestException('Only image file can be uploaded!');
     }
+
+    //유저생성
+    const user = await this.userService.createUser({
+      email: requestDto.email,
+      password: requestDto.password,
+      username: requestDto.username,
+    });
+
+    const studentNumber = requestDto.studentNumber;
 
     //요청 생성
     const filename = await this.fileService.uploadFile(
@@ -206,7 +225,7 @@ export class AuthService {
       user,
     );
 
-    return new ScreenshotVerificationResponseDto(true, studentNumber);
+    return new SignUpResponseDto(true, studentNumber);
   }
 
   validateAdmin(id: string, password: string): boolean {
@@ -255,26 +274,38 @@ export class AuthService {
           continue;
         }
 
-        await this.fileService.deleteFile(otherRequest.imgDir);
-
-        const isDeleted =
-          await this.kuVerificationRepository.deleteVerificationRequest(
-            otherRequest.id,
-          );
-        if (!isDeleted) {
-          throw new NotImplementedException(
-            'remove other reqeusts with same student number failed!',
-          );
-        }
+        await this.deleteRequest(otherRequest.id);
       }
     } else {
-      await this.fileService.deleteFile(request.imgDir);
-      const isDeleted =
-        await this.kuVerificationRepository.deleteVerificationRequest(id);
-      if (!isDeleted) {
-        throw new NotImplementedException('reqeust refection failed!');
-      }
+      await this.deleteRequest(request.id);
     }
     return new VerifyScreenshotResponseDto(true);
+  }
+
+  async deleteRequest(requestId: number): Promise<void> {
+    const request =
+      await this.kuVerificationRepository.findRequestById(requestId);
+    await this.userService.deleteUser(request.user.id);
+    await this.fileService.deleteFile(request.imgDir);
+  }
+
+  imagefilter(extension: string): boolean {
+    const validExtensions = ['jpg', 'jpeg', 'png'];
+    return validExtensions.includes(extension);
+  }
+
+  async updatePassword(
+    userId: number,
+    newPassword: string,
+  ): Promise<ChangePasswordResponseDto> {
+    const updateResult = await this.userService.updatePassword(
+      userId,
+      newPassword,
+    );
+    if (!updateResult) {
+      throw new NotImplementedException('Change password failed!');
+    }
+
+    return new ChangePasswordResponseDto(updateResult);
   }
 }

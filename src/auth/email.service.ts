@@ -16,12 +16,13 @@ export class EmailService {
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      service: 'naver',
-      host: 'smtp.naver.com',
-      port: 587,
+      service: 'gmail',
       auth: {
         user: configService.get('EMAIL_USER'),
         pass: configService.get('EMAIL_PASS'),
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
   }
@@ -30,8 +31,13 @@ export class EmailService {
     const mailOptions: EmailOptions = {
       from: this.configService.get('EMAIL_USER'),
       to: email,
-      subject: '[Ku-Key] 인증코드를 확인해주세요',
-      html: `인증번호 : ${verifyToken}`,
+      subject: '[Ku-Key] Please check your verification code',
+      html: `<div style="text-align: center;">
+              <h1>🍪KuKey Verification Code</h1>
+              <p>This is the code to verify that your email is possible.</p>
+              <p>Please finish sign-up by input this code.</p>
+              <h2>${verifyToken}</h2>
+            </div>`,
     };
 
     return await this.transporter.sendMail(mailOptions);

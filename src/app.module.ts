@@ -4,10 +4,13 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourseModule } from './course/course.module';
+import { TimeTableModule } from './timetable/timetable.module';
 import * as path from 'path';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { FriendshipModule } from './friendship/friendship.module';
+import { ScheduleModule } from './schedule/schedule.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -40,6 +43,9 @@ console.log(`.env.${process.env.NODE_ENV}`);
     UserModule,
     AuthModule,
     CourseModule,
+    FriendshipModule,
+    TimeTableModule,
+    ScheduleModule,
   ],
   controllers: [AppController],
   providers: [AppService],
