@@ -24,6 +24,26 @@ async function bootstrap() {
     .setTitle('KU-KEY API')
     .setDescription('API for KU-KEY service')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        name: 'JWT',
+        description: 'JWT token',
+        in: 'header',
+      },
+      'accessToken',
+    )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        name: 'JWT',
+        description: 'Jwt token',
+        in: 'header',
+      },
+      'refreshToken',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
