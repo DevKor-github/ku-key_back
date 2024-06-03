@@ -28,7 +28,7 @@ export class TimeTableEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   year: string;
 
-  @Column('tinyint', { nullable: false, default: false })
+  @Column('boolean', { nullable: false, default: false })
   mainTimeTable: boolean;
 
   @JoinColumn({ name: 'userId' })
