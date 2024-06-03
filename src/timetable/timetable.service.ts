@@ -21,6 +21,9 @@ import {
 } from './dto/timetableId-timetable.dto';
 import { CourseService } from 'src/course/course.service';
 import { ScheduleService } from 'src/schedule/schedule.service';
+import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
+import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
+import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -38,7 +41,7 @@ export class TimeTableService {
     timeTableId: number,
     courseId: number,
     user: AuthorizedUserDto,
-  ): Promise<TimeTableCourseEntity> {
+  ): Promise<CreateTimeTableCourseResponseDto> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId: user.id },
@@ -199,7 +202,7 @@ export class TimeTableService {
   async createTimeTable(
     createTimeTableDto: CreateTimeTableDto,
     user: AuthorizedUserDto,
-  ): Promise<TimeTableEntity> {
+  ): Promise<CommonTimeTableResponseDto> {
     try {
       // 해당 user가 해당 년도, 해당 학기에 몇 개의 시간표를 가지고 있는 지 확인
       const existingTimeTableNumber = await this.timeTableRepository.count({
@@ -237,7 +240,7 @@ export class TimeTableService {
   async getSimpleTimeTableByTimeTableId(
     timeTableId: number,
     userId: number,
-  ): Promise<TimeTableEntity> {
+  ): Promise<CommonTimeTableResponseDto> {
     return await this.timeTableRepository.findOne({
       where: { id: timeTableId, userId },
     });
@@ -294,7 +297,7 @@ export class TimeTableService {
       });
       if (!userTimeTable) throw new NotFoundException('TimeTable not found');
       return userTimeTable.map((table) => ({
-        tableId: table.id,
+        timeTableId: table.id,
         semester: table.semester,
         year: table.year,
         mainTimeTable: table.mainTimeTable,
@@ -311,7 +314,7 @@ export class TimeTableService {
     timeTableId: number,
     courseId: number,
     user: AuthorizedUserDto,
-  ): Promise<void> {
+  ): Promise<CommonDeleteResponseDto> {
     try {
       // 해당 유저가 만든 시간표인지 확인
       const timeTable = await this.timeTableRepository.findOne({
@@ -333,6 +336,8 @@ export class TimeTableService {
         timeTableId,
         courseId,
       });
+
+      return { deleted: true };
     } catch (error) {
       console.error('Failed to delete TimeTableCourse: ', error);
       throw error;
@@ -342,7 +347,7 @@ export class TimeTableService {
   async deleteTimeTable(
     timeTableId: number,
     user: AuthorizedUserDto,
-  ): Promise<void> {
+  ): Promise<CommonDeleteResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -385,13 +390,14 @@ export class TimeTableService {
       throw error;
     } finally {
       await queryRunner.release();
+      return { deleted: true };
     }
   }
 
   async getMainTimeTable(
     timeTableDto: TimeTableDto,
     user: AuthorizedUserDto,
-  ): Promise<TimeTableEntity> {
+  ): Promise<CommonTimeTableResponseDto> {
     try {
       const mainTimeTable = await this.timeTableRepository.findOne({
         where: {
@@ -417,7 +423,7 @@ export class TimeTableService {
     timeTableId: number,
     user: AuthorizedUserDto,
     tableName: string,
-  ): Promise<TimeTableEntity> {
+  ): Promise<CommonTimeTableResponseDto> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: {
@@ -442,7 +448,7 @@ export class TimeTableService {
     timeTableId: number,
     user: AuthorizedUserDto,
     timeTableDto: TimeTableDto,
-  ): Promise<TimeTableEntity> {
+  ): Promise<CommonTimeTableResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
