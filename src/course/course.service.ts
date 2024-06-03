@@ -18,10 +18,7 @@ import { SearchCourseDto } from './dto/search-course.dto';
 @Injectable()
 export class CourseService {
   constructor(
-    @InjectRepository(CourseRepository)
     private courseRepository: CourseRepository,
-
-    @InjectRepository(CourseDetailRepository)
     private courseDetailRepository: CourseDetailRepository,
   ) {}
 
@@ -54,6 +51,19 @@ export class CourseService {
   async getCourse(courseId: number): Promise<CourseEntity> {
     return await this.courseRepository.findOne({
       where: { id: courseId },
+    });
+  }
+
+  async getCourseWithCourseDetails(courseId: number): Promise<CourseEntity> {
+    return await this.courseRepository.findOne({
+      where: { id: courseId },
+      relations: ['courseDetails'],
+    });
+  }
+
+  async getCourseDetails(courseId: number): Promise<CourseDetailEntity[]> {
+    return await this.courseDetailRepository.find({
+      where: { courseId: courseId },
     });
   }
 
