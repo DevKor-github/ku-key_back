@@ -1,5 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { KuVerificationEntity } from './ku-verification.entity';
+import { FriendshipEntity } from './friendship.entity';
+import { TimeTableEntity } from './timetable.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -27,9 +36,6 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   major: string | null;
 
-  @Column('varchar', { nullable: true })
-  gender: string | null;
-
   @Column('tinyint', { default: false })
   isVerified: boolean;
 
@@ -47,4 +53,20 @@ export class UserEntity extends CommonEntity {
 
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
+
+  @OneToOne(
+    () => KuVerificationEntity,
+    (kuVerification) => kuVerification.user,
+    { cascade: true },
+  )
+  kuVerification: KuVerificationEntity;
+
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser)
+  sentFriendRequests: FriendshipEntity[];
+
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
+  receivedFriendRequests: FriendshipEntity[];
+
+  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
+  timeTables: TimeTableEntity[];
 }
