@@ -1,34 +1,39 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateCourseDetailDto {
-  @ApiProperty({ description: '강의 ID' })
+export class CommonCourseDetailResponseDto {
+  @ApiProperty({ description: 'ID' })
   @IsNumber()
   @IsNotEmpty()
-  courseId: number;
+  id: number;
 
   @ApiProperty({ description: '요일' })
   @IsString()
   @IsOptional()
-  day?: string;
+  day: string;
 
   @ApiProperty({ description: '시작 시간' })
   @IsString()
   @IsOptional()
-  startTime?: string;
+  startTime: string;
 
   @ApiProperty({ description: '종료 시간' })
   @IsString()
   @IsOptional()
-  endTime?: string;
+  endTime: string;
 
   @ApiProperty({ description: '강의실' })
   @IsString()
   @IsOptional()
-  classroom?: string;
+  classroom: string;
 
   @ApiProperty({ description: '교시' })
   @IsString()
   @IsOptional()
-  period?: string;
+  period: string;
+
+  @ApiProperty({ description: '강의 ID' })
+  @IsNumber()
+  @IsNotEmpty()
+  courseId: number;
 }
