@@ -1,25 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-const DayType = {
-  Mon: 'Mon',
-  Tue: 'Tue',
-  Wed: 'Wed',
-  Thu: 'Thu',
-  Fri: 'Fri',
-  Sat: 'Sat',
-  Sun: 'Sun',
-} as const;
+export class CreateScheduleResponseDto {
+  @ApiProperty({ description: 'ID' })
+  @IsNumber()
+  @IsNotEmpty()
+  id: number;
 
-export type DayType = (typeof DayType)[keyof typeof DayType];
-
-export class CreateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })
   @IsNumber()
   @IsNotEmpty()
@@ -31,9 +18,9 @@ export class CreateScheduleRequestDto {
   title: string;
 
   @ApiProperty({ description: '요일' })
-  @IsEnum(DayType)
+  @IsString()
   @IsNotEmpty()
-  day: DayType;
+  day: string;
 
   @ApiProperty({ description: '시작 시간' })
   @IsString()
@@ -47,6 +34,5 @@ export class CreateScheduleRequestDto {
 
   @ApiProperty({ description: '장소' })
   @IsString()
-  @IsOptional()
   location: string;
 }
