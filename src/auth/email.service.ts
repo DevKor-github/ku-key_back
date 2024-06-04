@@ -42,4 +42,20 @@ export class EmailService {
 
     return await this.transporter.sendMail(mailOptions);
   }
+
+  async sendTempPassword(email: string, tempPassword: string): Promise<any> {
+    const mailOptions: EmailOptions = {
+      from: this.configService.get('EMAIL_USER'),
+      to: email,
+      subject: '[Ku-Key] Your temporary password has been issued.',
+      html: `<div style="text-align: center;">
+              <h1>🍪Temporary password guide</h1>
+              <p>Try to log in with the following password.</p>
+              <p>Please change the password after that.</p>
+              <h2>${tempPassword}</h2>
+            </div>`,
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
 }
