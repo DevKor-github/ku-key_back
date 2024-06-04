@@ -10,6 +10,7 @@ import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { ScheduleRepository } from './schedule.repository';
 import { TimeTableService } from 'src/timetable/timetable.service';
+import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -56,7 +57,7 @@ export class ScheduleService {
   async deleteSchedule(
     scheduleId: number,
     user: AuthorizedUserDto,
-  ): Promise<void> {
+  ): Promise<DeleteScheduleResponseDto> {
     try {
       const schedule = await this.scheduleRepository.findOne({
         where: { id: scheduleId, timeTable: { userId: user.id } },
@@ -68,6 +69,7 @@ export class ScheduleService {
       }
 
       await this.scheduleRepository.softDelete(scheduleId);
+      return { deleted: true };
     } catch (error) {
       console.error('Fail to delete schedule', error);
       throw error;
