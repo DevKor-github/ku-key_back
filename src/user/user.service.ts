@@ -99,7 +99,7 @@ export class UserService {
 
   async checkUserVerified(userId: number): Promise<boolean> {
     const user = await this.userRepository.findUserById(userId);
-    return user.isVerified ? true : false;
+    return user.isVerified;
   }
 
   async setCurrentRefresthToken(
