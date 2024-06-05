@@ -4,6 +4,6 @@ import { TimeTableDto } from './timetable.dto';
 export class CreateTimeTableDto extends TimeTableDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(20)
+  @MaxLength(25)
   tableName: string;
 }
