@@ -29,7 +29,7 @@ export class CourseEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   major: string;
 
-  @Column('tinyint', { nullable: false })
+  @Column('boolean', { nullable: false })
   hasExchangeSeat: boolean;
 
   @Column('varchar', { nullable: false })
