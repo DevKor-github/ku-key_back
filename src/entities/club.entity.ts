@@ -1,12 +1,17 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
+import { ClubLikeEntity } from './club-like.entity';
 
+@Entity('club')
 export class ClubEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ type: 'varchar', nullable: false })
   name: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  category: string;
 
   @Column({ type: 'varchar', nullable: false })
   activity: string;
@@ -28,4 +33,10 @@ export class ClubEntity extends CommonEntity {
 
   @Column({ type: 'varchar', nullable: true })
   contactInfo: string;
+
+  @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.club)
+  clubLikes: ClubLikeEntity[];
+
+  @Column({ default: 0 })
+  allLikes: number;
 }
