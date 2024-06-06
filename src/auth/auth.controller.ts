@@ -37,6 +37,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRequestDto } from './dto/login-request.dto';
 import { ChangePasswordRequestDto } from './dto/change-password-request.dto';
 import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
+import {
+  SendTempPasswordRequestDto,
+  SendTempPasswordResponseDto,
+} from './dto/send-temporary-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -156,5 +160,12 @@ export class AuthController {
     @Body() body: ChangePasswordRequestDto,
   ): Promise<ChangePasswordResponseDto> {
     return await this.authService.updatePassword(user.id, body.newPassword);
+  }
+
+  @Post('temporary-password')
+  async sendTemporaryPassword(
+    @Body() body: SendTempPasswordRequestDto,
+  ): Promise<SendTempPasswordResponseDto> {
+    return await this.authService.sendTemporaryPassword(body.email);
   }
 }
