@@ -200,22 +200,29 @@ export class TimeTableService {
     createTimeTableDto: CreateTimeTableDto,
     user: AuthorizedUserDto,
   ): Promise<TimeTableEntity> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
       // 해당 user가 해당 년도, 해당 학기에 몇 개의 시간표를 가지고 있는 지 확인
-      const existingTimeTableNumber = await this.timeTableRepository.count({
-        where: {
-          userId: user.id,
-          year: createTimeTableDto.year,
-          semester: createTimeTableDto.semester,
+      const existingTimeTableNumber = await queryRunner.manager.count(
+        TimeTableEntity,
+        {
+          where: {
+            userId: user.id,
+            year: createTimeTableDto.year,
+            semester: createTimeTableDto.semester,
+          },
         },
-      });
+      );
+
       if (existingTimeTableNumber >= 3) {
         throw new ConflictException('Maximum number of TimeTables reached');
       }
 
       const isFirstTable = existingTimeTableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
 
-      const newTimeTable = this.timeTableRepository.create({
+      const newTimeTable = queryRunner.manager.create(TimeTableEntity, {
         userId: user.id,
         tableName: createTimeTableDto.tableName,
         semester: createTimeTableDto.semester,
@@ -223,14 +230,19 @@ export class TimeTableService {
         mainTimeTable: isFirstTable,
       });
 
-      return await this.timeTableRepository.save(newTimeTable);
+      await queryRunner.manager.save(newTimeTable);
+      await queryRunner.commitTransaction();
+      return newTimeTable;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       console.error('Failed to create TimeTable:', error);
       if (error instanceof ConflictException) {
         throw error;
       } else {
         throw new InternalServerErrorException('An internal error occurred');
       }
+    } finally {
+      await queryRunner.release();
     }
   }
 
