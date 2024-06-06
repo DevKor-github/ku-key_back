@@ -7,7 +7,12 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CreateCourseDto {
+export class CommonCourseResponseDto {
+  @ApiProperty({ description: 'ID' })
+  @IsNumber()
+  @IsNotEmpty()
+  id: number;
+
   @ApiProperty({ description: '교수 이름' })
   @IsString()
   @IsNotEmpty()
