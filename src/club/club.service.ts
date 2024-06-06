@@ -1,10 +1,15 @@
+import { ClubLikeRepository } from './club-like.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
+import { LikeClubResponseDto } from './dto/like-club-response.dto';
 
 @Injectable()
 export class ClubService {
-  constructor(private readonly clubRepository: ClubRepository) {}
+  constructor(
+    private readonly clubRepository: ClubRepository,
+    private readonly clubLikeRepository: ClubLikeRepository,
+  ) {}
 
   async getClubList(
     userId: number,
@@ -42,5 +47,36 @@ export class ClubService {
     }
 
     return clubList;
+  }
+
+  async likeClub(userId: number, clubId: number): Promise<LikeClubResponseDto> {
+    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+
+    const clubLike = await this.clubLikeRepository.findOne({
+      where: {
+        club: { id: clubId },
+        user: { id: userId },
+      },
+    });
+
+    if (!clubLike) {
+      const newClubLike = await this.clubLikeRepository.create({
+        club: { id: clubId },
+        user: { id: userId },
+      });
+      club.allLikes++;
+      await this.clubLikeRepository.save(newClubLike);
+      await this.clubRepository.save(club);
+      return new LikeClubResponseDto(true);
+    } else {
+      await this.clubLikeRepository.delete(clubLike.id);
+      club.allLikes--;
+      await this.clubRepository.save(club);
+      return new LikeClubResponseDto(false);
+    }
   }
 }
