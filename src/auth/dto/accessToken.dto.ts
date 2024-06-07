@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
 export class AccessTokenDto {
@@ -5,6 +6,7 @@ export class AccessTokenDto {
     this.accessToken = accessToken;
   }
 
+  @ApiProperty({ description: 'Access Token' })
   @IsString()
   accessToken: string;
 }
