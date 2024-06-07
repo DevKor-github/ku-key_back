@@ -1,38 +1,38 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 
 export class SetProfileRequestDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty({ description: '본명' })
   name: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty({ description: '국적' })
   country: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty({ description: '모교' })
   homeUniversity: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty({ description: '사용가능 언어' })
   language: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @ApiProperty({ description: '전공' })
   major: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsDate()
   @ApiProperty({ description: '교환학생 시작 날짜', example: 'yyyy-mm-dd' })
   startDay: Date;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsDate()
   @ApiProperty({ description: '교환학생 끝 날짜', example: 'yyyy-mm-dd' })
   endDay: Date;
