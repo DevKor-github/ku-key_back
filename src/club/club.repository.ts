@@ -8,10 +8,18 @@ export class ClubRepository extends Repository<ClubEntity> {
     super(ClubEntity, dataSource.createEntityManager());
   }
 
-  async findClubsByFiltering(category?: string): Promise<ClubEntity[]> {
+  async findClubsByFiltering(
+    category?: string,
+    keyword?: string,
+  ): Promise<ClubEntity[]> {
     const queryBuilder = this.createQueryBuilder('club');
 
-    if (category) {
+    // 키워드가 존재하면 카테고리 존재해도 카테고리 필터링 X
+    if (keyword) {
+      queryBuilder.andWhere('club.name LIKE :keyword', {
+        keyword: `${keyword}%`,
+      });
+    } else if (category) {
       queryBuilder.andWhere('club.category = :category', { category });
     }
 

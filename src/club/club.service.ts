@@ -15,9 +15,13 @@ export class ClubService {
     userId: number,
     like?: string,
     category?: string,
+    keyword?: string,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
-    const clubs = await this.clubRepository.findClubsByFiltering(category);
+    const clubs = await this.clubRepository.findClubsByFiltering(
+      category,
+      keyword,
+    );
 
     if (!clubs) {
       throw new NotFoundException('동아리 목록을 불러오는데 실패했습니다.');
