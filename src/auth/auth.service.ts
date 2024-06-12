@@ -246,7 +246,8 @@ export class AuthService {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
           imgDir:
-            'https://kukey.s3.ap-northeast-2.amazonaws.com/' + request.imgDir,
+            `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
+            request.imgDir,
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
