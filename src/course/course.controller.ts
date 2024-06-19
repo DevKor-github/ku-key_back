@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseService } from './course.service';
@@ -15,6 +16,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
 import { SearchCourseDto } from './dto/search-course.dto';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -24,6 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { CommonCourseDetailResponseDto } from './dto/common-course-detail-response.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('course')
 @Controller('course')
@@ -81,7 +84,9 @@ export class CourseController {
   }
 
   // 학수번호 검색
+  @UseGuards(JwtAuthGuard)
   @Get('searchCourseCode')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '학수번호로 강의 검색',
     description: '학수번호를 입력하여 강의를 검색합니다.',
@@ -102,7 +107,9 @@ export class CourseController {
   }
 
   // 과목명 검색
+  @UseGuards(JwtAuthGuard)
   @Get('searchCourseName')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '과목명 강의 검색',
     description: '과목명을 입력하여 강의를 검색합니다.',
@@ -129,7 +136,9 @@ export class CourseController {
   }
 
   // 교수님 성함 검색
+  @UseGuards(JwtAuthGuard)
   @Get('searchProfessorName')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '교수님 성함으로 강의 검색',
     description: '교수님 성함을 입력하여 강의를 검색합니다.',
@@ -156,7 +165,9 @@ export class CourseController {
   }
 
   // 교양 리스트
+  @UseGuards(JwtAuthGuard)
   @Get('general')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '교양 강의 조회',
     description: '모든 교양 강의를 조회합니다.',
@@ -172,7 +183,9 @@ export class CourseController {
   }
 
   // 전공 리스트 (학부별)
+  @UseGuards(JwtAuthGuard)
   @Get('major')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '전공 강의 조회',
     description: '해당 과의 모든 전공 강의를 조회합니다.',
@@ -195,7 +208,9 @@ export class CourseController {
   }
 
   // 학문의 기초 리스트
+  @UseGuards(JwtAuthGuard)
   @Get('academicFoundation')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '학문의 기초 강의 조회',
     description: '해당 단과대의 모든 학문의 기초 강의를 조회합니다.',

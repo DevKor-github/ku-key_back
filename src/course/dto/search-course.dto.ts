@@ -4,7 +4,7 @@ import { IsOptional, IsString, Length } from 'class-validator';
 export class SearchCourseDto {
   @ApiProperty({ description: '학수 번호' })
   @IsString()
-  @Length(2)
+  @Length(7)
   @IsOptional()
   courseCode?: string;
 

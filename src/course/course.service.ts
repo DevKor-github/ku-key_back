@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CourseRepository } from './course.repository';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from 'src/entities/course.entity';
@@ -76,7 +75,7 @@ export class CourseService {
     searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseRepository.find({
-      where: { courseCode: searchCourseDto.courseCode },
+      where: { courseCode: Like(`${searchCourseDto.courseCode}%`) },
     });
   }
 
