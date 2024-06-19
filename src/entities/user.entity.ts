@@ -36,7 +36,7 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   major: string | null;
 
-  @Column('tinyint', { default: false })
+  @Column('boolean', { default: false })
   isVerified: boolean;
 
   @Column('varchar', { nullable: true })

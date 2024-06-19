@@ -29,6 +29,7 @@ import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.d
 import { SignUpRequestDto } from './dto/sign-up-request.dto';
 import { LogoutResponseDto } from './dto/logout-response.dto';
 import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
+import { SendTempPasswordResponseDto } from './dto/send-temporary-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -245,7 +246,8 @@ export class AuthService {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
           imgDir:
-            'https://kukey.s3.ap-northeast-2.amazonaws.com/' + request.imgDir,
+            `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
+            request.imgDir,
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
@@ -307,5 +309,34 @@ export class AuthService {
     }
 
     return new ChangePasswordResponseDto(updateResult);
+  }
+
+  async sendTemporaryPassword(
+    email: string,
+  ): Promise<SendTempPasswordResponseDto> {
+    const user = await this.userService.findUserByEmail(email);
+    const tempPassword = this.generateTempPassword(10);
+
+    const isUpdated = await this.userService.updatePassword(
+      user.id,
+      tempPassword,
+    );
+    if (!isUpdated) {
+      throw new NotImplementedException('Change password failed!');
+    }
+    await this.emailService.sendTempPassword(email, tempPassword);
+    return new SendTempPasswordResponseDto(true);
+  }
+
+  generateTempPassword(len: number): string {
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < len; i++) {
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length),
+      );
+    }
+    return result;
   }
 }
