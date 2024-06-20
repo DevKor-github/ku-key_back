@@ -9,7 +9,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { TimeTableEntity } from 'src/entities/timetable.entity';
 import { TimeTableDto } from './dto/timetable.dto';
 import { TimeTableService } from './timetable.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -17,7 +16,7 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import { GetTimeTableByTimeTableIdResponseDto } from './dto/timetableId-timetable.dto';
+import { GetCourseInfoByTimeTableIdResponseDto } from './dto/get-courseinfo-timetable.dto';
 import { UpdateTimeTableNameDto } from './dto/update-timetable-name.dto';
 import {
   ApiBearerAuth,
@@ -31,6 +30,7 @@ import {
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
+import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
 
 @Controller('timetable')
 @ApiTags('timetable')
@@ -144,7 +144,7 @@ export class TimeTableController {
   @Get('/:timeTableId')
   @ApiOperation({
     summary: '시간표 ID로 시간표 관련 정보 조회',
-    description: '시간표 ID로 해당 시간표와 관련된 강의 정보를 반환합니다.',
+    description: '시간표 ID로 해당 시간표와 관련된 강의,일정 정보를 반환합니다.',
   })
   @ApiParam({
     name: 'timeTableId',
@@ -153,13 +153,13 @@ export class TimeTableController {
   @ApiResponse({
     status: 200,
     description: '특정 시간표 ID로 조회 성공 시',
-    type: GetTimeTableByTimeTableIdResponseDto,
+    type: GetTimeTableByTimeTableIdDto,
     isArray: true,
   })
   async getTimeTableByTimeTableId(
     @Param('timeTableId') timeTableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdResponseDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
     return await this.timeTableService.getTimeTableByTimeTableId(
       timeTableId,
       user,

@@ -20,6 +20,15 @@ export class ScheduleService {
     private readonly timeTableService: TimeTableService,
   ) {}
 
+  async getScheduleByTimeTableId(timeTableId: number): Promise<ScheduleEntity[]> {
+    try {
+      return await this.scheduleRepository.find({ where: { timeTableId } });
+    } catch (error) {
+      console.error('Fail to get schedule by timetable id', error);
+      throw error;
+    }
+  }
+
   async createSchedule(
     createScheduleRequestDto: CreateScheduleRequestDto,
     user: AuthorizedUserDto,
