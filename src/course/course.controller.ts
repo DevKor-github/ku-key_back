@@ -84,7 +84,7 @@ export class CourseController {
 
   // 학수번호 검색
   @UseGuards(JwtAuthGuard)
-  @Get('searchCourseCode')
+  @Get('search-course-code')
   @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '학수번호로 강의 검색',
@@ -105,13 +105,13 @@ export class CourseController {
     return await this.courseService.searchCourseCode(searchCourseDto);
   }
 
-  // 과목명 검색
+  // 전공 - 과목명 검색
   @UseGuards(JwtAuthGuard)
-  @Get('searchCourseName')
+  @Get('search-major-course-name')
   @ApiBearerAuth('accessToken')
   @ApiOperation({
-    summary: '과목명 강의 검색',
-    description: '과목명을 입력하여 강의를 검색합니다.',
+    summary: '전공 과목명 강의 검색',
+    description: '전공 과목명을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
     type: SearchCourseDto,
@@ -123,24 +123,50 @@ export class CourseController {
   })
   @ApiResponse({
     status: 200,
-    description: '과목명으로 강의 검색 성공 시',
+    description: '전공 과목명으로 강의 검색 성공 시',
     type: CommonCourseResponseDto,
     isArray: true,
   })
-  async searchCourseName(
+  async searchMajorCourseName(
     @Query('major') major: string,
     @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.searchCourseName(major, searchCourseDto);
+    return await this.courseService.searchMajorCourseName(
+      major,
+      searchCourseDto,
+    );
   }
 
-  // 교수님 성함 검색
+  // 교양 - 과목명 검색
   @UseGuards(JwtAuthGuard)
-  @Get('searchProfessorName')
+  @Get('search-general-course-name')
   @ApiBearerAuth('accessToken')
   @ApiOperation({
-    summary: '교수님 성함으로 강의 검색',
-    description: '교수님 성함을 입력하여 강의를 검색합니다.',
+    summary: '교양 과목명 강의 검색',
+    description: '교양 과목명을 입력하여 강의를 검색합니다.',
+  })
+  @ApiBody({
+    type: SearchCourseDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '교양 과목명으로 강의 검색 성공 시',
+    type: CommonCourseResponseDto,
+    isArray: true,
+  })
+  async searchGeneralCourseName(
+    @Body() searchCourseDto: SearchCourseDto,
+  ): Promise<CommonCourseResponseDto[]> {
+    return await this.courseService.searchGeneralCourseName(searchCourseDto);
+  }
+
+  // 전공 - 교수님 성함 검색
+  @UseGuards(JwtAuthGuard)
+  @Get('search-major-professor-name')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({
+    summary: '전공 과목 담당 교수님 성함으로 강의 검색',
+    description: '전공 과목 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
     type: SearchCourseDto,
@@ -152,15 +178,41 @@ export class CourseController {
   })
   @ApiResponse({
     status: 200,
-    description: '교수님 성함으로 강의 검색 성공 시',
+    description: '전공 과목 담당 교수님 성함으로 강의 검색 성공 시',
     type: CommonCourseResponseDto,
     isArray: true,
   })
-  async searchProfessorName(
+  async searchMajorProfessorName(
     @Query('major') major: string,
     @Body() searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.searchProfessorName(major, searchCourseDto);
+    return await this.courseService.searchMajorProfessorName(
+      major,
+      searchCourseDto,
+    );
+  }
+
+  // 교양 - 교수님 성함 검색
+  @UseGuards(JwtAuthGuard)
+  @Get('search-general-professor-name')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({
+    summary: '교양 담당 교수님 성함으로 강의 검색',
+    description: '교양 담당 교수님 성함을 입력하여 강의를 검색합니다.',
+  })
+  @ApiBody({
+    type: SearchCourseDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '교양 담당 교수님 성함으로 강의 검색 성공 시',
+    type: CommonCourseResponseDto,
+    isArray: true,
+  })
+  async searchGeneralProfessorName(
+    @Body() searchCourseDto: SearchCourseDto,
+  ): Promise<CommonCourseResponseDto[]> {
+    return await this.courseService.searchGeneralProfessorName(searchCourseDto);
   }
 
   // 교양 리스트

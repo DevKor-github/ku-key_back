@@ -74,40 +74,108 @@ export class CourseService {
   async searchCourseCode(
     searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: { courseCode: Like(`${searchCourseDto.courseCode}%`) },
-    });
+    try {
+      const courseCode = searchCourseDto.courseCode;
+      if (!courseCode) {
+        throw new BadRequestException('학수번호를 입력하세요!');
+      }
+      return await this.courseRepository.find({
+        where: { courseCode: Like(`${searchCourseDto.courseCode}%`) },
+      });
+    } catch (error) {
+      throw new BadRequestException('학수번호를 입력하세요!');
+    }
   }
 
-  // 과목명 검색 (띄어쓰기로 단어 구분)
-  async searchCourseName(
+  // 전공 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchMajorCourseName(
     major: string,
     searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
-    const words = searchCourseDto.courseName
-      .split(/\s+/)
-      .filter((word) => word.length);
-    const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    return await this.courseRepository
-      .createQueryBuilder('course')
-      .where(`course.courseName REGEXP :pattern`, {
-        pattern: `^${searchPattern}.*$`,
-      })
-      .andWhere('course.major = :major', { major })
-      .getMany();
+    try {
+      const courseName = searchCourseDto.courseName;
+      if (!courseName)
+        throw new BadRequestException('전공 과목명을 입력하세요!');
+      const words = searchCourseDto.courseName
+        .split(/\s+/)
+        .filter((word) => word.length);
+      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+      return await this.courseRepository
+        .createQueryBuilder('course')
+        .where(`course.courseName REGEXP :pattern`, {
+          pattern: `^${searchPattern}.*$`,
+        })
+        .andWhere('course.major = :major', { major })
+        .getMany();
+    } catch (error) {
+      throw new BadRequestException('전공 과목명을 입력하세요!');
+    }
   }
 
-  // 교수님 성함 검색
-  async searchProfessorName(
+  // 전공 교수님 성함 검색
+  async searchMajorProfessorName(
     major: string,
     searchCourseDto: SearchCourseDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: {
-        professorName: Like(`%${searchCourseDto.professorName}%`),
-        major: major,
-      },
-    });
+    try {
+      const professorName = searchCourseDto.professorName;
+      if (!professorName)
+        throw new BadRequestException('교수님 성함을 입력하세요!');
+
+      return await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchCourseDto.professorName}%`),
+          major: major,
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException('교수님 성함을 입력하세요!');
+    }
+  }
+
+  // 교양 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchGeneralCourseName(
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    try {
+      const courseName = searchCourseDto.courseName;
+      if (!courseName)
+        throw new BadRequestException('교양 강의명을 입력하세요!');
+      const words = searchCourseDto.courseName
+        .split(/\s+/)
+        .filter((word) => word.length);
+      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+      return await this.courseRepository
+        .createQueryBuilder('course')
+        .where(`course.courseName REGEXP :pattern`, {
+          pattern: `^${searchPattern}.*$`,
+        })
+        .andWhere('course.category = :category', {
+          category: 'General Studies',
+        })
+        .getMany();
+    } catch (error) {
+      throw new BadRequestException('교양 강의명을 입력하세요!');
+    }
+  }
+
+  // 교양 교수님 성함 검색
+  async searchGeneralProfessorName(
+    searchCourseDto: SearchCourseDto,
+  ): Promise<CourseEntity[]> {
+    try {
+      const professorName = searchCourseDto.professorName;
+      if (!professorName)
+        throw new BadRequestException('교수님 성함을 입력하세요!');
+      return await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchCourseDto.professorName}%`),
+          category: 'General Studies',
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException('교수님 성함을 입력하세요!');
+    }
   }
 
   // 교양 리스트 반환
