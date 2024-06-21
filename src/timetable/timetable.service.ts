@@ -304,17 +304,17 @@ export class TimeTableService {
             classroom,
           });
         });
+      });
 
-        // 스케줄 정보 객체
-        schedules.forEach((schedule) => {
-          getTimeTableByTimeTableIdResponse.push({
-            scheduleId: schedule.id,
-            scheduleTitle: schedule.title,
-            scheduleDay: schedule.day,
-            scheduleStartTime: schedule.startTime,
-            scheduleEndTime: schedule.endTime,
-            location: schedule.location,
-          });
+      // 스케줄 정보 객체
+      schedules.forEach((schedule) => {
+        getTimeTableByTimeTableIdResponse.push({
+          scheduleId: schedule.id,
+          scheduleTitle: schedule.title,
+          scheduleDay: schedule.day,
+          scheduleStartTime: schedule.startTime,
+          scheduleEndTime: schedule.endTime,
+          location: schedule.location,
         });
       });
 
