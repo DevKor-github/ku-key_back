@@ -40,9 +40,14 @@ export class TimeTableEntity extends CommonEntity {
   @OneToMany(
     () => TimeTableCourseEntity,
     (timeTableCourseEntity) => timeTableCourseEntity.timeTable,
+    { cascade: true },
   )
   timeTableCourses: TimeTableCourseEntity[];
 
-  @OneToMany(() => ScheduleEntity, (scheduleEntity) => scheduleEntity.timeTable)
+  @OneToMany(
+    () => ScheduleEntity,
+    (scheduleEntity) => scheduleEntity.timeTable,
+    { cascade: true },
+  )
   schedules: ScheduleEntity[];
 }
