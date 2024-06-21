@@ -13,7 +13,6 @@ import { CourseService } from './course.service';
 import { CreateCourseDetailDto } from './dto/create-course-detail.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
-import { SearchCourseDto } from './dto/search-course.dto';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -26,6 +25,9 @@ import {
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { CommonCourseDetailResponseDto } from './dto/common-course-detail-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { SearchCourseCodeDto } from './dto/search-course-code.dto';
+import { SearchCourseNameDto } from './dto/search-course-name.dto';
+import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 
 @ApiTags('course')
 @Controller('course')
@@ -91,7 +93,7 @@ export class CourseController {
     description: '학수번호를 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
-    type: SearchCourseDto,
+    type: SearchCourseCodeDto,
   })
   @ApiResponse({
     status: 200,
@@ -100,9 +102,9 @@ export class CourseController {
     isArray: true,
   })
   async searchCourseCode(
-    @Body() searchCourseDto: SearchCourseDto,
+    @Body() searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.searchCourseCode(searchCourseDto);
+    return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
 
   // 전공 - 과목명 검색
@@ -114,7 +116,7 @@ export class CourseController {
     description: '전공 과목명을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
-    type: SearchCourseDto,
+    type: SearchCourseNameDto,
   })
   @ApiQuery({
     name: 'major',
@@ -129,11 +131,11 @@ export class CourseController {
   })
   async searchMajorCourseName(
     @Query('major') major: string,
-    @Body() searchCourseDto: SearchCourseDto,
+    @Body() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorCourseName(
       major,
-      searchCourseDto,
+      searchCourseNameDto,
     );
   }
 
@@ -146,7 +148,7 @@ export class CourseController {
     description: '교양 과목명을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
-    type: SearchCourseDto,
+    type: SearchCourseNameDto,
   })
   @ApiResponse({
     status: 200,
@@ -155,9 +157,11 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralCourseName(
-    @Body() searchCourseDto: SearchCourseDto,
+    @Body() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.searchGeneralCourseName(searchCourseDto);
+    return await this.courseService.searchGeneralCourseName(
+      searchCourseNameDto,
+    );
   }
 
   // 전공 - 교수님 성함 검색
@@ -169,7 +173,7 @@ export class CourseController {
     description: '전공 과목 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
-    type: SearchCourseDto,
+    type: SearchProfessorNameDto,
   })
   @ApiQuery({
     name: 'major',
@@ -184,11 +188,11 @@ export class CourseController {
   })
   async searchMajorProfessorName(
     @Query('major') major: string,
-    @Body() searchCourseDto: SearchCourseDto,
+    @Body() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorProfessorName(
       major,
-      searchCourseDto,
+      searchProfessorNameDto,
     );
   }
 
@@ -201,7 +205,7 @@ export class CourseController {
     description: '교양 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
   @ApiBody({
-    type: SearchCourseDto,
+    type: SearchProfessorNameDto,
   })
   @ApiResponse({
     status: 200,
@@ -210,9 +214,11 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralProfessorName(
-    @Body() searchCourseDto: SearchCourseDto,
+    @Body() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.searchGeneralProfessorName(searchCourseDto);
+    return await this.courseService.searchGeneralProfessorName(
+      searchProfessorNameDto,
+    );
   }
 
   // 교양 리스트

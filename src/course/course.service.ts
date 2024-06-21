@@ -12,9 +12,11 @@ import { CourseDetailRepository } from './course-detail.repository';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
 import { Like } from 'typeorm';
-import { SearchCourseDto } from './dto/search-course.dto';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { CommonCourseDetailResponseDto } from './dto/common-course-detail-response.dto';
+import { SearchCourseCodeDto } from './dto/search-course-code.dto';
+import { SearchCourseNameDto } from './dto/search-course-name.dto';
+import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 
 @Injectable()
 export class CourseService {
@@ -72,15 +74,15 @@ export class CourseService {
 
   // 학수번호 검색
   async searchCourseCode(
-    searchCourseDto: SearchCourseDto,
+    searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<CommonCourseResponseDto[]> {
     try {
-      const courseCode = searchCourseDto.courseCode;
+      const courseCode = searchCourseCodeDto.courseCode;
       if (!courseCode) {
         throw new BadRequestException('학수번호를 입력하세요!');
       }
       return await this.courseRepository.find({
-        where: { courseCode: Like(`${searchCourseDto.courseCode}%`) },
+        where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
       });
     } catch (error) {
       throw error;
@@ -90,13 +92,13 @@ export class CourseService {
   // 전공 과목명 검색 (띄어쓰기로 단어 구분)
   async searchMajorCourseName(
     major: string,
-    searchCourseDto: SearchCourseDto,
+    searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     try {
-      const courseName = searchCourseDto.courseName;
+      const courseName = searchCourseNameDto.courseName;
       if (!courseName)
         throw new BadRequestException('전공 과목명을 입력하세요!');
-      const words = searchCourseDto.courseName
+      const words = searchCourseNameDto.courseName
         .split(/\s+/)
         .filter((word) => word.length);
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
@@ -115,16 +117,16 @@ export class CourseService {
   // 전공 교수님 성함 검색
   async searchMajorProfessorName(
     major: string,
-    searchCourseDto: SearchCourseDto,
+    searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     try {
-      const professorName = searchCourseDto.professorName;
+      const professorName = searchProfessorNameDto.professorName;
       if (!professorName)
         throw new BadRequestException('교수님 성함을 입력하세요!');
 
       return await this.courseRepository.find({
         where: {
-          professorName: Like(`%${searchCourseDto.professorName}%`),
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           major: major,
         },
       });
@@ -135,13 +137,13 @@ export class CourseService {
 
   // 교양 과목명 검색 (띄어쓰기로 단어 구분)
   async searchGeneralCourseName(
-    searchCourseDto: SearchCourseDto,
+    searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CourseEntity[]> {
     try {
-      const courseName = searchCourseDto.courseName;
+      const courseName = searchCourseNameDto.courseName;
       if (!courseName)
         throw new BadRequestException('교양 강의명을 입력하세요!');
-      const words = searchCourseDto.courseName
+      const words = searchCourseNameDto.courseName
         .split(/\s+/)
         .filter((word) => word.length);
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
@@ -161,15 +163,15 @@ export class CourseService {
 
   // 교양 교수님 성함 검색
   async searchGeneralProfessorName(
-    searchCourseDto: SearchCourseDto,
+    searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CourseEntity[]> {
     try {
-      const professorName = searchCourseDto.professorName;
+      const professorName = searchProfessorNameDto.professorName;
       if (!professorName)
         throw new BadRequestException('교수님 성함을 입력하세요!');
       return await this.courseRepository.find({
         where: {
-          professorName: Like(`%${searchCourseDto.professorName}%`),
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           category: 'General Studies',
         },
       });
