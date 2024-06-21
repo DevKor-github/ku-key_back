@@ -83,7 +83,7 @@ export class CourseService {
         where: { courseCode: Like(`${searchCourseDto.courseCode}%`) },
       });
     } catch (error) {
-      throw new BadRequestException('학수번호를 입력하세요!');
+      throw error;
     }
   }
 
@@ -108,7 +108,7 @@ export class CourseService {
         .andWhere('course.major = :major', { major })
         .getMany();
     } catch (error) {
-      throw new BadRequestException('전공 과목명을 입력하세요!');
+      throw error;
     }
   }
 
@@ -129,7 +129,7 @@ export class CourseService {
         },
       });
     } catch (error) {
-      throw new BadRequestException('교수님 성함을 입력하세요!');
+      throw error;
     }
   }
 
@@ -155,7 +155,7 @@ export class CourseService {
         })
         .getMany();
     } catch (error) {
-      throw new BadRequestException('교양 강의명을 입력하세요!');
+      throw error;
     }
   }
 
@@ -174,7 +174,7 @@ export class CourseService {
         },
       });
     } catch (error) {
-      throw new BadRequestException('교수님 성함을 입력하세요!');
+      throw error;
     }
   }
 
