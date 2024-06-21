@@ -392,6 +392,7 @@ export class TimeTableService {
     try {
       const timeTable = await queryRunner.manager.findOne(TimeTableEntity, {
         where: { id: timeTableId, userId: user.id },
+        relations: ['timeTableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
       });
 
       if (!timeTable) {
@@ -417,17 +418,15 @@ export class TimeTableService {
           await queryRunner.manager.save(nextMainTimeTable);
         }
       }
-      await queryRunner.manager.softDelete(TimeTableEntity, {
-        id: timeTableId,
-      });
+      await queryRunner.manager.softRemove(timeTable);
       await queryRunner.commitTransaction();
+      return { deleted: true };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.error('Failed to delete TimeTable: ', error);
       throw error;
     } finally {
       await queryRunner.release();
-      return { deleted: true };
     }
   }
 
