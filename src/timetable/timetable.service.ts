@@ -21,6 +21,7 @@ import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { GetFriendTimeTableRequestDto } from 'src/friendship/dto/get-friend-timetable.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -257,11 +258,11 @@ export class TimeTableService {
 
   async getTimeTableByTimeTableId(
     timeTableId: number,
-    user: AuthorizedUserDto,
+    userId: number,
   ): Promise<GetTimeTableByTimeTableIdDto[]> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
-        where: { id: timeTableId, userId: user.id },
+        where: { id: timeTableId, userId },
         relations: [
           'timeTableCourses',
           'timeTableCourses.course',
@@ -342,6 +343,35 @@ export class TimeTableService {
     }
   }
 
+  // 친구 시간표 조회
+  async getFriendTimeTable(
+    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: {
+          userId: getFriendTimeTableRequestDto.friendId,
+          year: getFriendTimeTableRequestDto.year,
+          semester: getFriendTimeTableRequestDto.semester,
+          mainTimeTable: true,
+        },
+      });
+
+      // 시간표가 없을 경우
+      if (!timeTable) {
+        throw new NotFoundException('친구 시간표가 존재하지 않습니다!');
+      }
+
+      // 시간표 id 추출 후 구현해놓은 함수 사용
+      const friendTimeTableId = timeTable.id;
+      return await this.getTimeTableByTimeTableId(
+        friendTimeTableId,
+        getFriendTimeTableRequestDto.friendId,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
   // 시간표에 등록한 강의 삭제
   async deleteTimeTableCourse(
     timeTableId: number,

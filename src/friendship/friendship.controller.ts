@@ -31,6 +31,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -79,6 +81,31 @@ export class FriendshipController {
     return await this.friendshipService.searchUserForFriendshipRequest(
       myUsername,
       username,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('friend-timetable')
+  @ApiOperation({
+    summary: '친구 시간표 조회',
+    description:
+      '친구 ID, 연도, 학기를 입력받아 해당 학기에 친구의 대표 시간표를 조회합니다.',
+  })
+  @ApiBody({
+    type: GetFriendTimeTableRequestDto,
+  })
+  @ApiOkResponse({
+    description: '친구 시간표 반환',
+    type: GetTimeTableByTimeTableIdDto,
+    isArray: true,
+  })
+  async getFriendTimeTable(
+    @Body() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+    return await this.friendshipService.getFriendTimeTable(
+      user.id,
+      getFriendTimeTableRequestDto,
     );
   }
 
@@ -135,7 +162,8 @@ export class FriendshipController {
   })
   @ApiParam({
     name: 'friendshipId',
-    description: '해당 친구 요청에 대한 friendship table의 Primary Key',
+    description: '해당 친구 요청에 대한 friendship id',
+    type: Number,
   })
   @ApiOkResponse({
     description: '친구 요청 수락 성공 시',
@@ -143,12 +171,12 @@ export class FriendshipController {
   })
   async acceptFriendshipRequest(
     @User() user: AuthorizedUserDto,
-    @Param('friendshipId') friendshipId: string,
+    @Param('friendshipId') friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
     const userId = user.id;
     return await this.friendshipService.acceptFriendshipRequest(
       userId,
-      Number(friendshipId),
+      friendshipId,
     );
   }
 
@@ -160,7 +188,8 @@ export class FriendshipController {
   })
   @ApiParam({
     name: 'friendshipId',
-    description: '해당 친구 요청에 대한 friendship table의 Primary Key',
+    description: '해당 친구 요청에 대한 friendship id',
+    type: Number,
   })
   @ApiOkResponse({
     description: '친구 요청 거절 성공 시',
@@ -168,12 +197,12 @@ export class FriendshipController {
   })
   async rejectFriendshipRequest(
     @User() user: AuthorizedUserDto,
-    @Param('friendshipId') friendshipId: string,
+    @Param('friendshipId') friendshipId: number,
   ): Promise<RejectFriendshipResponseDto> {
     const userId = user.id;
     return await this.friendshipService.rejectFriendshipRequest(
       userId,
-      Number(friendshipId),
+      friendshipId,
     );
   }
 
@@ -186,7 +215,7 @@ export class FriendshipController {
   })
   @ApiParam({
     name: 'friendshipId',
-    description: '해당 친구 관계에 대한 friendship table의 Primary Key',
+    description: '해당 친구 관계에 대한 friendship id',
   })
   @ApiOkResponse({
     description: '친구 삭제 성공 시',
@@ -194,12 +223,9 @@ export class FriendshipController {
   })
   async deleteFriendship(
     @User() user: AuthorizedUserDto,
-    @Param('friendshipId') friendshipId: string,
+    @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
     const userId = user.id;
-    return await this.friendshipService.deleteFriendship(
-      userId,
-      Number(friendshipId),
-    );
+    return await this.friendshipService.deleteFriendship(userId, friendshipId);
   }
 }
