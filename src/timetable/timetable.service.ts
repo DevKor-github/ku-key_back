@@ -14,16 +14,12 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import {
-  DayType,
-  GetCourseInfoByTimeTableIdResponseDto,
-} from './dto/get-courseinfo-timetable.dto';
+import { DayType } from './dto/get-courseinfo-timetable.dto';
 import { CourseService } from 'src/course/course.service';
 import { ScheduleService } from 'src/schedule/schedule.service';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
-import { GetScheduleInfoByTimeTableIdResponseDto } from './dto/get-scheduleinfo-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
 
 @Injectable()
