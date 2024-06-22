@@ -14,13 +14,15 @@ export class ClubRepository extends Repository<ClubEntity> {
   ): Promise<ClubEntity[]> {
     const queryBuilder = this.createQueryBuilder('club');
 
-    // 키워드가 존재하면 카테고리 존재해도 카테고리 필터링 X
+    // 카테고리, 키워드로 필터링
+    if (category) {
+      queryBuilder.andWhere('club.category = :category', { category });
+    }
+
     if (keyword) {
       queryBuilder.andWhere('club.name LIKE :keyword', {
         keyword: `${keyword}%`,
       });
-    } else if (category) {
-      queryBuilder.andWhere('club.category = :category', { category });
     }
 
     // 찜 여부를 함께 반환
