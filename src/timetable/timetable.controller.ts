@@ -16,7 +16,6 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import { GetCourseInfoByTimeTableIdResponseDto } from './dto/get-courseinfo-timetable.dto';
 import { UpdateTimeTableNameDto } from './dto/update-timetable-name.dto';
 import {
   ApiBearerAuth,
@@ -144,7 +143,8 @@ export class TimeTableController {
   @Get('/:timeTableId')
   @ApiOperation({
     summary: '시간표 ID로 시간표 관련 정보 조회',
-    description: '시간표 ID로 해당 시간표와 관련된 강의,일정 정보를 반환합니다.',
+    description:
+      '시간표 ID로 해당 시간표와 관련된 강의,일정 정보를 반환합니다.',
   })
   @ApiParam({
     name: 'timeTableId',
