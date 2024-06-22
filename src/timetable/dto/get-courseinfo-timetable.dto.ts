@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 const DayType = {
   Mon: 'Mon',
@@ -13,7 +19,12 @@ const DayType = {
 
 export type DayType = (typeof DayType)[keyof typeof DayType];
 
-export class GetTimeTableByTimeTableIdResponseDto {
+export class GetCourseInfoByTimeTableIdResponseDto {
+  @ApiProperty({ description: '강의 ID' })
+  @IsNumber()
+  @IsNotEmpty()
+  courseId: number;
+
   @ApiProperty({ description: '교수님 성함' })
   @IsString()
   @IsNotEmpty()
@@ -31,21 +42,21 @@ export class GetTimeTableByTimeTableIdResponseDto {
 
   @ApiProperty({ description: '시작 시간' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   startTime: string;
 
   @ApiProperty({ description: '종료 시간' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   endTime: string;
 
   @ApiProperty({ description: '강의실' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   classroom: string;
 
   @ApiProperty({ description: '요일' })
   @IsEnum(DayType)
-  @IsNotEmpty()
+  @IsOptional()
   day: DayType;
 }
