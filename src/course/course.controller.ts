@@ -266,7 +266,7 @@ export class CourseController {
 
   // 학문의 기초 리스트
   @UseGuards(JwtAuthGuard)
-  @Get('academicFoundation')
+  @Get('academic-foundation')
   @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '학문의 기초 강의 조회',
