@@ -11,7 +11,6 @@ import {
 
 @Controller('board')
 @ApiTags('board')
-@UseGuards(JwtAuthGuard)
 export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
