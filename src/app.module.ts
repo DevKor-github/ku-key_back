@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { CommonModule } from './common/common.module';
 import { BoardModule } from './community/board/board.module';
 import { PostModule } from './community/post/post.module';
 
@@ -42,6 +43,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
       max: 100,
       isGlobal: true,
     }),
+    CommonModule,
     UserModule,
     AuthModule,
     CourseModule,

@@ -6,14 +6,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RefreshStrategy } from './strategies/refresh.strategy';
-import { EmailService } from './email.service';
 import { VerifyStrategy } from './strategies/verify.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 import { KuVerificationRepository } from './ku-verification.repository';
 import { AdminStrategy } from './strategies/admin.strategy';
-import { FileService } from './file.service';
 import { UserModule } from 'src/user/user.module';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
   imports: [
@@ -29,12 +28,11 @@ import { UserModule } from 'src/user/user.module';
     }),
     TypeOrmModule.forFeature([KuVerificationEntity]),
     UserModule,
+    CommonModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    EmailService,
-    FileService,
     KuVerificationRepository,
     LocalStrategy,
     JwtStrategy,
