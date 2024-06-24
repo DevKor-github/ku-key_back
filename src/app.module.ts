@@ -12,6 +12,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { BoardModule } from './community/board/board.module';
+import { PostModule } from './community/post/post.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -48,6 +49,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
     TimeTableModule,
     ScheduleModule,
     BoardModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
