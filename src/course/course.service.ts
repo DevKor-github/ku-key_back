@@ -124,6 +124,10 @@ export class CourseService {
       if (!professorName)
         throw new BadRequestException('교수님 성함을 입력하세요!');
 
+      if (!major) {
+        throw new BadRequestException('전공을 입력하세요!');
+      }
+
       return await this.courseRepository.find({
         where: {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
