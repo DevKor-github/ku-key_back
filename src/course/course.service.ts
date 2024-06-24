@@ -108,6 +108,7 @@ export class CourseService {
           pattern: `^${searchPattern}.*$`,
         })
         .andWhere('course.major = :major', { major })
+        .andWhere('course.category = :category', { category: 'Major' })
         .getMany();
     } catch (error) {
       throw error;
@@ -132,6 +133,7 @@ export class CourseService {
         where: {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           major: major,
+          category: 'Major',
         },
       });
     } catch (error) {
