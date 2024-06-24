@@ -11,7 +11,7 @@ export class PostRepository extends Repository<PostEntity> {
   async getPostsbyBoardId(boardId: number): Promise<PostEntity[]> {
     const posts = await this.find({
       where: { boardId: boardId },
-      relations: ['postImages', 'comments'],
+      relations: ['postImages', 'comments', 'user'],
     });
     return posts;
   }
