@@ -198,9 +198,7 @@ export class AuthService {
     screenshot: Express.Multer.File,
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
-    const splitedFileNames = screenshot.originalname.split('.');
-    const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    if (!this.imagefilter(extension)) {
+    if (!this.fileService.imagefilter(screenshot)) {
       throw new BadRequestException('Only image file can be uploaded!');
     }
 
