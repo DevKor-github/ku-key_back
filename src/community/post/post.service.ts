@@ -26,6 +26,14 @@ export class PostService {
     return new GetPostListResponseDto(board, posts);
   }
 
+  async getPost(
+    user: AuthorizedUserDto,
+    postId: number,
+  ): Promise<GetPostResponseDto> {
+    const post = await this.postRepository.getPostbyPostId(postId);
+    return new GetPostResponseDto(post, user.id);
+  }
+
   async createPost(
     user: AuthorizedUserDto,
     boardId: number,

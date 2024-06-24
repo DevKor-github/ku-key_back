@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   UploadedFiles,
@@ -15,6 +16,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -48,6 +50,27 @@ export class PostController {
     @Query('boardId') boardId: number,
   ): Promise<GetPostListResponseDto> {
     return await this.postService.getPostList(boardId);
+  }
+
+  @Get('/:postId')
+  @ApiOperation({
+    summary: '게시글 조회',
+    description: '게시글 내용을 조회합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 조회 성공',
+    type: GetPostResponseDto,
+  })
+  async getPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+  ): Promise<GetPostResponseDto> {
+    return await this.postService.getPost(user, postId);
   }
 
   @Post()
