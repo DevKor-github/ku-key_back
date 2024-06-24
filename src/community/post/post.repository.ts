@@ -15,4 +15,30 @@ export class PostRepository extends Repository<PostEntity> {
     });
     return posts;
   }
+
+  async createPost(
+    userId: number,
+    boardId: number,
+    title: string,
+    content: string,
+    isAnonymous: boolean,
+  ): Promise<PostEntity> {
+    const post = this.create({
+      userId: userId,
+      boardId: boardId,
+      title: title,
+      content: content,
+      isAnonymous: isAnonymous,
+    });
+
+    return await this.save(post);
+  }
+
+  async getPostbyPostId(postId: number): Promise<PostEntity> {
+    const post = await this.findOne({
+      where: { id: postId },
+      relations: ['user', 'postImages', 'comments'],
+    });
+    return post;
+  }
 }
