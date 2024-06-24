@@ -31,6 +31,9 @@ export class PostService {
     postId: number,
   ): Promise<GetPostResponseDto> {
     const post = await this.postRepository.getPostbyPostId(postId);
+    if (!post) {
+      throw new BadRequestException('Wrong PostId!');
+    }
     return new GetPostResponseDto(post, user.id);
   }
 
