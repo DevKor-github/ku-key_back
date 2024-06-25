@@ -258,7 +258,7 @@ export class TimeTableService {
   async getTimeTableByTimeTableId(
     timeTableId: number,
     user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId: user.id },
@@ -276,7 +276,10 @@ export class TimeTableService {
         await this.scheduleService.getScheduleByTimeTableId(timeTableId);
 
       // 코스 정보와 스케줄 정보를 같은 깊이의 객체로 분리하여 반환
-      const getTimeTableByTimeTableIdResponse = [];
+      const getTimeTableByTimeTableIdResponse: GetTimeTableByTimeTableIdDto = {
+        courses: [],
+        schedules: [],
+      };
       timeTable.timeTableCourses.forEach((courseEntry) => {
         const {
           id: courseId,
@@ -289,7 +292,7 @@ export class TimeTableService {
           const { day, startTime, endTime, classroom } = detailEntry;
 
           // 강의 정보 객체
-          getTimeTableByTimeTableIdResponse.push({
+          getTimeTableByTimeTableIdResponse.courses.push({
             courseId,
             professorName,
             courseName,
@@ -304,10 +307,10 @@ export class TimeTableService {
 
       // 스케줄 정보 객체
       schedules.forEach((schedule) => {
-        getTimeTableByTimeTableIdResponse.push({
+        getTimeTableByTimeTableIdResponse.schedules.push({
           scheduleId: schedule.id,
           scheduleTitle: schedule.title,
-          scheduleDay: schedule.day,
+          scheduleDay: schedule.day as DayType,
           scheduleStartTime: schedule.startTime,
           scheduleEndTime: schedule.endTime,
           location: schedule.location,

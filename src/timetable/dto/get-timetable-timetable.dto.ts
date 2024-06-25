@@ -3,7 +3,7 @@ import { GetCourseInfoByTimeTableIdResponseDto } from './get-courseinfo-timetabl
 import { GetScheduleInfoByTimeTableIdResponseDto } from './get-scheduleinfo-timetable.dto';
 
 export class GetTimeTableByTimeTableIdDto {
-  @ApiPropertyOptional({ type: GetCourseInfoByTimeTableIdResponseDto })
+  @ApiPropertyOptional({ type: [GetCourseInfoByTimeTableIdResponseDto] })
   courses?: GetCourseInfoByTimeTableIdResponseDto[];
 
   @ApiPropertyOptional({ type: [GetScheduleInfoByTimeTableIdResponseDto] })

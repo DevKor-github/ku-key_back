@@ -154,12 +154,11 @@ export class TimeTableController {
     status: 200,
     description: '특정 시간표 ID로 조회 성공 시',
     type: GetTimeTableByTimeTableIdDto,
-    isArray: true,
   })
   async getTimeTableByTimeTableId(
     @Param('timeTableId') timeTableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     return await this.timeTableService.getTimeTableByTimeTableId(
       timeTableId,
       user,
