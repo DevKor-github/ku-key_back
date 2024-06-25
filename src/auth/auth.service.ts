@@ -243,9 +243,7 @@ export class AuthService {
       .map((request) => {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
-          imgDir:
-            `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
-            request.imgDir,
+          imgDir: this.fileService.makeUrlByFileDir(request.imgDir),
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };

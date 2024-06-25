@@ -70,4 +70,11 @@ export class FileService {
     const validExtensions = ['jpg', 'jpeg', 'png'];
     return validExtensions.includes(extension);
   }
+
+  makeUrlByFileDir(fileDir: string): string {
+    return (
+      `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
+      fileDir
+    );
+  }
 }
