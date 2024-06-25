@@ -62,6 +62,12 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    for (const image of images) {
+      if (!this.fileService.imagefilter(image)) {
+        throw new BadRequestException('Only image file can be uploaded!');
+      }
+    }
+
     const post = await this.postRepository.createPost(
       user.id,
       boardId,
@@ -105,6 +111,12 @@ export class PostService {
     }
 
     if (requestDto.ImageUpdate) {
+      for (const image of images) {
+        if (!this.fileService.imagefilter(image)) {
+          throw new BadRequestException('Only image file can be uploaded!');
+        }
+      }
+
       for (const image of post.postImages) {
         await this.fileService.deleteFile(image.imgDir);
         const isImageDeleted = await this.postImageRepository.deletePostImage(
