@@ -23,7 +23,15 @@ export class PostService {
       throw new BadRequestException('Wrong BoardId!');
     }
     const posts = await this.postRepository.getPostsbyBoardId(boardId);
-    return new GetPostListResponseDto(board, posts);
+    const postList = new GetPostListResponseDto(board, posts);
+    postList.posts.map((postPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
+
+    return postList;
   }
 
   async getPost(
@@ -34,7 +42,12 @@ export class PostService {
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
-    return new GetPostResponseDto(post, user.id);
+    const postResponse = new GetPostResponseDto(post, user.id);
+    postResponse.imageDirs.map((image) => {
+      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
+    });
+
+    return postResponse;
   }
 
   async createPost(
@@ -63,6 +76,11 @@ export class PostService {
       );
       createdPost.postImages.push(postImage);
     }
-    return new GetPostResponseDto(createdPost, user.id);
+    const postResponse = new GetPostResponseDto(createdPost, user.id);
+    postResponse.imageDirs.map((image) => {
+      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
+    });
+
+    return postResponse;
   }
 }
