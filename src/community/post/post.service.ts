@@ -116,16 +116,6 @@ export class PostService {
           throw new BadRequestException('Only image file can be uploaded!');
         }
       }
-
-      for (const image of post.postImages) {
-        await this.fileService.deleteFile(image.imgDir);
-        const isImageDeleted = await this.postImageRepository.deletePostImage(
-          image.id,
-        );
-        if (!isImageDeleted) {
-          throw new NotImplementedException('Image Update Failed!');
-        }
-      }
     }
 
     const isUpdated = await this.postRepository.updatePost(
@@ -138,23 +128,28 @@ export class PostService {
       throw new NotImplementedException('Post Update Failed!');
     }
 
-    const updatedPost = await this.postRepository.getPostbyPostId(postId);
-
     if (requestDto.ImageUpdate) {
+      for (const image of post.postImages) {
+        await this.fileService.deleteFile(image.imgDir);
+        const isImageDeleted = await this.postImageRepository.deletePostImage(
+          image.id,
+        );
+        if (!isImageDeleted) {
+          throw new NotImplementedException('Image Update Failed!');
+        }
+      }
+
       for (const image of images) {
         const imgDir = await this.fileService.uploadFile(
           image,
           'PostImage',
           `${post.id}`,
         );
-        const postImage = await this.postImageRepository.createPostImage(
-          post.id,
-          imgDir,
-        );
-        updatedPost.postImages.push(postImage);
+        await this.postImageRepository.createPostImage(post.id, imgDir);
       }
     }
 
+    const updatedPost = await this.postRepository.getPostbyPostId(postId);
     const postResponse = new GetPostResponseDto(updatedPost, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
