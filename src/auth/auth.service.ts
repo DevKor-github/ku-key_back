@@ -198,9 +198,7 @@ export class AuthService {
     screenshot: Express.Multer.File,
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
-    const splitedFileNames = screenshot.originalname.split('.');
-    const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    if (!this.imagefilter(extension)) {
+    if (!this.fileService.imagefilter(screenshot)) {
       throw new BadRequestException('Only image file can be uploaded!');
     }
 
@@ -245,9 +243,7 @@ export class AuthService {
       .map((request) => {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
-          imgDir:
-            `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
-            request.imgDir,
+          imgDir: this.fileService.makeUrlByFileDir(request.imgDir),
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
@@ -289,11 +285,6 @@ export class AuthService {
       await this.kuVerificationRepository.findRequestById(requestId);
     await this.userService.deleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
-  }
-
-  imagefilter(extension: string): boolean {
-    const validExtensions = ['jpg', 'jpeg', 'png'];
-    return validExtensions.includes(extension);
   }
 
   async updatePassword(
