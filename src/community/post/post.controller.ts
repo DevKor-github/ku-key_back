@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UploadedFiles,
@@ -27,6 +28,7 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
 import { GetPostResponseDto } from './dto/get-post.dto';
+import { UpdatePostRequestDto } from './dto/update-post.dto';
 
 @Controller('post')
 @ApiTags('post')
@@ -99,5 +101,33 @@ export class PostController {
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     return await this.postService.createPost(user, boardId, images, body);
+  }
+
+  @Patch('/:postId')
+  @UseInterceptors(FilesInterceptor('images'))
+  @ApiOperation({
+    summary: '게시글 수정',
+    description: '게시글을 수정합니다.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiBody({
+    type: UpdatePostRequestDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 수정 성공',
+    type: GetPostResponseDto,
+  })
+  async updatePost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+    @UploadedFiles() images: Array<Express.Multer.File>,
+    @Body() body: UpdatePostRequestDto,
+  ): Promise<GetPostResponseDto> {
+    return await this.postService.updatePost(user, postId, images, body);
   }
 }

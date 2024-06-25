@@ -41,4 +41,22 @@ export class PostRepository extends Repository<PostEntity> {
     });
     return post;
   }
+
+  async updatePost(
+    postId: number,
+    title: string,
+    content: string,
+    isAnonymous: boolean,
+  ): Promise<boolean> {
+    const result = await this.update(
+      { id: postId },
+      {
+        title: title,
+        content: content,
+        isAnonymous: isAnonymous,
+      },
+    );
+
+    return result.affected ? true : false;
+  }
 }

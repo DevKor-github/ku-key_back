@@ -18,4 +18,9 @@ export class PostImageRepository extends Repository<PostImageEntity> {
     });
     return await this.save(postImage);
   }
+
+  async deletePostImage(postImageId: number): Promise<boolean> {
+    const deleteResult = await this.softDelete({ id: postImageId });
+    return deleteResult.affected ? true : false;
+  }
 }

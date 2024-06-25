@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { PostImageRepository } from './post-image.repository';
 import { BoardService } from '../board/board.service';
@@ -7,6 +11,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
 import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
+import { UpdatePostRequestDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostService {
@@ -77,6 +82,67 @@ export class PostService {
       createdPost.postImages.push(postImage);
     }
     const postResponse = new GetPostResponseDto(createdPost, user.id);
+    postResponse.imageDirs.map((image) => {
+      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
+    });
+
+    return postResponse;
+  }
+
+  async updatePost(
+    user: AuthorizedUserDto,
+    postId: number,
+    images: Array<Express.Multer.File>,
+    requestDto: UpdatePostRequestDto,
+  ): Promise<GetPostResponseDto> {
+    const post = await this.postRepository.getPostbyPostId(postId);
+    if (!post) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+    if (post.userId !== user.id) {
+      throw new BadRequestException("Other user's post!");
+    }
+
+    if (requestDto.ImageUpdate) {
+      for (const image of post.postImages) {
+        await this.fileService.deleteFile(image.imgDir);
+        const isImageDeleted = await this.postImageRepository.deletePostImage(
+          image.id,
+        );
+        if (!isImageDeleted) {
+          throw new NotImplementedException('Image Update Failed!');
+        }
+      }
+    }
+
+    const isUpdated = await this.postRepository.updatePost(
+      postId,
+      requestDto.title,
+      requestDto.content,
+      requestDto.isAnonymous,
+    );
+    if (!isUpdated) {
+      throw new NotImplementedException('Post Update Failed!');
+    }
+
+    const updatedPost = await this.postRepository.getPostbyPostId(postId);
+
+    if (requestDto.ImageUpdate) {
+      for (const image of images) {
+        const imgDir = await this.fileService.uploadFile(
+          image,
+          'PostImage',
+          `${post.id}`,
+        );
+        const postImage = await this.postImageRepository.createPostImage(
+          post.id,
+          imgDir,
+        );
+        updatedPost.postImages.push(postImage);
+      }
+    }
+
+    const postResponse = new GetPostResponseDto(updatedPost, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
     });
