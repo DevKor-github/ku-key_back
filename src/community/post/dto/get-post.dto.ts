@@ -15,7 +15,7 @@ class Comment {
   @ApiProperty({ description: '댓글 생성 시간' })
   createdAt: Date;
 
-  @ApiProperty({ description: '댓글 수정 시간(수정이 되지 않았으면 null)' })
+  @ApiProperty({ description: '댓글 수정 시간' })
   updatedAt: Date;
 
   @ApiProperty({ description: '댓글을 작성한 사용자(익명이면 null)' })
@@ -69,7 +69,7 @@ export class GetPostResponseDto {
   @ApiProperty({ description: '게시글 생성 시간' })
   createdAt: Date;
 
-  @ApiProperty({ description: '게시글 수정 시간(수정이 되지 않았으면 null)' })
+  @ApiProperty({ description: '게시글 수정 시간' })
   updatedAt: Date;
 
   @ApiProperty({ description: '게시글을 생성한 사용자(익명이면 null)' })
