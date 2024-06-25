@@ -21,6 +21,7 @@ import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { ColorType } from './dto/update-timetable-color.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -449,6 +450,31 @@ export class TimeTableService {
       return mainTimeTable;
     } catch (error) {
       console.error('Failed to get MainTimeTable: ', error);
+      throw error;
+    }
+  }
+
+  // 시간표 색상 변경
+  async updateTimeTableColor(
+    timeTableId: number,
+    user: AuthorizedUserDto,
+    tableColor: ColorType,
+  ): Promise<CommonTimeTableResponseDto> {
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: {
+          id: timeTableId,
+          userId: user.id,
+        },
+      });
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+
+      timeTable.color = tableColor;
+      return await this.timeTableRepository.save(timeTable);
+    } catch (error) {
+      console.error('Failed to update TimeTable name: ', error);
       throw error;
     }
   }
