@@ -287,11 +287,6 @@ export class AuthService {
     await this.fileService.deleteFile(request.imgDir);
   }
 
-  imagefilter(extension: string): boolean {
-    const validExtensions = ['jpg', 'jpeg', 'png'];
-    return validExtensions.includes(extension);
-  }
-
   async updatePassword(
     userId: number,
     newPassword: string,
