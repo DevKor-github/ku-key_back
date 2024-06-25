@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -29,6 +30,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
+import { DeletePostResponseDto } from './dto/delete-post.dto';
 
 @Controller('post')
 @ApiTags('post')
@@ -129,5 +131,26 @@ export class PostController {
     @Body() body: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     return await this.postService.updatePost(user, postId, images, body);
+  }
+
+  @Delete('/:postId')
+  @ApiOperation({
+    summary: '게시글 삭제',
+    description: '게시글을 삭제합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 삭제 성공',
+    type: DeletePostResponseDto,
+  })
+  async deletePost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+  ): Promise<DeletePostResponseDto> {
+    return await this.postService.deletePost(user, postId);
   }
 }

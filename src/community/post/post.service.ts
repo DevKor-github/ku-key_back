@@ -12,6 +12,7 @@ import { CreatePostRequestDto } from './dto/create-post.dto';
 import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
+import { DeletePostResponseDto } from './dto/delete-post.dto';
 
 @Injectable()
 export class PostService {
@@ -148,5 +149,35 @@ export class PostService {
     });
 
     return postResponse;
+  }
+
+  async deletePost(
+    user: AuthorizedUserDto,
+    postId: number,
+  ): Promise<DeletePostResponseDto> {
+    const post = await this.postRepository.getPostbyPostId(postId);
+    if (!post) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+    if (post.userId !== user.id) {
+      throw new BadRequestException("Other user's post!");
+    }
+
+    for (const image of post.postImages) {
+      await this.fileService.deleteFile(image.imgDir);
+      const isImageDeleted = await this.postImageRepository.deletePostImage(
+        image.id,
+      );
+      if (!isImageDeleted) {
+        throw new NotImplementedException('Image Delete Failed!');
+      }
+    }
+
+    const isDeleted = await this.postRepository.deletePost(postId);
+    if (!isDeleted) {
+      throw new NotImplementedException('Post Delete Failed!');
+    }
+
+    return new DeletePostResponseDto(true);
   }
 }
