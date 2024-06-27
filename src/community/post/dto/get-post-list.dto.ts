@@ -25,7 +25,16 @@ class PostPreview {
     this.title = postEntity.title;
     this.content = postEntity.content.substring(0, 100);
     this.createdAt = postEntity.createdAt;
-    this.username = postEntity.isAnonymous ? null : postEntity.user.username;
+    this.username = postEntity.isAnonymous
+      ? null
+      : postEntity.user.username.substring(
+          0,
+          Math.floor(postEntity.user.username.length / 2),
+        ) +
+        '*'.repeat(
+          postEntity.user.username.length -
+            Math.floor(postEntity.user.username.length / 2),
+        );
     this.commentNumber = postEntity.comments.length;
     this.thumbnailDir =
       postEntity.postImages.length > 0 ? postEntity.postImages[0].imgDir : null;

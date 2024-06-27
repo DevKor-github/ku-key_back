@@ -46,7 +46,16 @@ export class GetPostResponseDto {
     this.content = postEntity.content;
     this.createdAt = postEntity.createdAt;
     this.updatedAt = postEntity.updatedAt;
-    this.username = postEntity.isAnonymous ? null : postEntity.user.username;
+    this.username = postEntity.isAnonymous
+      ? null
+      : postEntity.user.username.substring(
+          0,
+          Math.floor(postEntity.user.username.length / 2),
+        ) +
+        '*'.repeat(
+          postEntity.user.username.length -
+            Math.floor(postEntity.user.username.length / 2),
+        );
 
     //댓글 할당 코드 필요
 
