@@ -23,12 +23,17 @@ export class PostService {
     private readonly fileService: FileService,
   ) {}
 
-  async getPostList(boardId: number): Promise<GetPostListResponseDto> {
+  async getPostList(
+    boardId: number,
+    keyword?: string,
+  ): Promise<GetPostListResponseDto> {
     const board = await this.boardService.getBoardbyId(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
-    const posts = await this.postRepository.getPostsbyBoardId(boardId);
+    const posts = keyword
+      ? await this.postRepository.getPostsbyBoardIdwithKeyword(boardId, keyword)
+      : await this.postRepository.getPostsbyBoardId(boardId);
     const postList = new GetPostListResponseDto(board, posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;

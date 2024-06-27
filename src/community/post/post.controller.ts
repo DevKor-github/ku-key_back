@@ -45,6 +45,7 @@ export class PostController {
     description: '게시판 별로 게시글 목록을 조회합니다.',
   })
   @ApiQuery({ name: 'boardId', description: '조회하고자 하는 게시판 ID' })
+  @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
@@ -52,8 +53,9 @@ export class PostController {
   })
   async getPostList(
     @Query('boardId') boardId: number,
+    @Query('keyword') keyword?: string,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getPostList(boardId);
+    return await this.postService.getPostList(boardId, keyword);
   }
 
   @Get('/:postId')

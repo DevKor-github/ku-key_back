@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostEntity } from 'src/entities/post.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -11,6 +11,20 @@ export class PostRepository extends Repository<PostEntity> {
   async getPostsbyBoardId(boardId: number): Promise<PostEntity[]> {
     const posts = await this.find({
       where: { boardId: boardId },
+      relations: ['postImages', 'comments', 'user'],
+    });
+    return posts;
+  }
+
+  async getPostsbyBoardIdwithKeyword(
+    boardId: number,
+    keyword: string,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: [
+        { boardId: boardId, title: ILike(`%${keyword}%`) },
+        { boardId: boardId, content: ILike(`%${keyword}%`) },
+      ],
       relations: ['postImages', 'comments', 'user'],
     });
     return posts;
