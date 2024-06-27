@@ -73,6 +73,11 @@ export class PostService {
       }
     }
 
+    const board = await this.boardService.getBoardbyId(boardId);
+    if (!board) {
+      throw new BadRequestException('Wrong BoardId!');
+    }
+
     const post = await this.postRepository.createPost(
       user.id,
       boardId,
