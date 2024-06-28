@@ -197,4 +197,8 @@ export class PostService {
 
     return new DeletePostResponseDto(true);
   }
+
+  async isExistingPostId(postId: number): Promise<boolean> {
+    return await this.postRepository.isExistingPostId(postId);
+  }
 }

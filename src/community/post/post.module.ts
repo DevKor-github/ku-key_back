@@ -17,5 +17,6 @@ import { CommonModule } from 'src/common/common.module';
   ],
   controllers: [PostController],
   providers: [PostService, PostRepository, PostImageRepository],
+  exports: [PostService],
 })
 export class PostModule {}
