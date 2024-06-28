@@ -162,7 +162,7 @@ export class TimeTableController {
   ): Promise<GetTimeTableByTimeTableIdDto> {
     return await this.timeTableService.getTimeTableByTimeTableId(
       timeTableId,
-      user,
+      user.id,
     );
   }
 

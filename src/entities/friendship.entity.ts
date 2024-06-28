@@ -13,6 +13,6 @@ export class FriendshipEntity extends CommonEntity {
   @ManyToOne(() => UserEntity, (user) => user.receivedFriendRequests)
   toUser: UserEntity;
 
-  @Column('tinyint', { nullable: false })
+  @Column('boolean', { nullable: false })
   areWeFriend: boolean;
 }
