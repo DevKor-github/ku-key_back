@@ -1,28 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { GetCommentResponseDto } from 'src/community/comment/dto/get-comment.dto';
+import { CommentEntity } from 'src/entities/comment.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostEntity } from 'src/entities/post.entity';
 
-class Comment {
-  @ApiProperty({ description: '댓글 고유 ID' })
-  id: number;
-
-  @ApiProperty({ description: '본인이 작성한 댓글인지 여부' })
-  isMyComment: boolean;
-
-  @ApiProperty({ description: '댓글 내용' })
-  content: string;
-
-  @ApiProperty({ description: '댓글 생성 시간' })
-  createdAt: Date;
-
-  @ApiProperty({ description: '댓글 수정 시간' })
-  updatedAt: Date;
-
-  @ApiProperty({ description: '댓글을 작성한 사용자(익명이면 null)' })
-  username: string | null;
-
+class Comment extends GetCommentResponseDto {
+  constructor(commentEntity: CommentEntity, userId: number) {
+    super(commentEntity, userId);
+    if (!commentEntity.parentCommentId) {
+      this.reply = [];
+    }
+  }
   @ApiProperty({ description: '답글', type: [Comment] })
-  reply: Comment[];
+  reply?: Comment[];
 }
 
 class Image {
@@ -57,7 +47,21 @@ export class GetPostResponseDto {
             Math.floor(postEntity.user.username.length / 2),
         );
 
-    //댓글 할당 코드 필요
+    this.comments = [];
+    postEntity.comments
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map((comment) => {
+        if (!comment.parentCommentId) {
+          this.comments.push(new Comment(comment, userId));
+        } else {
+          this.comments
+            .find(
+              (existingComment) =>
+                existingComment.id === comment.parentCommentId,
+            )
+            .reply.push(new Comment(comment, userId));
+        }
+      });
 
     this.imageDirs = postEntity.postImages.map(
       (postImage) => new Image(postImage),
