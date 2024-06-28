@@ -5,7 +5,7 @@ export class GetCommentResponseDto {
   constructor(commentEntity: CommentEntity, userId: number) {
     this.id = commentEntity.id;
     this.isMyComment = commentEntity.userId === userId;
-    this.content = commentEntity.conetnt;
+    this.content = commentEntity.content;
     this.createdAt = commentEntity.createdAt;
     this.updatedAt = commentEntity.updatedAt;
     this.username = commentEntity.isAnonymous

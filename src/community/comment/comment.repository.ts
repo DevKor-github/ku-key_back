@@ -27,7 +27,7 @@ export class CommentRepository extends Repository<CommentEntity> {
     const comment = this.create({
       userId: userId,
       postId: postId,
-      conetnt: content,
+      content: content,
       isAnonymous: isAnonymous,
     });
     if (parentCommentId) {

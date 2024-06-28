@@ -25,7 +25,7 @@ export class CommentEntity extends CommonEntity {
   parentCommentId: number;
 
   @Column('varchar', { nullable: false })
-  conetnt: string;
+  content: string;
 
   @Column('boolean', { nullable: false })
   isAnonymous: boolean;
