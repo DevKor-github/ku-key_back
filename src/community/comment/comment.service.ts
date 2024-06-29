@@ -30,6 +30,12 @@ export class CommentService {
     if (parentCommentId) {
       const parentComment =
         await this.commentRepository.getCommentbyCommentId(parentCommentId);
+      if (!parentComment) {
+        throw new BadRequestException('Wrong ParentCommentId!');
+      }
+      if (postId !== parentComment.postId) {
+        throw new BadRequestException("Cannot create other post's reply!");
+      }
       if (parentComment.parentCommentId) {
         parentCommentId = parentComment.parentComment.id;
       }
