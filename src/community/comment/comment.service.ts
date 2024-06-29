@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { CommentRepository } from './comment.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCommentRequestDto } from './dto/create-comment.dto';
 import { PostService } from '../post/post.service';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
+import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -39,5 +44,33 @@ export class CommentService {
       comment.id,
     );
     return new GetCommentResponseDto(createdComment, user.id);
+  }
+
+  async updateComment(
+    user: AuthorizedUserDto,
+    commentId: number,
+    requestDto: UpdateCommentRequestDto,
+  ): Promise<GetCommentResponseDto> {
+    const comment =
+      await this.commentRepository.getCommentbyCommentId(commentId);
+    if (!comment) {
+      throw new BadRequestException('Wrong CommentId!');
+    }
+    if (comment.userId !== user.id) {
+      throw new BadRequestException("Other user's comment!");
+    }
+
+    const isUpdated = await this.commentRepository.updateComment(
+      commentId,
+      requestDto.content,
+      requestDto.isAnonymous,
+    );
+    if (!isUpdated) {
+      throw new NotImplementedException('Comment Update Failed!');
+    }
+
+    const updatedComment =
+      await this.commentRepository.getCommentbyCommentId(commentId);
+    return new GetCommentResponseDto(updatedComment, user.id);
   }
 }

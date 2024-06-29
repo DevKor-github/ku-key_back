@@ -1,8 +1,17 @@
-import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -13,6 +22,7 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCommentRequestDto } from './dto/create-comment.dto';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
+import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -55,5 +65,30 @@ export class CommentController {
       body,
       parentCommentId,
     );
+  }
+
+  @Patch('/:commentId')
+  @ApiOperation({
+    summary: '댓글 수정',
+    description: '댓글을 수정합니다.',
+  })
+  @ApiParam({
+    name: 'commentId',
+    description: '댓글의 고유 ID',
+  })
+  @ApiBody({
+    type: UpdateCommentRequestDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '댓글 수정 성공',
+    type: GetCommentResponseDto,
+  })
+  async updateComment(
+    @User() user: AuthorizedUserDto,
+    @Param('commentId') commentId: number,
+    @Body() body: UpdateCommentRequestDto,
+  ): Promise<GetCommentResponseDto> {
+    return await this.commentService.updateComment(user, commentId, body);
   }
 }

@@ -35,4 +35,20 @@ export class CommentRepository extends Repository<CommentEntity> {
     }
     return await this.save(comment);
   }
+
+  async updateComment(
+    commentId: number,
+    content: string,
+    isAnonymous: boolean,
+  ): Promise<boolean> {
+    const result = await this.update(
+      { id: commentId },
+      {
+        content: content,
+        isAnonymous: isAnonymous,
+      },
+    );
+
+    return result.affected ? true : false;
+  }
 }
