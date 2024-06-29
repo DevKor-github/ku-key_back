@@ -51,4 +51,9 @@ export class CommentRepository extends Repository<CommentEntity> {
 
     return result.affected ? true : false;
   }
+
+  async deleteComment(commentId: number): Promise<boolean> {
+    const deleteResult = await this.softDelete({ id: commentId });
+    return deleteResult.affected ? true : false;
+  }
 }

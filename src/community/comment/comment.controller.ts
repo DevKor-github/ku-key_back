@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   Patch,
   Post,
@@ -23,6 +24,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCommentRequestDto } from './dto/create-comment.dto';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
+import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -90,5 +92,26 @@ export class CommentController {
     @Body() body: UpdateCommentRequestDto,
   ): Promise<GetCommentResponseDto> {
     return await this.commentService.updateComment(user, commentId, body);
+  }
+
+  @Delete('/:commentId')
+  @ApiOperation({
+    summary: '댓글 삭제',
+    description: '댓글을 삭제합니다.',
+  })
+  @ApiParam({
+    name: 'commentId',
+    description: '댓글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '댓글 삭제 성공',
+    type: DeleteCommentResponseDto,
+  })
+  async deleteComment(
+    @User() user: AuthorizedUserDto,
+    @Param('commentId') commentId: number,
+  ): Promise<DeleteCommentResponseDto> {
+    return await this.commentService.deleteComment(user, commentId);
   }
 }

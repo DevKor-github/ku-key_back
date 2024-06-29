@@ -9,6 +9,7 @@ import { CreateCommentRequestDto } from './dto/create-comment.dto';
 import { PostService } from '../post/post.service';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
+import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -72,5 +73,26 @@ export class CommentService {
     const updatedComment =
       await this.commentRepository.getCommentbyCommentId(commentId);
     return new GetCommentResponseDto(updatedComment, user.id);
+  }
+
+  async deleteComment(
+    user: AuthorizedUserDto,
+    commentId: number,
+  ): Promise<DeleteCommentResponseDto> {
+    const comment =
+      await this.commentRepository.getCommentbyCommentId(commentId);
+    if (!comment) {
+      throw new BadRequestException('Wrong commentId!');
+    }
+    if (comment.userId !== user.id) {
+      throw new BadRequestException("Other user's comment!");
+    }
+
+    const isDeleted = await this.commentRepository.deleteComment(commentId);
+    if (!isDeleted) {
+      throw new NotImplementedException('Comment Delete Failed!');
+    }
+
+    return new DeleteCommentResponseDto(true);
   }
 }
