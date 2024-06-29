@@ -182,12 +182,6 @@ export class PostService {
 
     for (const image of post.postImages) {
       await this.fileService.deleteFile(image.imgDir);
-      const isImageDeleted = await this.postImageRepository.deletePostImage(
-        image.id,
-      );
-      if (!isImageDeleted) {
-        throw new NotImplementedException('Image Delete Failed!');
-      }
     }
 
     const isDeleted = await this.postRepository.deletePost(postId);

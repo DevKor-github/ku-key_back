@@ -42,9 +42,13 @@ export class PostEntity extends CommonEntity {
   @ManyToOne(() => BoardEntity, (boardEntity) => boardEntity.posts)
   board: BoardEntity;
 
-  @OneToMany(() => PostImageEntity, (postImageEntity) => postImageEntity.post)
+  @OneToMany(() => PostImageEntity, (postImageEntity) => postImageEntity.post, {
+    cascade: true,
+  })
   postImages: PostImageEntity[];
 
-  @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.post)
+  @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.post, {
+    cascade: true,
+  })
   comments: CommentEntity[];
 }
