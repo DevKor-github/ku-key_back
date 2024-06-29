@@ -47,7 +47,7 @@ export class CommentEntity extends CommonEntity {
     () => CommentEntity,
     (commentEntity) => commentEntity.replyComments,
     {
-      onDelete: 'CASCADE',
+      onDelete: 'NO ACTION',
     },
   )
   parentComment: CommentEntity;

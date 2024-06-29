@@ -51,7 +51,16 @@ export class PostRepository extends Repository<PostEntity> {
   async getPostbyPostId(postId: number): Promise<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
-      relations: ['user', 'postImages', 'comments', 'comments.user'],
+      relations: ['user', 'postImages'],
+    });
+    return post;
+  }
+
+  async getPostbyPostIdwithDeletedComment(postId: number): Promise<PostEntity> {
+    const post = await this.findOne({
+      where: { id: postId },
+      withDeleted: true,
+      relations: ['user', 'postImages', 'comments.user'],
     });
     return post;
   }

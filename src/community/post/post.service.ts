@@ -49,9 +49,13 @@ export class PostService {
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<GetPostResponseDto> {
-    const post = await this.postRepository.getPostbyPostId(postId);
+    const post =
+      await this.postRepository.getPostbyPostIdwithDeletedComment(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+    if (post.deletedAt) {
+      throw new BadRequestException('Deleted Post!');
     }
     const postResponse = new GetPostResponseDto(post, user.id);
     postResponse.imageDirs.map((image) => {
@@ -85,7 +89,8 @@ export class PostService {
       requestDto.content,
       requestDto.isAnonymous,
     );
-    const createdPost = await this.postRepository.getPostbyPostId(post.id);
+    const createdPost =
+      await this.postRepository.getPostbyPostIdwithDeletedComment(post.id);
     for (const image of images) {
       const imgDir = await this.fileService.uploadFile(
         image,
@@ -159,7 +164,8 @@ export class PostService {
       }
     }
 
-    const updatedPost = await this.postRepository.getPostbyPostId(postId);
+    const updatedPost =
+      await this.postRepository.getPostbyPostIdwithDeletedComment(postId);
     const postResponse = new GetPostResponseDto(updatedPost, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
