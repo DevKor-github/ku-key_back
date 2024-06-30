@@ -11,6 +11,7 @@ class Comment extends GetCommentResponseDto {
       this.reply = [];
     }
   }
+
   @ApiProperty({ description: '답글', type: [Comment] })
   reply?: Comment[];
 }
@@ -63,9 +64,9 @@ export class GetPostResponseDto {
         }
       });
 
-    this.imageDirs = postEntity.postImages.map(
-      (postImage) => new Image(postImage),
-    );
+    this.imageDirs = postEntity.postImages
+      .filter((postImage) => !postImage.deletedAt)
+      .map((postImage) => new Image(postImage));
   }
   @ApiProperty({ description: '게시글 고유 ID' })
   id: number;
