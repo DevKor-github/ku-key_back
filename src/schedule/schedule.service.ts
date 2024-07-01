@@ -78,14 +78,6 @@ export class ScheduleService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const timeTable =
-        await this.timeTableService.getSimpleTimeTableByTimeTableId(
-          updateScheduleRequestDto.timeTableId,
-          user.id,
-        );
-      if (!timeTable) {
-        throw new NotFoundException('TimeTable not found');
-      }
       const schedule = await queryRunner.manager.findOne(ScheduleEntity, {
         where: { id: scheduleId, timeTable: { userId: user.id } },
         relations: ['timeTable'],
@@ -93,6 +85,14 @@ export class ScheduleService {
 
       if (!schedule) {
         throw new NotFoundException('Schedule not found');
+      }
+
+      if (
+        Number(schedule.timeTableId) !== updateScheduleRequestDto.timeTableId
+      ) {
+        throw new NotFoundException(
+          '변경하고자 하는 일정이 해당 시간표에 존재하지 않습니다!',
+        );
       }
 
       // 수정할 부분이 시간 or 요일일 때
@@ -180,7 +180,6 @@ export class ScheduleService {
     const existingScheduleInfo = await this.getTableScheduleInfo(
       schedule.timeTableId,
     );
-    console.log(existingScheduleInfo);
     for (const existingInfo of existingScheduleInfo) {
       if (
         existingInfo.day === schedule.day &&
