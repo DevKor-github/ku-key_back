@@ -11,6 +11,9 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { ScheduleRepository } from './schedule.repository';
 import { TimeTableService } from 'src/timetable/timetable.service';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
+import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
+import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ScheduleService {
@@ -18,9 +21,12 @@ export class ScheduleService {
     private readonly scheduleRepository: ScheduleRepository,
     @Inject(forwardRef(() => TimeTableService))
     private readonly timeTableService: TimeTableService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async getScheduleByTimeTableId(timeTableId: number): Promise<ScheduleEntity[]> {
+  async getScheduleByTimeTableId(
+    timeTableId: number,
+  ): Promise<ScheduleEntity[]> {
     try {
       return await this.scheduleRepository.find({ where: { timeTableId } });
     } catch (error) {
@@ -60,6 +66,69 @@ export class ScheduleService {
     } catch (error) {
       console.error('Fail to create schedule to timetable', error);
       throw error;
+    }
+  }
+
+  async updateSchedule(
+    user: AuthorizedUserDto,
+    scheduleId: number,
+    updateScheduleRequestDto: UpdateScheduleRequestDto,
+  ): Promise<UpdateScheduleResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const schedule = await queryRunner.manager.findOne(ScheduleEntity, {
+        where: { id: scheduleId, timeTable: { userId: user.id } },
+        relations: ['timeTable'],
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Schedule not found');
+      }
+
+      if (
+        Number(schedule.timeTableId) !== updateScheduleRequestDto.timeTableId
+      ) {
+        throw new NotFoundException(
+          '변경하고자 하는 일정이 해당 시간표에 존재하지 않습니다!',
+        );
+      }
+
+      // 수정할 부분이 시간 or 요일일 때
+      if (
+        updateScheduleRequestDto.day &&
+        updateScheduleRequestDto.startTime &&
+        updateScheduleRequestDto.endTime
+      ) {
+        // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
+        const isConflict = await this.checkTimeConflict(
+          updateScheduleRequestDto,
+        );
+
+        if (isConflict) {
+          throw new ConflictException(
+            'Schedule conflicts with existing courses and schedules',
+          );
+        }
+      }
+
+      await queryRunner.manager.update(
+        ScheduleEntity,
+        { id: scheduleId },
+        updateScheduleRequestDto,
+      );
+      await queryRunner.commitTransaction();
+      // 수정된 스케줄 반환 (update는 return 값이 없어서 find로 찾고 반환)
+      return await queryRunner.manager.findOne(ScheduleEntity, {
+        where: { id: scheduleId },
+      });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Fail to update schedule', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -111,7 +180,6 @@ export class ScheduleService {
     const existingScheduleInfo = await this.getTableScheduleInfo(
       schedule.timeTableId,
     );
-    console.log(existingScheduleInfo);
     for (const existingInfo of existingScheduleInfo) {
       if (
         existingInfo.day === schedule.day &&
