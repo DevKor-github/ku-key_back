@@ -125,7 +125,7 @@ export class PostService {
       throw new BadRequestException("Other user's post!");
     }
 
-    if (requestDto.ImageUpdate) {
+    if (requestDto.imageUpdate) {
       for (const image of images) {
         if (!this.fileService.imagefilter(image)) {
           throw new BadRequestException('Only image file can be uploaded!');
@@ -143,7 +143,7 @@ export class PostService {
       throw new NotImplementedException('Post Update Failed!');
     }
 
-    if (requestDto.ImageUpdate) {
+    if (requestDto.imageUpdate) {
       for (const image of post.postImages) {
         await this.fileService.deleteFile(image.imgDir);
         const isImageDeleted = await this.postImageRepository.deletePostImage(

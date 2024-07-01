@@ -6,5 +6,5 @@ export class UpdatePostRequestDto extends CreatePostRequestDto {
   @IsNotEmpty()
   @IsBoolean()
   @ApiProperty({ description: '첨부 이미지 변경 여부' })
-  ImageUpdate: boolean;
+  imageUpdate: boolean;
 }
