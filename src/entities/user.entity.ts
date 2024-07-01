@@ -9,6 +9,8 @@ import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
 import { FriendshipEntity } from './friendship.entity';
 import { TimeTableEntity } from './timetable.entity';
+import { PostEntity } from './post.entity';
+import { CommentEntity } from './comment.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -69,4 +71,10 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
   timeTables: TimeTableEntity[];
+
+  @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
+  posts: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
+  comments: CommentEntity[];
 }
