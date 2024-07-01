@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -55,6 +56,9 @@ export class PostController {
     @Query('boardId') boardId: number,
     @Query('keyword') keyword?: string,
   ): Promise<GetPostListResponseDto> {
+    if (!boardId) {
+      throw new BadRequestException('No BoardId!');
+    }
     return await this.postService.getPostList(boardId, keyword);
   }
 
@@ -104,6 +108,9 @@ export class PostController {
     @UploadedFiles() images: Array<Express.Multer.File>,
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    if (!boardId) {
+      throw new BadRequestException('No BoardId!');
+    }
     return await this.postService.createPost(user, boardId, images, body);
   }
 

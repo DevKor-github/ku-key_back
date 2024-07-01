@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -61,6 +62,9 @@ export class CommentController {
     @Query('postId') postId: number,
     @Query('parentCommentId') parentCommentId?: number,
   ): Promise<GetCommentResponseDto> {
+    if (!postId) {
+      throw new BadRequestException('No PostId!');
+    }
     return await this.commentService.createComment(
       user,
       postId,
