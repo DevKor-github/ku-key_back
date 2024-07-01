@@ -261,7 +261,7 @@ export class FriendshipService {
   async getFriendTimeTable(
     userId: number,
     getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
       // 친구인지 아닌지 체크
       const areWeFriend =

@@ -31,4 +31,9 @@ export class CommonTimeTableResponseDto {
   @IsBoolean()
   @IsNotEmpty()
   mainTimeTable: boolean;
+
+  @ApiProperty({ description: '시간표 색상' })
+  @IsString()
+  @IsNotEmpty()
+  color: string;
 }
