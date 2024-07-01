@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreatePostRequestDto {
@@ -17,7 +17,7 @@ export class CreatePostRequestDto {
   @ApiProperty({ description: '익명 여부' })
   isAnonymous: boolean;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: 'array',
     items: { type: 'string', format: 'binary' },
     description: '첨부 이미지',
