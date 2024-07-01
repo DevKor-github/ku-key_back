@@ -281,6 +281,7 @@ export class TimeTableService {
       const getTimeTableByTimeTableIdResponse: GetTimeTableByTimeTableIdDto = {
         courses: [],
         schedules: [],
+        color: timeTable.color,
       };
       timeTable.timeTableCourses.forEach((courseEntry) => {
         const {
