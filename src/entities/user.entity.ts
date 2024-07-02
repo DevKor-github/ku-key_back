@@ -9,6 +9,7 @@ import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
 import { FriendshipEntity } from './friendship.entity';
 import { TimeTableEntity } from './timetable.entity';
+import { CourseReviewEntity } from './course-review.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -54,6 +55,9 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
+  @Column('boolean', { default: false })
+  isViewable: boolean;
+
   @OneToOne(
     () => KuVerificationEntity,
     (kuVerification) => kuVerification.user,
@@ -69,4 +73,10 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
   timeTables: TimeTableEntity[];
+
+  @OneToMany(
+    () => CourseReviewEntity,
+    (courseReviewEntity) => courseReviewEntity.user,
+  )
+  courseReviews: CourseReviewEntity[];
 }
