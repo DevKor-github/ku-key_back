@@ -77,9 +77,9 @@ export class FriendshipController {
     @Query('username') username: string,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
-    const myUsername = user.username;
+    const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
-      myUsername,
+      myId,
       username,
     );
   }

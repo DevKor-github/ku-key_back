@@ -73,12 +73,10 @@ export class FriendshipService {
   }
 
   async searchUserForFriendshipRequest(
-    myUsername: string,
+    myId: number,
     username: string,
   ): Promise<SearchUserResponseDto> {
-    if (username === myUsername) {
-      throw new BadRequestException('올바르지 않은 상대입니다.');
-    }
+    const userInfo = new SearchUserResponseDto();
 
     const user = await this.userService.findUserByUsername(username);
 
@@ -86,7 +84,31 @@ export class FriendshipService {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
-    const userInfo = new SearchUserResponseDto();
+    // 본인을 검색한 경우
+    if (myId == user.id) {
+      userInfo.status = 'me';
+      userInfo.name = user.name;
+      userInfo.username = user.username;
+      userInfo.major = user.major;
+      userInfo.language = user.language;
+
+      return userInfo;
+    }
+
+    const checkFriendship =
+      await this.friendshipRepository.findFriendshipBetweenUsers(myId, user.id);
+
+    // 수락 대기 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
+    if (checkFriendship) {
+      if (!checkFriendship.areWeFriend) {
+        userInfo.status = 'requested';
+      } else {
+        userInfo.status = 'friend';
+      }
+    } else {
+      userInfo.status = 'unknown';
+    }
+
     userInfo.name = user.name;
     userInfo.username = user.username;
     userInfo.major = user.major;

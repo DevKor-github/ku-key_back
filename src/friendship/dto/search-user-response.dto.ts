@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+const Status = {
+  Me: 'me',
+  Friend: 'friend',
+  Requested: 'requested',
+  Unknown: 'unknown',
+} as const;
+
+export type Status = (typeof Status)[keyof typeof Status];
 
 export class SearchUserResponseDto {
   @IsString()
@@ -21,4 +30,12 @@ export class SearchUserResponseDto {
   @IsOptional()
   @ApiProperty({ description: '사용 언어' })
   language: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(Status)
+  @ApiProperty({
+    description: '유저 상태 (본인 / 친구 / 친구 요청 수락 대기중 / 그 외)',
+  })
+  status: Status;
 }
