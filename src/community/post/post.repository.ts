@@ -8,7 +8,7 @@ export class PostRepository extends Repository<PostEntity> {
     super(PostEntity, dataSource.createEntityManager());
   }
 
-  async getPostsbyBoardId(boardId: number): Promise<PostEntity[]> {
+  async getPostsByBoardId(boardId: number): Promise<PostEntity[]> {
     const posts = await this.find({
       where: { boardId: boardId },
       relations: ['postImages', 'comments', 'user'],
@@ -16,7 +16,7 @@ export class PostRepository extends Repository<PostEntity> {
     return posts;
   }
 
-  async getPostsbyBoardIdwithKeyword(
+  async getPostsByBoardIdwithKeyword(
     boardId: number,
     keyword: string,
   ): Promise<PostEntity[]> {
@@ -48,7 +48,7 @@ export class PostRepository extends Repository<PostEntity> {
     return await this.save(post);
   }
 
-  async getPostbyPostId(postId: number): Promise<PostEntity> {
+  async getPostByPostId(postId: number): Promise<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
       relations: ['user', 'postImages'],
@@ -56,7 +56,7 @@ export class PostRepository extends Repository<PostEntity> {
     return post;
   }
 
-  async getPostbyPostIdwithDeletedComment(postId: number): Promise<PostEntity> {
+  async getPostByPostIdWithDeletedComment(postId: number): Promise<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
       withDeleted: true,

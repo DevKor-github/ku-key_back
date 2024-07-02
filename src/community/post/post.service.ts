@@ -27,13 +27,13 @@ export class PostService {
     boardId: number,
     keyword?: string,
   ): Promise<GetPostListResponseDto> {
-    const board = await this.boardService.getBoardbyId(boardId);
+    const board = await this.boardService.getBoardById(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
     const posts = keyword
-      ? await this.postRepository.getPostsbyBoardIdwithKeyword(boardId, keyword)
-      : await this.postRepository.getPostsbyBoardId(boardId);
+      ? await this.postRepository.getPostsByBoardIdwithKeyword(boardId, keyword)
+      : await this.postRepository.getPostsByBoardId(boardId);
     const postList = new GetPostListResponseDto(board, posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;
@@ -50,7 +50,7 @@ export class PostService {
     postId: number,
   ): Promise<GetPostResponseDto> {
     const post =
-      await this.postRepository.getPostbyPostIdwithDeletedComment(postId);
+      await this.postRepository.getPostByPostIdWithDeletedComment(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
@@ -77,7 +77,7 @@ export class PostService {
       }
     }
 
-    const board = await this.boardService.getBoardbyId(boardId);
+    const board = await this.boardService.getBoardById(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
@@ -90,7 +90,7 @@ export class PostService {
       requestDto.isAnonymous,
     );
     const createdPost =
-      await this.postRepository.getPostbyPostIdwithDeletedComment(post.id);
+      await this.postRepository.getPostByPostIdWithDeletedComment(post.id);
     for (const image of images) {
       const imgDir = await this.fileService.uploadFile(
         image,
@@ -117,7 +117,7 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
-    const post = await this.postRepository.getPostbyPostId(postId);
+    const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
@@ -165,7 +165,7 @@ export class PostService {
     }
 
     const updatedPost =
-      await this.postRepository.getPostbyPostIdwithDeletedComment(postId);
+      await this.postRepository.getPostByPostIdWithDeletedComment(postId);
     const postResponse = new GetPostResponseDto(updatedPost, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
@@ -178,7 +178,7 @@ export class PostService {
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<DeletePostResponseDto> {
-    const post = await this.postRepository.getPostbyPostId(postId);
+    const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }

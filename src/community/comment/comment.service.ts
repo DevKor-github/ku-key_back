@@ -29,7 +29,7 @@ export class CommentService {
     }
     if (parentCommentId) {
       const parentComment =
-        await this.commentRepository.getCommentbyCommentId(parentCommentId);
+        await this.commentRepository.getCommentByCommentId(parentCommentId);
       if (!parentComment) {
         throw new BadRequestException('Wrong ParentCommentId!');
       }
@@ -47,7 +47,7 @@ export class CommentService {
       requestDto.isAnonymous,
       parentCommentId,
     );
-    const createdComment = await this.commentRepository.getCommentbyCommentId(
+    const createdComment = await this.commentRepository.getCommentByCommentId(
       comment.id,
     );
     return new GetCommentResponseDto(createdComment, user.id);
@@ -59,7 +59,7 @@ export class CommentService {
     requestDto: UpdateCommentRequestDto,
   ): Promise<GetCommentResponseDto> {
     const comment =
-      await this.commentRepository.getCommentbyCommentId(commentId);
+      await this.commentRepository.getCommentByCommentId(commentId);
     if (!comment) {
       throw new BadRequestException('Wrong CommentId!');
     }
@@ -77,7 +77,7 @@ export class CommentService {
     }
 
     const updatedComment =
-      await this.commentRepository.getCommentbyCommentId(commentId);
+      await this.commentRepository.getCommentByCommentId(commentId);
     return new GetCommentResponseDto(updatedComment, user.id);
   }
 
@@ -86,7 +86,7 @@ export class CommentService {
     commentId: number,
   ): Promise<DeleteCommentResponseDto> {
     const comment =
-      await this.commentRepository.getCommentbyCommentId(commentId);
+      await this.commentRepository.getCommentByCommentId(commentId);
     if (!comment) {
       throw new BadRequestException('Wrong commentId!');
     }

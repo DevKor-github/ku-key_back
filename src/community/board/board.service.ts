@@ -12,7 +12,7 @@ export class BoardService {
     return boards.map((board) => new getBoardResponseDto(board));
   }
 
-  async getBoardbyId(boardId: number): Promise<BoardEntity> {
-    return await this.boardRepository.getBoardbyId(boardId);
+  async getBoardById(boardId: number): Promise<BoardEntity> {
+    return await this.boardRepository.getBoardById(boardId);
   }
 }

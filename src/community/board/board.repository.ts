@@ -12,7 +12,7 @@ export class BoardRepository extends Repository<BoardEntity> {
     return await this.find();
   }
 
-  async getBoardbyId(id: number): Promise<BoardEntity> {
+  async getBoardById(id: number): Promise<BoardEntity> {
     return await this.findOne({ where: { id: id } });
   }
 }

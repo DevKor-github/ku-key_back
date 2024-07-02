@@ -8,7 +8,7 @@ export class CommentRepository extends Repository<CommentEntity> {
     super(CommentEntity, dataSource.createEntityManager());
   }
 
-  async getCommentbyCommentId(commentId: number) {
+  async getCommentByCommentId(commentId: number) {
     const comment = await this.findOne({
       where: { id: commentId },
       relations: ['parentComment', 'user'],
