@@ -40,7 +40,10 @@ export class ClubService {
       return {
         clubId: club.id,
         name: club.name,
-        activity: club.activity,
+        summary: club.summary,
+        regularMeeting: club.regularMeeting,
+        recruitmentPeriod: club.recruitmentPeriod,
+        description: club.description,
         isLiked: isLiked,
       };
     });

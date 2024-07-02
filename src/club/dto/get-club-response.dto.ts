@@ -14,8 +14,23 @@ export class GetClubResponseDto {
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: '활동 내용' })
-  activity: string;
+  @ApiProperty({ description: '동아리 요약' })
+  summary: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '정기 모임' })
+  regularMeeting: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '모집 기간' })
+  recruitmentPeriod: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '동아리 설명' })
+  description: string;
 
   @IsBoolean()
   @IsNotEmpty()

@@ -11,28 +11,19 @@ export class ClubEntity extends CommonEntity {
   name: string;
 
   @Column({ type: 'varchar', nullable: false })
+  summary: string;
+
+  @Column({ type: 'varchar', nullable: false })
   category: string;
 
   @Column({ type: 'varchar', nullable: false })
-  activity: string;
+  regularMeeting: string;
 
   @Column({ type: 'varchar', nullable: false })
-  activityPeriod: string;
+  recruitmentPeriod: string;
 
   @Column({ type: 'varchar', nullable: false })
-  recruitmentInfo: string;
-
-  @Column({ type: 'varchar', nullable: false })
-  joinMethod: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  requiredSemester: boolean;
-
-  @Column({ type: 'varchar', nullable: true })
-  instagram: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  contactInfo: string;
+  description: string;
 
   @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.club)
   clubLikes: ClubLikeEntity[];
