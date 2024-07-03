@@ -11,7 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ScheduleModule } from './schedule/schedule.module';
-import { ClubModule } from './club/club.module';
+import { ClubModule } from './home/club/club.module';
 import { CommonModule } from './common/common.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
