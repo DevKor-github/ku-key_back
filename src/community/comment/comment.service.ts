@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  NotImplementedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CommentRepository } from './comment.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -73,7 +73,7 @@ export class CommentService {
       requestDto.isAnonymous,
     );
     if (!isUpdated) {
-      throw new NotImplementedException('Comment Update Failed!');
+      throw new InternalServerErrorException('Comment Update Failed!');
     }
 
     const updatedComment =
@@ -96,7 +96,7 @@ export class CommentService {
 
     const isDeleted = await this.commentRepository.deleteComment(commentId);
     if (!isDeleted) {
-      throw new NotImplementedException('Comment Delete Failed!');
+      throw new InternalServerErrorException('Comment Delete Failed!');
     }
 
     return new DeleteCommentResponseDto(true);

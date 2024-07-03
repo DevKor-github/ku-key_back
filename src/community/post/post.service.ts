@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  NotImplementedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { PostImageRepository } from './post-image.repository';
@@ -227,7 +227,7 @@ export class PostService {
 
     const isDeleted = await this.postRepository.deletePost(postId);
     if (!isDeleted) {
-      throw new NotImplementedException('Post Delete Failed!');
+      throw new InternalServerErrorException('Post Delete Failed!');
     }
 
     return new DeletePostResponseDto(true);
