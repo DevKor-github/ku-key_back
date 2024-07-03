@@ -1,6 +1,7 @@
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FriendshipService } from './friendship.service';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -77,6 +78,9 @@ export class FriendshipController {
     @Query('username') username: string,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
+    if (!username) {
+      throw new BadRequestException('query string이 없습니다.');
+    }
     const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
       myId,
