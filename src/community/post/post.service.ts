@@ -13,6 +13,9 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
+import { DataSource } from 'typeorm';
+import { PostEntity } from 'src/entities/post.entity';
+import { PostImageEntity } from 'src/entities/post-image.entity';
 
 @Injectable()
 export class PostService {
@@ -21,6 +24,7 @@ export class PostService {
     private readonly postImageRepository: PostImageRepository,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getPostList(
@@ -82,27 +86,45 @@ export class PostService {
       throw new BadRequestException('Wrong BoardId!');
     }
 
-    const post = await this.postRepository.createPost(
-      user.id,
-      boardId,
-      requestDto.title,
-      requestDto.content,
-      requestDto.isAnonymous,
-    );
-    const createdPost =
-      await this.postRepository.getPostByPostIdWithDeletedComment(post.id);
-    for (const image of images) {
-      const imgDir = await this.fileService.uploadFile(
-        image,
-        'PostImage',
-        `${post.id}`,
-      );
-      const postImage = await this.postImageRepository.createPostImage(
-        post.id,
-        imgDir,
-      );
-      createdPost.postImages.push(postImage);
+    let newPostId: number;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const post = queryRunner.manager.create(PostEntity, {
+        userId: user.id,
+        boardId: boardId,
+        title: requestDto.title,
+        content: requestDto.content,
+        isAnonymous: requestDto.isAnonymous,
+      });
+      newPostId = (await queryRunner.manager.save(post)).id;
+
+      for (const image of images) {
+        const imgDir = await this.fileService.uploadFile(
+          image,
+          'PostImage',
+          `${newPostId}`,
+        );
+        const postImage = queryRunner.manager.create(PostImageEntity, {
+          postId: newPostId,
+          imgDir: imgDir,
+        });
+        await queryRunner.manager.save(postImage);
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
+
+    const createdPost =
+      await this.postRepository.getPostByPostIdWithDeletedComment(newPostId);
+
     const postResponse = new GetPostResponseDto(createdPost, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
@@ -133,35 +155,48 @@ export class PostService {
       }
     }
 
-    const isUpdated = await this.postRepository.updatePost(
-      postId,
-      requestDto.title,
-      requestDto.content,
-      requestDto.isAnonymous,
-    );
-    if (!isUpdated) {
-      throw new NotImplementedException('Post Update Failed!');
-    }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.update(
+        PostEntity,
+        { id: postId },
+        {
+          title: requestDto.title,
+          content: requestDto.content,
+          isAnonymous: requestDto.isAnonymous,
+        },
+      );
 
-    if (requestDto.imageUpdate) {
-      for (const image of post.postImages) {
-        await this.fileService.deleteFile(image.imgDir);
-        const isImageDeleted = await this.postImageRepository.deletePostImage(
-          image.id,
-        );
-        if (!isImageDeleted) {
-          throw new NotImplementedException('Image Update Failed!');
+      if (requestDto.imageUpdate) {
+        for (const image of post.postImages) {
+          await this.fileService.deleteFile(image.imgDir);
+          await queryRunner.manager.softDelete(PostImageEntity, {
+            id: image.id,
+          });
+        }
+
+        for (const image of images) {
+          const imgDir = await this.fileService.uploadFile(
+            image,
+            'PostImage',
+            `${postId}`,
+          );
+          const postImage = queryRunner.manager.create(PostImageEntity, {
+            postId: postId,
+            imgDir: imgDir,
+          });
+          await queryRunner.manager.save(postImage);
         }
       }
 
-      for (const image of images) {
-        const imgDir = await this.fileService.uploadFile(
-          image,
-          'PostImage',
-          `${post.id}`,
-        );
-        await this.postImageRepository.createPostImage(post.id, imgDir);
-      }
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
 
     const updatedPost =
