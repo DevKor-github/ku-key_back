@@ -92,8 +92,23 @@ export class FriendshipController {
     description:
       '친구 ID, 연도, 학기를 입력받아 해당 학기에 친구의 대표 시간표를 조회합니다.',
   })
-  @ApiBody({
-    type: GetFriendTimeTableRequestDto,
+  @ApiQuery({
+    name: 'friendId',
+    type: 'string',
+    required: true,
+    description: '친구 ID',
+  })
+  @ApiQuery({
+    name: 'year',
+    type: 'string',
+    required: true,
+    description: '연도',
+  })
+  @ApiQuery({
+    name: 'semester',
+    type: 'string',
+    required: true,
+    description: '학기',
   })
   @ApiOkResponse({
     description: '친구 시간표 반환',
@@ -101,7 +116,7 @@ export class FriendshipController {
     isArray: true,
   })
   async getFriendTimeTable(
-    @Body() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+    @Query() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<GetTimeTableByTimeTableIdDto[]> {
     return await this.friendshipService.getFriendTimeTable(
