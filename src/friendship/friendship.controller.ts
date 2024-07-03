@@ -102,7 +102,7 @@ export class FriendshipController {
   async getFriendTimeTable(
     @Body() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     return await this.friendshipService.getFriendTimeTable(
       user.id,
       getFriendTimeTableRequestDto,
