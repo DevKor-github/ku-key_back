@@ -18,6 +18,7 @@ import { UserService } from 'src/user/user.service';
 import { TimeTableService } from 'src/timetable/timetable.service';
 import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -74,8 +75,9 @@ export class FriendshipService {
 
   async searchUserForFriendshipRequest(
     myId: number,
-    username: string,
+    searchUserQueryDto: SearchUserQueryDto,
   ): Promise<SearchUserResponseDto> {
+    const username = searchUserQueryDto.username;
     const userInfo = new SearchUserResponseDto();
 
     const user = await this.userService.findUserByUsername(username);
@@ -84,29 +86,27 @@ export class FriendshipService {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
-    // 본인을 검색한 경우
     if (myId == user.id) {
+      // 본인을 검색한 경우 status
       userInfo.status = 'me';
-      userInfo.name = user.name;
-      userInfo.username = user.username;
-      userInfo.major = user.major;
-      userInfo.language = user.language;
-
-      return userInfo;
-    }
-
-    const checkFriendship =
-      await this.friendshipRepository.findFriendshipBetweenUsers(myId, user.id);
-
-    // 수락 대기 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
-    if (checkFriendship) {
-      if (!checkFriendship.areWeFriend) {
-        userInfo.status = 'requested';
-      } else {
-        userInfo.status = 'friend';
-      }
     } else {
-      userInfo.status = 'unknown';
+      const checkFriendship =
+        await this.friendshipRepository.findFriendshipBetweenUsers(
+          myId,
+          user.id,
+        );
+
+      // 수락 대기 중 / 수락 보류 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
+      if (checkFriendship) {
+        if (!checkFriendship.areWeFriend) {
+          userInfo.status =
+            checkFriendship.fromUser.id == myId ? 'requested' : 'pending';
+        } else {
+          userInfo.status = 'friend';
+        }
+      } else {
+        userInfo.status = 'unknown';
+      }
     }
 
     userInfo.name = user.name;
@@ -286,13 +286,13 @@ export class FriendshipService {
   ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
       // 친구인지 아닌지 체크
-      const areWeFriend =
+      const checkFriendship =
         await this.friendshipRepository.findFriendshipBetweenUsers(
           userId,
           getFriendTimeTableRequestDto.friendId,
         );
 
-      if (!areWeFriend) {
+      if (!checkFriendship || !checkFriendship.areWeFriend) {
         throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
       }
 

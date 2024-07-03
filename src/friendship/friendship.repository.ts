@@ -38,6 +38,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
         { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
         { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
       ],
+      relations: ['fromUser', 'toUser'],
     });
   }
 
