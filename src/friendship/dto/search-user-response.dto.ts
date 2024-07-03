@@ -5,6 +5,7 @@ const Status = {
   Me: 'me',
   Friend: 'friend',
   Requested: 'requested',
+  Pending: 'pending',
   Unknown: 'unknown',
 } as const;
 
@@ -35,7 +36,8 @@ export class SearchUserResponseDto {
   @IsNotEmpty()
   @IsEnum(Status)
   @ApiProperty({
-    description: '유저 상태 (본인 / 친구 / 친구 요청 수락 대기중 / 그 외)',
+    description:
+      '유저 상태 (본인 / 친구 / 상대방의 수락 대기 중 / 나의 수락 보류 중 / 그 외)',
   })
   status: Status;
 }

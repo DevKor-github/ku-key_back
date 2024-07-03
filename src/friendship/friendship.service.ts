@@ -84,29 +84,28 @@ export class FriendshipService {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
-    // 본인을 검색한 경우
     if (myId == user.id) {
+      // 본인을 검색한 경우 status
       userInfo.status = 'me';
-      userInfo.name = user.name;
-      userInfo.username = user.username;
-      userInfo.major = user.major;
-      userInfo.language = user.language;
-
-      return userInfo;
-    }
-
-    const checkFriendship =
-      await this.friendshipRepository.findFriendshipBetweenUsers(myId, user.id);
-
-    // 수락 대기 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
-    if (checkFriendship) {
-      if (!checkFriendship.areWeFriend) {
-        userInfo.status = 'requested';
-      } else {
-        userInfo.status = 'friend';
-      }
     } else {
-      userInfo.status = 'unknown';
+      const checkFriendship =
+        await this.friendshipRepository.findFriendshipBetweenUsers(
+          myId,
+          user.id,
+        );
+
+      console.log(checkFriendship);
+      // 수락 대기 중 / 수락 보류 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
+      if (checkFriendship) {
+        if (!checkFriendship.areWeFriend) {
+          userInfo.status =
+            checkFriendship.fromUser.id == myId ? 'requested' : 'pending';
+        } else {
+          userInfo.status = 'friend';
+        }
+      } else {
+        userInfo.status = 'unknown';
+      }
     }
 
     userInfo.name = user.name;
