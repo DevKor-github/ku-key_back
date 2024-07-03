@@ -20,9 +20,11 @@ export class ClubRepository extends Repository<ClubEntity> {
     }
 
     if (keyword) {
-      queryBuilder.andWhere('club.name LIKE :keyword', {
-        keyword: `${keyword}%`,
-      });
+      queryBuilder
+        .andWhere('club.name LIKE :keyword', {
+          keyword: `${keyword}%`,
+        })
+        .orWhere('club.summary LIKE :keyword', { keyword: `%${keyword}%` });
     }
 
     // 찜 여부를 함께 반환

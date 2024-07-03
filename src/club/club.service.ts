@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { LikeClubResponseDto } from './dto/like-club-response.dto';
+import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 
 @Injectable()
 export class ClubService {
@@ -13,11 +14,11 @@ export class ClubService {
 
   async getClubList(
     userId: number,
-    like?: string,
-    category?: string,
-    keyword?: string,
+    clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
+    const { like, category, keyword } = clubSearchQueryDto;
+
     const clubs = await this.clubRepository.findClubsByFiltering(
       category,
       keyword,

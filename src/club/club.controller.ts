@@ -20,6 +20,7 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { LikeClubResponseDto } from './dto/like-club-response.dto';
+import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -32,7 +33,7 @@ export class ClubController {
   @ApiOperation({
     summary: '동아리 목록 조회',
     description:
-      '동아리 전체 목록을 조회하거나, 찜 여부, 소속/분과, 검색어(동아리명)로 필터링하여 조회합니다.',
+      '동아리 전체 목록을 조회하거나, 찜 여부, 소속/분과, 검색어(동아리명, 동아리 요약)로 필터링하여 조회합니다.',
   })
   @ApiQuery({ name: 'like', description: '찜 여부 필터링', required: false })
   @ApiQuery({
@@ -42,7 +43,7 @@ export class ClubController {
   })
   @ApiQuery({
     name: 'keyword',
-    description: '동아리명 검색 키워드',
+    description: '동아리명/동아리 요약 검색 키워드',
     required: false,
   })
   @ApiOkResponse({
@@ -52,12 +53,10 @@ export class ClubController {
   })
   async getClubList(
     @User() user: AuthorizedUserDto,
-    @Query('like') like?: string,
-    @Query('category') category?: string,
-    @Query('keyword') keyword?: string,
+    @Query() clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
     const userId = user.id;
-    return await this.clubService.getClubList(userId, like, category, keyword);
+    return await this.clubService.getClubList(userId, clubSearchQueryDto);
   }
 
   @UseGuards(JwtAuthGuard)
