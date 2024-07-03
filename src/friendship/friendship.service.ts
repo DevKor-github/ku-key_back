@@ -285,13 +285,13 @@ export class FriendshipService {
   ): Promise<GetTimeTableByTimeTableIdDto[]> {
     try {
       // 친구인지 아닌지 체크
-      const areWeFriend =
+      const checkFriendship =
         await this.friendshipRepository.findFriendshipBetweenUsers(
           userId,
           getFriendTimeTableRequestDto.friendId,
         );
 
-      if (!areWeFriend) {
+      if (!checkFriendship || !checkFriendship.areWeFriend) {
         throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
       }
 
