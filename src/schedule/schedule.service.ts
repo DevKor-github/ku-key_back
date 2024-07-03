@@ -104,6 +104,7 @@ export class ScheduleService {
         // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
         const isConflict = await this.checkTimeConflict(
           updateScheduleRequestDto,
+          scheduleId,
         );
 
         if (isConflict) {
@@ -156,6 +157,7 @@ export class ScheduleService {
 
   async checkTimeConflict(
     schedule: CreateScheduleRequestDto,
+    scheduleId?: number,
   ): Promise<boolean> {
     // 강의시간과 안 겹치는지 확인
     const existingCourseInfo = await this.getTableCourseInfo(
@@ -180,7 +182,19 @@ export class ScheduleService {
     const existingScheduleInfo = await this.getTableScheduleInfo(
       schedule.timeTableId,
     );
+
     for (const existingInfo of existingScheduleInfo) {
+      // 변경하고자 하는 일정이 기존의 일정 시간대 내에서 변경하는 경우 (ex : 토요일 10:30~12:00 -> 토요일 11:00 ~ 12:00)
+      if (
+        scheduleId === Number(existingInfo.id) &&
+        String(schedule.day) === existingInfo.day &&
+        this.timeToNumber(schedule.startTime) >=
+          this.timeToNumber(existingInfo.startTime) &&
+        this.timeToNumber(schedule.endTime) <=
+          this.timeToNumber(existingInfo.endTime)
+      ) {
+        return false;
+      }
       if (
         existingInfo.day === schedule.day &&
         this.isConflictingTime(
@@ -214,18 +228,26 @@ export class ScheduleService {
 
   async getTableScheduleInfo(
     timeTableId: number,
-  ): Promise<{ day: string; startTime: string; endTime: string }[]> {
+  ): Promise<
+    { id: number; day: string; startTime: string; endTime: string }[]
+  > {
     const schedules = await this.scheduleRepository.find({
       where: { timeTableId },
-      select: ['day', 'startTime', 'endTime'],
+      select: ['id', 'day', 'startTime', 'endTime'],
     });
 
     return schedules.map((schedule) => ({
+      id: schedule.id,
       day: schedule.day,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
     }));
   }
+  // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
+  private timeToNumber = (time: string): number => {
+    const [hours, minutes, seconds] = time.split(':').map(Number);
+    return hours * 3600 + minutes * 60 + seconds;
+  };
 
   private isConflictingTime(
     existingStartTime: string,
@@ -233,16 +255,10 @@ export class ScheduleService {
     newStartTime: string,
     newEndTime: string,
   ): boolean {
-    // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
-    const timeToNumber = (time: string): number => {
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      return hours * 3600 + minutes * 60 + seconds;
-    };
-
-    const existingStart = timeToNumber(existingStartTime);
-    const existingEnd = timeToNumber(existingEndTime);
-    const newStart = timeToNumber(newStartTime);
-    const newEnd = timeToNumber(newEndTime);
+    const existingStart = this.timeToNumber(existingStartTime);
+    const existingEnd = this.timeToNumber(existingEndTime);
+    const newStart = this.timeToNumber(newStartTime);
+    const newEnd = this.timeToNumber(newEndTime);
 
     // 시간이 겹치는지 확인
     return (
