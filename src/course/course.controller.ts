@@ -92,8 +92,10 @@ export class CourseController {
     summary: '학수번호로 강의 검색',
     description: '학수번호를 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseCodeDto,
+  @ApiQuery({
+    name: 'courseCode',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -102,7 +104,7 @@ export class CourseController {
     isArray: true,
   })
   async searchCourseCode(
-    @Body() searchCourseCodeDto: SearchCourseCodeDto,
+    @Query() searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
@@ -115,11 +117,13 @@ export class CourseController {
     summary: '전공 과목명 강의 검색',
     description: '전공 과목명을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseNameDto,
-  })
   @ApiQuery({
     name: 'major',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'courseName',
     required: true,
     type: 'string',
   })
@@ -131,7 +135,7 @@ export class CourseController {
   })
   async searchMajorCourseName(
     @Query('major') major: string,
-    @Body() searchCourseNameDto: SearchCourseNameDto,
+    @Query() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorCourseName(
       major,
@@ -147,8 +151,10 @@ export class CourseController {
     summary: '교양 과목명 강의 검색',
     description: '교양 과목명을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseNameDto,
+  @ApiQuery({
+    name: 'courseName',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -157,7 +163,7 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralCourseName(
-    @Body() searchCourseNameDto: SearchCourseNameDto,
+    @Query() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchGeneralCourseName(
       searchCourseNameDto,
@@ -172,11 +178,13 @@ export class CourseController {
     summary: '전공 과목 담당 교수님 성함으로 강의 검색',
     description: '전공 과목 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchProfessorNameDto,
-  })
   @ApiQuery({
     name: 'major',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'professorName',
     required: true,
     type: 'string',
   })
@@ -188,7 +196,7 @@ export class CourseController {
   })
   async searchMajorProfessorName(
     @Query('major') major: string,
-    @Body() searchProfessorNameDto: SearchProfessorNameDto,
+    @Query() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorProfessorName(
       major,
@@ -204,8 +212,10 @@ export class CourseController {
     summary: '교양 담당 교수님 성함으로 강의 검색',
     description: '교양 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchProfessorNameDto,
+  @ApiQuery({
+    name: 'professorName',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -214,7 +224,7 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralProfessorName(
-    @Body() searchProfessorNameDto: SearchProfessorNameDto,
+    @Query() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchGeneralProfessorName(
       searchProfessorNameDto,
