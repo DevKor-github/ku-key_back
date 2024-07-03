@@ -1,7 +1,6 @@
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FriendshipService } from './friendship.service';
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -34,6 +33,7 @@ import {
 } from '@nestjs/swagger';
 import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -69,22 +69,19 @@ export class FriendshipController {
     description:
       'username(친구 추가용 id)를 query로 받아 해당하는 유저를 검색합니다.',
   })
-  @ApiQuery({ name: 'username', description: '친구 추가용 id' })
+  @ApiQuery({ name: 'username', description: '친구 추가용 id', required: true })
   @ApiOkResponse({
     description: '검색된 유저 정보 반환',
     type: SearchUserResponseDto,
   })
   async searchUserForFriendshipRequest(
-    @Query('username') username: string,
+    @Query() searchUserQueryDto: SearchUserQueryDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
-    if (!username) {
-      throw new BadRequestException('query string이 없습니다.');
-    }
     const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
       myId,
-      username,
+      searchUserQueryDto,
     );
   }
 

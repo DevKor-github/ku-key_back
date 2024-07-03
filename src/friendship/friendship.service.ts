@@ -18,6 +18,7 @@ import { UserService } from 'src/user/user.service';
 import { TimeTableService } from 'src/timetable/timetable.service';
 import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -74,8 +75,9 @@ export class FriendshipService {
 
   async searchUserForFriendshipRequest(
     myId: number,
-    username: string,
+    searchUserQueryDto: SearchUserQueryDto,
   ): Promise<SearchUserResponseDto> {
+    const username = searchUserQueryDto.username;
     const userInfo = new SearchUserResponseDto();
 
     const user = await this.userService.findUserByUsername(username);
@@ -94,7 +96,6 @@ export class FriendshipService {
           user.id,
         );
 
-      console.log(checkFriendship);
       // 수락 대기 중 / 수락 보류 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
       if (checkFriendship) {
         if (!checkFriendship.areWeFriend) {
