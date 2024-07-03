@@ -1,4 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { BoardEntity } from 'src/entities/board.entity';
 import { PostEntity } from 'src/entities/post.entity';
 
@@ -75,4 +82,15 @@ export class GetPostListResponseDto {
 
   @ApiProperty({ description: '게시글 목록', type: [PostPreview] })
   posts: PostPreview[];
+}
+
+export class GetPostListRequestDto {
+  @IsNotEmpty()
+  @IsNumber()
+  boardId: number;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  keyword?: string;
 }

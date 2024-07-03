@@ -24,7 +24,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetPostListResponseDto } from './dto/get-post-list.dto';
+import {
+  GetPostListRequestDto,
+  GetPostListResponseDto,
+} from './dto/get-post-list.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -53,13 +56,12 @@ export class PostController {
     type: GetPostListResponseDto,
   })
   async getPostList(
-    @Query('boardId') boardId: number,
-    @Query('keyword') keyword?: string,
+    @Query() requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    if (!boardId) {
-      throw new BadRequestException('No BoardId!');
-    }
-    return await this.postService.getPostList(boardId, keyword);
+    return await this.postService.getPostList(
+      requestDto.boardId,
+      requestDto.keyword,
+    );
   }
 
   @Get('/:postId')
