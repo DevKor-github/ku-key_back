@@ -50,7 +50,7 @@ export class ClubService {
     });
 
     // 찜한 동아리만 보기 시
-    if (like === 'true') {
+    if (like) {
       return clubList.filter((club) => club.isLiked === true);
     }
 

@@ -1,11 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, MinLength } from 'class-validator';
+import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class ClubSearchQueryDto {
   @IsOptional()
-  @IsString()
+  @ToBoolean()
   @ApiPropertyOptional({ description: '찜 필터링 여부 (true / false)' })
-  like?: string;
+  like?: boolean;
 
   @IsOptional()
   @IsString()
