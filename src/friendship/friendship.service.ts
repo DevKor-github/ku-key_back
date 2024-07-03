@@ -15,6 +15,9 @@ import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dt
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
+import { TimeTableService } from 'src/timetable/timetable.service';
+import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -22,6 +25,7 @@ export class FriendshipService {
     @InjectRepository(FriendshipRepository)
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
+    private readonly timeTableService: TimeTableService,
   ) {}
 
   async getFriendList(
@@ -78,7 +82,7 @@ export class FriendshipService {
 
     const user = await this.userService.findUserByUsername(username);
 
-    if (!user) {
+    if (!user || !user.isVerified) {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
@@ -251,6 +255,35 @@ export class FriendshipService {
       throw new InternalServerErrorException('친구 삭제에 실패했습니다.');
     } else {
       return new DeleteFriendshipResponseDto(true);
+    }
+  }
+
+  async getFriendTimeTable(
+    userId: number,
+    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+    try {
+      // 친구인지 아닌지 체크
+      const areWeFriend =
+        await this.friendshipRepository.findFriendshipBetweenUsers(
+          userId,
+          getFriendTimeTableRequestDto.friendId,
+        );
+
+      if (!areWeFriend) {
+        throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+      }
+
+      const friendTimeTable = await this.timeTableService.getFriendTimeTable(
+        getFriendTimeTableRequestDto,
+      );
+
+      if (!friendTimeTable) {
+        throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
+      }
+      return friendTimeTable;
+    } catch (error) {
+      throw error;
     }
   }
 }

@@ -14,15 +14,14 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource } from 'typeorm';
 import { CreateTimeTableDto } from './dto/create-timetable.dto';
 import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import {
-  DayType,
-  GetTimeTableByTimeTableIdResponseDto,
-} from './dto/timetableId-timetable.dto';
+import { DayType } from './dto/get-courseinfo-timetable.dto';
 import { CourseService } from 'src/course/course.service';
 import { ScheduleService } from 'src/schedule/schedule.service';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
+import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { GetFriendTimeTableRequestDto } from 'src/friendship/dto/get-friend-timetable.dto';
 
 @Injectable()
 export class TimeTableService {
@@ -259,11 +258,11 @@ export class TimeTableService {
 
   async getTimeTableByTimeTableId(
     timeTableId: number,
-    user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdResponseDto[]> {
+    userId: number,
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
-        where: { id: timeTableId, userId: user.id },
+        where: { id: timeTableId, userId },
         relations: [
           'timeTableCourses',
           'timeTableCourses.course',
@@ -274,25 +273,49 @@ export class TimeTableService {
         throw new NotFoundException('TimeTable not found');
       }
 
-      const GetTimeTableByTimeTableIdResponse = timeTable.timeTableCourses
-        .map((courseEntry) => {
-          const { professorName, courseName, courseCode } = courseEntry.course;
-          return courseEntry.course.courseDetails.map((detailEntry) => {
-            const { day, startTime, endTime, classroom } = detailEntry;
-            return {
-              professorName,
-              courseName,
-              courseCode,
-              day: day as DayType,
-              startTime,
-              endTime,
-              classroom,
-            };
-          });
-        })
-        .flat(); // flat으로 다차원 배열 평탄화
+      const schedules =
+        await this.scheduleService.getScheduleByTimeTableId(timeTableId);
 
-      return GetTimeTableByTimeTableIdResponse;
+      // 코스 정보와 스케줄 정보를 같은 깊이의 객체로 분리하여 반환
+      const getTimeTableByTimeTableIdResponse = [];
+      timeTable.timeTableCourses.forEach((courseEntry) => {
+        const {
+          id: courseId,
+          professorName,
+          courseName,
+          courseCode,
+        } = courseEntry.course;
+
+        courseEntry.course.courseDetails.forEach((detailEntry) => {
+          const { day, startTime, endTime, classroom } = detailEntry;
+
+          // 강의 정보 객체
+          getTimeTableByTimeTableIdResponse.push({
+            courseId,
+            professorName,
+            courseName,
+            courseCode,
+            day: day as DayType,
+            startTime,
+            endTime,
+            classroom,
+          });
+        });
+      });
+
+      // 스케줄 정보 객체
+      schedules.forEach((schedule) => {
+        getTimeTableByTimeTableIdResponse.push({
+          scheduleId: schedule.id,
+          scheduleTitle: schedule.title,
+          scheduleDay: schedule.day,
+          scheduleStartTime: schedule.startTime,
+          scheduleEndTime: schedule.endTime,
+          location: schedule.location,
+        });
+      });
+
+      return getTimeTableByTimeTableIdResponse;
     } catch (error) {
       console.error('Failed to get TimeTable: ', error);
       throw error;
@@ -316,6 +339,36 @@ export class TimeTableService {
       }));
     } catch (error) {
       console.error('Failed to get TimeTable: ', error);
+      throw error;
+    }
+  }
+
+  // 친구 시간표 조회
+  async getFriendTimeTable(
+    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: {
+          userId: getFriendTimeTableRequestDto.friendId,
+          year: getFriendTimeTableRequestDto.year,
+          semester: getFriendTimeTableRequestDto.semester,
+          mainTimeTable: true,
+        },
+      });
+
+      // 시간표가 없을 경우
+      if (!timeTable) {
+        throw new NotFoundException('친구 시간표가 존재하지 않습니다!');
+      }
+
+      // 시간표 id 추출 후 구현해놓은 함수 사용
+      const friendTimeTableId = timeTable.id;
+      return await this.getTimeTableByTimeTableId(
+        friendTimeTableId,
+        getFriendTimeTableRequestDto.friendId,
+      );
+    } catch (error) {
       throw error;
     }
   }
@@ -366,6 +419,7 @@ export class TimeTableService {
     try {
       const timeTable = await queryRunner.manager.findOne(TimeTableEntity, {
         where: { id: timeTableId, userId: user.id },
+        relations: ['timeTableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
       });
 
       if (!timeTable) {
@@ -391,17 +445,15 @@ export class TimeTableService {
           await queryRunner.manager.save(nextMainTimeTable);
         }
       }
-      await queryRunner.manager.softDelete(TimeTableEntity, {
-        id: timeTableId,
-      });
+      await queryRunner.manager.softRemove(timeTable);
       await queryRunner.commitTransaction();
+      return { deleted: true };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.error('Failed to delete TimeTable: ', error);
       throw error;
     } finally {
       await queryRunner.release();
-      return { deleted: true };
     }
   }
 

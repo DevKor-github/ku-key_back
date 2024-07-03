@@ -11,7 +11,7 @@ import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
-import { EmailService } from './email.service';
+import { EmailService } from 'src/common/email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { AccessTokenDto } from './dto/accessToken.dto';
@@ -23,7 +23,7 @@ import { SignUpResponseDto } from './dto/sign-up-response.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
-import { FileService } from './file.service';
+import { FileService } from 'src/common/file.service';
 import { UserService } from 'src/user/user.service';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { SignUpRequestDto } from './dto/sign-up-request.dto';
@@ -198,9 +198,7 @@ export class AuthService {
     screenshot: Express.Multer.File,
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
-    const splitedFileNames = screenshot.originalname.split('.');
-    const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    if (!this.imagefilter(extension)) {
+    if (!this.fileService.imagefilter(screenshot)) {
       throw new BadRequestException('Only image file can be uploaded!');
     }
 
@@ -245,8 +243,7 @@ export class AuthService {
       .map((request) => {
         const result: GetScreenshotVerificationsResponseDto = {
           id: request.id,
-          imgDir:
-            'https://kukey.s3.ap-northeast-2.amazonaws.com/' + request.imgDir,
+          imgDir: this.fileService.makeUrlByFileDir(request.imgDir),
           studentNumber: request.studentNumber,
           lastUpdated: request.updatedAt,
         };
@@ -288,11 +285,6 @@ export class AuthService {
       await this.kuVerificationRepository.findRequestById(requestId);
     await this.userService.deleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
-  }
-
-  imagefilter(extension: string): boolean {
-    const validExtensions = ['jpg', 'jpeg', 'png'];
-    return validExtensions.includes(extension);
   }
 
   async updatePassword(

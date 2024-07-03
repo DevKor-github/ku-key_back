@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CourseRepository } from './course.repository';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from 'src/entities/course.entity';
@@ -13,9 +12,11 @@ import { CourseDetailRepository } from './course-detail.repository';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
 import { Like } from 'typeorm';
-import { SearchCourseDto } from './dto/search-course.dto';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { CommonCourseDetailResponseDto } from './dto/common-course-detail-response.dto';
+import { SearchCourseCodeDto } from './dto/search-course-code.dto';
+import { SearchCourseNameDto } from './dto/search-course-name.dto';
+import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 
 @Injectable()
 export class CourseService {
@@ -73,42 +74,116 @@ export class CourseService {
 
   // 학수번호 검색
   async searchCourseCode(
-    searchCourseDto: SearchCourseDto,
+    searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: { courseCode: searchCourseDto.courseCode },
-    });
+    try {
+      const courseCode = searchCourseCodeDto.courseCode;
+      if (!courseCode) {
+        throw new BadRequestException('학수번호를 입력하세요!');
+      }
+      return await this.courseRepository.find({
+        where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // 과목명 검색 (띄어쓰기로 단어 구분)
-  async searchCourseName(
+  // 전공 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchMajorCourseName(
     major: string,
-    searchCourseDto: SearchCourseDto,
+    searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
-    const words = searchCourseDto.courseName
-      .split(/\s+/)
-      .filter((word) => word.length);
-    const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    return await this.courseRepository
-      .createQueryBuilder('course')
-      .where(`course.courseName REGEXP :pattern`, {
-        pattern: `^${searchPattern}.*$`,
-      })
-      .andWhere('course.major = :major', { major })
-      .getMany();
+    try {
+      const courseName = searchCourseNameDto.courseName;
+      if (!courseName)
+        throw new BadRequestException('전공 과목명을 입력하세요!');
+      const words = searchCourseNameDto.courseName
+        .split(/\s+/)
+        .filter((word) => word.length);
+      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+      return await this.courseRepository
+        .createQueryBuilder('course')
+        .where(`course.courseName REGEXP :pattern`, {
+          pattern: `^${searchPattern}.*$`,
+        })
+        .andWhere('course.major = :major', { major })
+        .andWhere('course.category = :category', { category: 'Major' })
+        .getMany();
+    } catch (error) {
+      throw error;
+    }
   }
 
-  // 교수님 성함 검색
-  async searchProfessorName(
+  // 전공 교수님 성함 검색
+  async searchMajorProfessorName(
     major: string,
-    searchCourseDto: SearchCourseDto,
+    searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: {
-        professorName: Like(`%${searchCourseDto.professorName}%`),
-        major: major,
-      },
-    });
+    try {
+      const professorName = searchProfessorNameDto.professorName;
+      if (!professorName)
+        throw new BadRequestException('교수님 성함을 입력하세요!');
+
+      if (!major) {
+        throw new BadRequestException('전공을 입력하세요!');
+      }
+
+      return await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          major: major,
+          category: 'Major',
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // 교양 과목명 검색 (띄어쓰기로 단어 구분)
+  async searchGeneralCourseName(
+    searchCourseNameDto: SearchCourseNameDto,
+  ): Promise<CourseEntity[]> {
+    try {
+      const courseName = searchCourseNameDto.courseName;
+      if (!courseName)
+        throw new BadRequestException('교양 강의명을 입력하세요!');
+      const words = searchCourseNameDto.courseName
+        .split(/\s+/)
+        .filter((word) => word.length);
+      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+      return await this.courseRepository
+        .createQueryBuilder('course')
+        .where(`course.courseName REGEXP :pattern`, {
+          pattern: `^${searchPattern}.*$`,
+        })
+        .andWhere('course.category = :category', {
+          category: 'General Studies',
+        })
+        .getMany();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // 교양 교수님 성함 검색
+  async searchGeneralProfessorName(
+    searchProfessorNameDto: SearchProfessorNameDto,
+  ): Promise<CourseEntity[]> {
+    try {
+      const professorName = searchProfessorNameDto.professorName;
+      if (!professorName)
+        throw new BadRequestException('교수님 성함을 입력하세요!');
+      return await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          category: 'General Studies',
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // 교양 리스트 반환

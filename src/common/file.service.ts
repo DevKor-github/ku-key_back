@@ -63,4 +63,18 @@ export class FileService {
       throw new BadRequestException('Failed delete file');
     }
   }
+
+  imagefilter(file: Express.Multer.File): boolean {
+    const splitedFileNames = file.originalname.split('.');
+    const extension = splitedFileNames.at(splitedFileNames.length - 1);
+    const validExtensions = ['jpg', 'jpeg', 'png'];
+    return validExtensions.includes(extension);
+  }
+
+  makeUrlByFileDir(fileDir: string): string {
+    return (
+      `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/` +
+      fileDir
+    );
+  }
 }
