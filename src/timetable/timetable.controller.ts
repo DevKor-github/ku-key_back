@@ -106,8 +106,17 @@ export class TimeTableController {
     summary: '대표 시간표 조회',
     description: '해당 유저의 대표 시간표를 조회합니다.',
   })
-  @ApiBody({
-    type: TimeTableDto,
+  @ApiQuery({
+    name: 'year',
+    type: 'string',
+    required: true,
+    description: '연도',
+  })
+  @ApiQuery({
+    name: 'semester',
+    type: 'string',
+    required: true,
+    description: '학기',
   })
   @ApiResponse({
     status: 200,
@@ -115,7 +124,7 @@ export class TimeTableController {
     type: CommonTimeTableResponseDto,
   })
   async getMainTimeTable(
-    @Body() timeTableDto: TimeTableDto,
+    @Query() timeTableDto: TimeTableDto,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonTimeTableResponseDto> {
     return await this.timeTableService.getMainTimeTable(timeTableDto, user);
