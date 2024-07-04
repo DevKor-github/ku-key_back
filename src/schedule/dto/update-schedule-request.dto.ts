@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 
 const DayType = {
@@ -31,18 +32,21 @@ export class UpdateScheduleRequestDto {
   title: string;
 
   @ApiPropertyOptional({ description: '요일' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsEnum(DayType)
-  @IsOptional()
+  @IsNotEmpty()
   day: DayType;
 
   @ApiPropertyOptional({ description: '시작 시간' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   startTime: string;
 
   @ApiPropertyOptional({ description: '종료 시간' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   endTime: string;
 
   @ApiPropertyOptional({ description: '장소' })

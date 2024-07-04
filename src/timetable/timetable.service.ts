@@ -506,7 +506,7 @@ export class TimeTableService {
       timeTable.color = tableColor;
       return await this.timeTableRepository.save(timeTable);
     } catch (error) {
-      console.error('Failed to update TimeTable name: ', error);
+      console.error('Failed to update TimeTable color: ', error);
       throw error;
     }
   }

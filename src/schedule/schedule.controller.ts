@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -21,6 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { CreateScheduleResponseDto } from './dto/create-schedule-response.dto';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
+import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
+import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
 
 @Controller('schedule')
 @ApiTags('schedule')
@@ -51,6 +54,37 @@ export class ScheduleController {
     return await this.scheduleService.createSchedule(
       createScheduleRequestDto,
       user,
+    );
+  }
+
+  @Patch('/:scheduleId')
+  @ApiOperation({
+    summary: '시간표에 개인 스케쥴 수정',
+    description: '시간표에 등록된 개인 스케쥴을 수정합니다.',
+  })
+  @ApiParam({
+    name: 'scheduleId',
+    type: 'number',
+    required: true,
+    description: '수정할 스케쥴 ID',
+  })
+  @ApiBody({
+    type: UpdateScheduleRequestDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '스케쥴 수정 성공 시',
+    type: UpdateScheduleResponseDto,
+  })
+  async updateSchedule(
+    @User() user: AuthorizedUserDto,
+    @Param('scheduleId') scheduleId: number,
+    @Body() updateScheduleRequestDto: UpdateScheduleRequestDto,
+  ): Promise<UpdateScheduleResponseDto> {
+    return await this.scheduleService.updateSchedule(
+      user,
+      scheduleId,
+      updateScheduleRequestDto,
     );
   }
 

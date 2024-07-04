@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 
@@ -7,11 +13,14 @@ export class CourseReviewEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
+  @Column({ nullable: false })
+  userId: number;
+
   @Column('int', { nullable: false })
   rate: number;
 
   @Column('int', { nullable: false })
-  level: number;
+  classLevel: number;
 
   @Column('int', { nullable: false })
   teamProject: number;
@@ -43,6 +52,7 @@ export class CourseReviewEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   courseCode: string;
 
+  @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (user) => user.courseReviews, {
     nullable: false,
   })
