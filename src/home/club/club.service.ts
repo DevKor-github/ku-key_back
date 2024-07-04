@@ -45,6 +45,7 @@ export class ClubService {
         regularMeeting: club.regularMeeting,
         recruitmentPeriod: club.recruitmentPeriod,
         description: club.description,
+        imageUrl: club.imageUrl,
         isLiked: isLiked,
       };
     });

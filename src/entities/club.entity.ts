@@ -30,4 +30,7 @@ export class ClubEntity extends CommonEntity {
 
   @Column({ default: 0 })
   allLikes: number;
+
+  @Column({ type: 'varchar', nullable: false })
+  imageUrl: string;
 }

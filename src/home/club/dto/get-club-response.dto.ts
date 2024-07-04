@@ -32,6 +32,11 @@ export class GetClubResponseDto {
   @ApiProperty({ description: '동아리 설명' })
   description: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '동아리 사진 URL' })
+  imageUrl: string;
+
   @IsBoolean()
   @IsNotEmpty()
   @ApiProperty({ description: '찜 여부' })
