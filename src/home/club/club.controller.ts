@@ -21,6 +21,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { LikeClubResponseDto } from './dto/like-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
+import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -76,5 +77,21 @@ export class ClubController {
   ): Promise<LikeClubResponseDto> {
     const userId = user.id;
     return await this.clubService.likeClub(userId, clubId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('hot-club')
+  @ApiOperation({
+    summary: 'Hot Club 목록 조회',
+    description:
+      '최근 일주일 동안 찜 누른 개수가 가장 많은 동아리 4개를 반환합니다.',
+  })
+  @ApiOkResponse({
+    description: 'Hot Club 목록 4개 반환',
+    isArray: true,
+    type: GetHotClubResponseDto,
+  })
+  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
+    return await this.clubService.getHotClubList();
   }
 }

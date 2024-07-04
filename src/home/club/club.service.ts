@@ -4,6 +4,7 @@ import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { LikeClubResponseDto } from './dto/like-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
+import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 
 @Injectable()
 export class ClubService {
@@ -87,5 +88,43 @@ export class ClubService {
       await this.clubRepository.save(club);
       return new LikeClubResponseDto(false);
     }
+  }
+
+  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
+    const topLikedClubsInfo =
+      await this.clubLikeRepository.findTopLikedClubsInfo();
+
+    if (!topLikedClubsInfo) {
+      throw new NotFoundException('동아리 목록을 불러오는데 실패했습니다.');
+    }
+
+    const hotClubIds = topLikedClubsInfo.map((info) => info.clubId);
+    const hotClubs = await this.clubRepository.findClubsByIdOrder(hotClubIds);
+
+    // hotClubs의 개수가 4개 미만인 경우, 전체 찜 개수 기준으로 높은 것부터 선택하여 부족한 수를 채움
+    const additionalClubsNeeded = 4 - hotClubs.length;
+    const allClubs = await this.clubRepository.find({
+      take: 4,
+      order: { allLikes: 'DESC' },
+    });
+
+    // 전체 찜 개수 기준으로 가져온 동아리 중 hotClubs내에 이미 포함된 경우 제거
+    const existingClubIds = new Set(hotClubs.map((hc) => hc.id));
+    const additionalClubs = allClubs
+      .filter((club) => !existingClubIds.has(club.id))
+      .slice(0, additionalClubsNeeded);
+
+    const combinedClubs = [...hotClubs, ...additionalClubs];
+    let ranking = 1;
+
+    return combinedClubs.map((club) => {
+      const dto = new GetHotClubResponseDto();
+      dto.name = club.name;
+      dto.summary = club.summary;
+      dto.imageUrl = club.imageUrl;
+      dto.category = club.category;
+      dto.ranking = ranking++;
+      return dto;
+    });
   }
 }

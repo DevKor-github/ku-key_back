@@ -34,4 +34,13 @@ export class ClubRepository extends Repository<ClubEntity> {
 
     return queryBuilder.getMany();
   }
+
+  async findClubsByIdOrder(clubIds: number[]): Promise<ClubEntity[]> {
+    const clubs = await this.createQueryBuilder('club')
+      .where('club.id IN (:...ids)', { ids: clubIds })
+      .orderBy(`FIELD(club.id, ${clubIds.join(',')})`)
+      .getMany();
+
+    return clubs;
+  }
 }
