@@ -72,9 +72,7 @@ class PostPreview {
 export class GetPostListResponseDto {
   constructor(boardEntity: BoardEntity, postEntities: PostEntity[]) {
     this.board = new BoardInfo(boardEntity);
-    this.posts = postEntities
-      .map((postEntity) => new PostPreview(postEntity))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    this.posts = postEntities.map((postEntity) => new PostPreview(postEntity));
   }
 
   @ApiProperty({ description: '게시판 정보' })
