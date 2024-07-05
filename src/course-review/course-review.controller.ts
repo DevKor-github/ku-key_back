@@ -1,9 +1,10 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { CourseReviewService } from './course-review.service';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -12,6 +13,9 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
 import { CreateCourseReviewResponseDto } from './dto/create-course-review-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
+import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
+import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -37,11 +41,75 @@ export class CourseReviewController {
   @Post()
   async createCourseReview(
     @User() user: AuthorizedUserDto,
-    @Body() createCourseReviewDto: CreateCourseReviewRequestDto,
+    @Body() createCourseReviewRequestDto: CreateCourseReviewRequestDto,
   ): Promise<CreateCourseReviewResponseDto> {
     return await this.courseReviewService.createCourseReview(
       user,
-      createCourseReviewDto,
+      createCourseReviewRequestDto,
+    );
+  }
+
+  // 종합 강의평 조회
+  @ApiOperation({
+    summary: '강의평 요약 조회',
+    description:
+      '해당 교수의 해당 강의에 대한 강의평들을 종합한 강의평 요약을 조회합니다.',
+  })
+  @ApiQuery({
+    name: 'courseCode',
+    required: true,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'professorName',
+    required: true,
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '종합 강의평 조회 성공',
+    type: GetCourseReviewSummaryResponseDto,
+  })
+  @Get('summary')
+  async getCourseReviewSummary(
+    @User() user: AuthorizedUserDto,
+    @Query() getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
+  ): Promise<GetCourseReviewSummaryResponseDto> {
+    return await this.courseReviewService.getCourseReviewSummary(
+      user,
+      getCourseReviewsRequestDto,
+    );
+  }
+
+  // 강의평 조회
+  @ApiOperation({
+    summary: '강의평 조회',
+    description:
+      '해당 교수의 해당 강의에 대해 강의평을 조회합니다. 열람권이 없으면 열람할 수 없습니다.',
+  })
+  @ApiQuery({
+    name: 'courseCode',
+    required: true,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'professorName',
+    required: true,
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '강의평 조회 성공',
+    type: GetCourseReviewsResponseDto,
+  })
+  @Get()
+  async getCourseReviews(
+    @User() user: AuthorizedUserDto,
+    @Query() getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
+  ): Promise<GetCourseReviewsResponseDto | []> {
+    return await this.courseReviewService.getCourseReviews(
+      user,
+      getCourseReviewsRequestDto,
     );
   }
 }
