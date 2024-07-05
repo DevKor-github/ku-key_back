@@ -12,6 +12,7 @@ import { TimeTableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
 import { CourseReviewEntity } from './course-review.entity';
+import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -87,4 +88,11 @@ export class UserEntity extends CommonEntity {
     (courseReviewEntity) => courseReviewEntity.user,
   )
   courseReviews: CourseReviewEntity[];
+
+  @OneToMany(
+    () => CourseReviewRecommendEntity,
+    (courseReviewRecommendEntity) => courseReviewRecommendEntity.user,
+    { cascade: true },
+  )
+  courseReviewRecommends: CourseReviewRecommendEntity[];
 }

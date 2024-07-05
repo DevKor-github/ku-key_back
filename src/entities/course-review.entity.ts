@@ -3,10 +3,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
+import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 
 @Entity('course_review')
 export class CourseReviewEntity extends CommonEntity {
@@ -57,4 +59,11 @@ export class CourseReviewEntity extends CommonEntity {
     nullable: false,
   })
   user: UserEntity;
+
+  @OneToMany(
+    () => CourseReviewRecommendEntity,
+    (courseReviewRecommendEntity) => courseReviewRecommendEntity.courseReview,
+    { cascade: true },
+  )
+  courseReviewRecommends: CourseReviewRecommendEntity[];
 }
