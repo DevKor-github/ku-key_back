@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
@@ -73,6 +70,7 @@ export class CourseService {
         .getMany();
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -114,6 +112,7 @@ export class CourseService {
         .getMany();
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
