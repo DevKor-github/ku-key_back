@@ -127,7 +127,7 @@ export class CourseReviewService {
       rate: courseReview.rate,
       year: courseReview.year,
       semester: courseReview.semester,
-      isRecommended: courseReview.recommended,
+      recommended: courseReview.recommended,
       text: courseReview.textReview,
     }));
 

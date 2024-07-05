@@ -34,8 +34,8 @@ export class CourseReviewEntity extends CommonEntity {
   @Column('int', { nullable: false })
   attendance: number;
 
-  @Column('boolean', { nullable: false })
-  recommended: boolean;
+  @Column('int', { nullable: false })
+  recommended: number;
 
   @Column('varchar', { nullable: false })
   textReview: string;

@@ -10,8 +10,8 @@ export class ReviewDto {
   @ApiProperty({ description: '학기' })
   semester: string;
 
-  @ApiProperty({ description: '추천 여부' })
-  isRecommended: boolean;
+  @ApiProperty({ description: '추천수' })
+  recommended: number;
 
   @ApiProperty({ description: '강의평' })
   text: string;
