@@ -1,9 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Min,
   MinLength,
 } from 'class-validator';
 import { BoardEntity } from 'src/entities/board.entity';
@@ -91,4 +93,14 @@ export class GetPostListRequestDto {
   @IsString()
   @MinLength(2)
   keyword?: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  pageSize: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  pageNumber: number;
 }
