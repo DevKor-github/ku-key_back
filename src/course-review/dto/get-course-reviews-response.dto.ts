@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ReviewDto {
+  @ApiProperty({ description: '강의평 ID' })
+  id: number;
+
   @ApiProperty({ description: '평점' })
   rate: number;
 

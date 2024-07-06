@@ -8,10 +8,11 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { CourseReviewEntity } from './course-review.entity';
+import { CommonEntity } from './common.entity';
 
 @Entity('course_review_recommend')
 @Index(['userId', 'courseReviewId'], { unique: true })
-export class CourseReviewRecommendEntity {
+export class CourseReviewRecommendEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 

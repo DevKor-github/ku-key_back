@@ -124,6 +124,7 @@ export class CourseReviewService {
       courseReviews.reduce((sum, review) => sum + review.rate, 0) / reviewCount;
 
     const reviews = courseReviews.map((courseReview) => ({
+      id: courseReview.id,
       rate: courseReview.rate,
       year: courseReview.year,
       semester: courseReview.semester,
