@@ -281,6 +281,7 @@ export class TimeTableService {
         courses: [],
         schedules: [],
         color: timeTable.color,
+        tableName: timeTable.tableName,
       };
       timeTable.timeTableCourses.forEach((courseEntry) => {
         const {

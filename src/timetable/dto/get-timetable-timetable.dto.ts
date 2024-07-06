@@ -11,4 +11,7 @@ export class GetTimeTableByTimeTableIdDto {
 
   @ApiProperty({ description: '시간표 색상' })
   color: string;
+
+  @ApiProperty({ description: '시간표 이름' })
+  tableName: string;
 }
