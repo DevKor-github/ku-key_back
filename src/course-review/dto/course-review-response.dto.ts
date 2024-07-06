@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class CreateCourseReviewResponseDto {
+export class CourseReviewResponseDto {
   @ApiProperty({ description: 'id' })
   id: number;
 

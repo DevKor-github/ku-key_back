@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CourseReviewService } from './course-review.service';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -11,7 +21,7 @@ import {
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
-import { CreateCourseReviewResponseDto } from './dto/create-course-review-response.dto';
+import { CourseReviewResponseDto } from './dto/course-review-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
@@ -36,13 +46,13 @@ export class CourseReviewController {
   @ApiResponse({
     status: 201,
     description: '강의평 등록 성공',
-    type: CreateCourseReviewResponseDto,
+    type: CourseReviewResponseDto,
   })
   @Post()
   async createCourseReview(
     @User() user: AuthorizedUserDto,
     @Body() createCourseReviewRequestDto: CreateCourseReviewRequestDto,
-  ): Promise<CreateCourseReviewResponseDto> {
+  ): Promise<CourseReviewResponseDto> {
     return await this.courseReviewService.createCourseReview(
       user,
       createCourseReviewRequestDto,
@@ -110,6 +120,32 @@ export class CourseReviewController {
     return await this.courseReviewService.getCourseReviews(
       user,
       getCourseReviewsRequestDto,
+    );
+  }
+
+  // 강의평 추천
+  @ApiOperation({
+    summary: '강의평 추천',
+    description: '강의평에 추천을 누릅니다.',
+  })
+  @ApiParam({
+    name: 'courseReviewId',
+    required: true,
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '강의평 추천 성공',
+    type: CourseReviewResponseDto,
+  })
+  @Patch('recommend/:courseReviewId')
+  async recommendCourseReview(
+    @User() user: AuthorizedUserDto,
+    @Param('courseReviewId') courseReviewId: number,
+  ): Promise<CourseReviewResponseDto> {
+    return await this.courseReviewService.recommendCourseReview(
+      user,
+      courseReviewId,
     );
   }
 }

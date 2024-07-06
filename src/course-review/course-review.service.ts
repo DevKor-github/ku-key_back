@@ -2,27 +2,32 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
-import { CreateCourseReviewResponseDto } from './dto/create-course-review-response.dto';
+import { CourseReviewResponseDto } from './dto/course-review-response.dto';
 import { CourseReviewRepository } from './course-review.repository';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { UserService } from 'src/user/user.service';
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
+import { DataSource } from 'typeorm';
+import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
+import { CourseReviewEntity } from 'src/entities/course-review.entity';
 
 @Injectable()
 export class CourseReviewService {
   constructor(
     private readonly courseReviewRepository: CourseReviewRepository,
     private readonly userService: UserService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createCourseReview(
     user: AuthorizedUserDto,
     createCourseReviewRequestDto: CreateCourseReviewRequestDto,
-  ): Promise<CreateCourseReviewResponseDto> {
+  ): Promise<CourseReviewResponseDto> {
     // 유저가 이미 강의평을 등록했는 지 체크
     const isAlreadReviewed = await this.courseReviewRepository.findOne({
       where: {
@@ -137,5 +142,61 @@ export class CourseReviewService {
       reviewCount,
       reviews,
     };
+  }
+
+  async recommendCourseReview(
+    user: AuthorizedUserDto,
+    courseReviewId: number,
+  ): Promise<CourseReviewResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const courseReview = await this.courseReviewRepository.findOne({
+        where: { id: courseReviewId },
+      });
+
+      if (!courseReview) {
+        throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
+      }
+
+      // 이미 추천했는지 확인
+      const isRecommended = await queryRunner.manager.findOne(
+        CourseReviewRecommendEntity,
+        {
+          where: { userId: user.id, courseReviewId },
+        },
+      );
+
+      // 이미 추천을 했을 때
+      if (isRecommended) {
+        await queryRunner.manager.delete(CourseReviewRecommendEntity, {
+          userId: user.id,
+          courseReviewId,
+        });
+
+        await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
+          recommended: () => 'recommended - 1',
+        });
+        courseReview.recommended -= 1;
+      } else {
+        await queryRunner.manager.save(CourseReviewRecommendEntity, {
+          userId: user.id,
+          courseReviewId,
+        });
+        await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
+          recommended: () => 'recommended + 1',
+        });
+        courseReview.recommended += 1;
+      }
+      await queryRunner.commitTransaction();
+      return courseReview;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
