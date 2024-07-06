@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class GetFriendTimeTableRequestDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: '친구 ID' })
-  friendId: number;
+  @ApiProperty({ description: '친구 추가용 ID' })
+  username: string;
 
   @IsString()
   @IsNotEmpty()

@@ -284,28 +284,34 @@ export class FriendshipService {
     userId: number,
     getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
   ): Promise<GetTimeTableByTimeTableIdDto> {
-    try {
-      // 친구인지 아닌지 체크
-      const checkFriendship =
-        await this.friendshipRepository.findFriendshipBetweenUsers(
-          userId,
-          getFriendTimeTableRequestDto.friendId,
-        );
+    // username으로 친구정보 가져오기
+    const friend = await this.userService.findUserByUsername(
+      getFriendTimeTableRequestDto.username,
+    );
 
-      if (!checkFriendship || !checkFriendship.areWeFriend) {
-        throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
-      }
-
-      const friendTimeTable = await this.timeTableService.getFriendTimeTable(
-        getFriendTimeTableRequestDto,
+    if (!friend) {
+      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+    }
+    // 친구인지 아닌지 체크
+    const checkFriendship =
+      await this.friendshipRepository.findFriendshipBetweenUsers(
+        userId,
+        friend.id,
       );
 
-      if (!friendTimeTable) {
-        throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
-      }
-      return friendTimeTable;
-    } catch (error) {
-      throw error;
+    if (!checkFriendship || !checkFriendship.areWeFriend) {
+      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
     }
+
+    const friendTimeTable = await this.timeTableService.getFriendTimeTable(
+      friend.id,
+      getFriendTimeTableRequestDto.semester,
+      getFriendTimeTableRequestDto.year,
+    );
+
+    if (!friendTimeTable) {
+      throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
+    }
+    return friendTimeTable;
   }
 }

@@ -93,10 +93,10 @@ export class FriendshipController {
       '친구 ID, 연도, 학기를 입력받아 해당 학기에 친구의 대표 시간표를 조회합니다.',
   })
   @ApiQuery({
-    name: 'friendId',
+    name: 'username',
     type: 'string',
     required: true,
-    description: '친구 ID',
+    description: '친구 추가용 ID (username)',
   })
   @ApiQuery({
     name: 'year',
