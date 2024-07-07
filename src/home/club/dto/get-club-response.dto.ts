@@ -37,8 +37,13 @@ export class GetClubResponseDto {
   @ApiProperty({ description: '동아리 사진 URL' })
   imageUrl: string;
 
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({ description: '좋아요 개수' })
+  likeCount: number;
+
   @IsBoolean()
   @IsNotEmpty()
-  @ApiProperty({ description: '찜 여부' })
+  @ApiProperty({ description: '좋아요 여부' })
   isLiked: boolean;
 }

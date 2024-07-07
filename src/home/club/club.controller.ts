@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ClubService } from './club.service';
 import {
   ApiBearerAuth,
@@ -19,7 +12,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
-import { LikeClubResponseDto } from './dto/like-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 
@@ -61,22 +53,27 @@ export class ClubController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('/like/:clubId')
+  @Post('/like/:clubId')
   @ApiOperation({
-    summary: '동아리 찜 등록/해제',
-    description: '이미 동아리 찜 눌러져 있으면 해제, 그렇지 않다면 찜 등록',
+    summary: '동아리 좋아요 등록/해제',
+    description:
+      '이미 동아리 좋아요 눌러져 있으면 해제, 그렇지 않다면 좋아요 등록',
   })
-  @ApiParam({ description: '찜 누를 동아리 id', name: 'clubId', type: Number })
+  @ApiParam({
+    description: '좋아요 누를 동아리 id',
+    name: 'clubId',
+    type: Number,
+  })
   @ApiOkResponse({
-    description: '찜 등록 시 liked: True, 해제 시 False 반환',
-    type: LikeClubResponseDto,
+    description: '좋아요 여부 및 좋아요 개수가 업데이트된 동아리 정보 반환',
+    type: GetClubResponseDto,
   })
-  async likeClub(
+  async toggleLikeClub(
     @User() user: AuthorizedUserDto,
     @Param('clubId') clubId: number,
-  ): Promise<LikeClubResponseDto> {
+  ): Promise<GetClubResponseDto> {
     const userId = user.id;
-    return await this.clubService.likeClub(userId, clubId);
+    return await this.clubService.toggleLikeClub(userId, clubId);
   }
 
   @UseGuards(JwtAuthGuard)

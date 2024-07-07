@@ -2,15 +2,18 @@ import { ClubLikeRepository } from './club-like.repository';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
-import { LikeClubResponseDto } from './dto/like-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
+import { DataSource } from 'typeorm';
+import { ClubEntity } from 'src/entities/club.entity';
+import { ClubLikeEntity } from 'src/entities/club-like.entity';
 
 @Injectable()
 export class ClubService {
   constructor(
     private readonly clubRepository: ClubRepository,
     private readonly clubLikeRepository: ClubLikeRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getClubList(
@@ -47,6 +50,7 @@ export class ClubService {
         recruitmentPeriod: club.recruitmentPeriod,
         description: club.description,
         imageUrl: club.imageUrl,
+        likeCount: club.allLikes,
         isLiked: isLiked,
       };
     });
@@ -59,34 +63,74 @@ export class ClubService {
     return clubList;
   }
 
-  async likeClub(userId: number, clubId: number): Promise<LikeClubResponseDto> {
-    const club = await this.clubRepository.findOne({ where: { id: clubId } });
+  async toggleLikeClub(
+    userId: number,
+    clubId: number,
+  ): Promise<GetClubResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!club) {
-      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
-    }
-
-    const clubLike = await this.clubLikeRepository.findOne({
-      where: {
-        club: { id: clubId },
-        user: { id: userId },
-      },
-    });
-
-    if (!clubLike) {
-      const newClubLike = await this.clubLikeRepository.create({
-        club: { id: clubId },
-        user: { id: userId },
+    try {
+      const club = await queryRunner.manager.findOne(ClubEntity, {
+        where: { id: clubId },
       });
-      club.allLikes++;
-      await this.clubLikeRepository.save(newClubLike);
-      await this.clubRepository.save(club);
-      return new LikeClubResponseDto(true);
-    } else {
-      await this.clubLikeRepository.delete(clubLike.id);
-      club.allLikes--;
-      await this.clubRepository.save(club);
-      return new LikeClubResponseDto(false);
+
+      if (!club) {
+        throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+      }
+
+      const clubLike = await queryRunner.manager.findOne(ClubLikeEntity, {
+        where: {
+          club: { id: clubId },
+          user: { id: userId },
+        },
+      });
+
+      if (!clubLike) {
+        const newClubLike = this.clubLikeRepository.create({
+          club: { id: clubId },
+          user: { id: userId },
+        });
+        club.allLikes++;
+        await queryRunner.manager.save(newClubLike);
+        await queryRunner.manager.save(club);
+        await queryRunner.commitTransaction();
+
+        return {
+          clubId: club.id,
+          name: club.name,
+          summary: club.summary,
+          regularMeeting: club.regularMeeting,
+          recruitmentPeriod: club.recruitmentPeriod,
+          description: club.description,
+          imageUrl: club.imageUrl,
+          likeCount: club.allLikes,
+          isLiked: true,
+        };
+      } else {
+        await queryRunner.manager.delete(ClubLikeEntity, { id: clubLike.id });
+        club.allLikes--;
+        await queryRunner.manager.save(club);
+        await queryRunner.commitTransaction();
+
+        return {
+          clubId: club.id,
+          name: club.name,
+          summary: club.summary,
+          regularMeeting: club.regularMeeting,
+          recruitmentPeriod: club.recruitmentPeriod,
+          description: club.description,
+          imageUrl: club.imageUrl,
+          likeCount: club.allLikes,
+          isLiked: false,
+        };
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 

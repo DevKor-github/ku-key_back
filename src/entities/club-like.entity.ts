@@ -1,9 +1,16 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { ClubEntity } from './club.entity';
 import { UserEntity } from './user.entity';
 
 @Entity('club_like')
+@Index(['club', 'user'], { unique: true })
 export class ClubLikeEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
