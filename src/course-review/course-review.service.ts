@@ -144,7 +144,7 @@ export class CourseReviewService {
     };
   }
 
-  async recommendCourseReview(
+  async toggleRecommendCourseReview(
     user: AuthorizedUserDto,
     courseReviewId: number,
   ): Promise<CourseReviewResponseDto> {

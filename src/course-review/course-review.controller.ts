@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  Patch,
   Post,
   Query,
   UseGuards,
@@ -126,7 +125,8 @@ export class CourseReviewController {
   // 강의평 추천
   @ApiOperation({
     summary: '강의평 추천',
-    description: '강의평에 추천을 누릅니다.',
+    description:
+      '강의평에 추천을 누릅니다. 이미 추천한 강의평이면 추천이 취소됩니다.',
   })
   @ApiParam({
     name: 'courseReviewId',
@@ -135,15 +135,15 @@ export class CourseReviewController {
   })
   @ApiResponse({
     status: 200,
-    description: '강의평 추천 성공',
+    description: '강의평 추천/추천 취소 성공',
     type: CourseReviewResponseDto,
   })
-  @Patch('recommend/:courseReviewId')
-  async recommendCourseReview(
+  @Post('recommend/:courseReviewId')
+  async toggleRecommendCourseReview(
     @User() user: AuthorizedUserDto,
     @Param('courseReviewId') courseReviewId: number,
   ): Promise<CourseReviewResponseDto> {
-    return await this.courseReviewService.recommendCourseReview(
+    return await this.courseReviewService.toggleRecommendCourseReview(
       user,
       courseReviewId,
     );
