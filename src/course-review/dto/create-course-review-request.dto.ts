@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
 
 export class CreateCourseReviewRequestDto {
   @ApiProperty({ description: '강의 평점' })
@@ -40,6 +40,7 @@ export class CreateCourseReviewRequestDto {
   @ApiProperty({ description: '강의평 남기기' })
   @IsString()
   @IsNotEmpty()
+  @Length(50, 1000)
   textReview: string;
 
   @ApiProperty({ description: '연도' })
