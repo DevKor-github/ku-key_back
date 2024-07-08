@@ -90,6 +90,23 @@ export class CourseReviewController {
     );
   }
 
+  @ApiOperation({
+    summary: '내 강의평 조회',
+    description: '내가 작성한 강의평을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '내 강의평 조회 성공',
+    type: CourseReviewResponseDto,
+    isArray: true,
+  })
+  @Get('my-course-reviews')
+  async getMyCourseReviews(
+    @User() user: AuthorizedUserDto,
+  ): Promise<CourseReviewResponseDto[]> {
+    return await this.courseReviewService.getMyCourseReviews(user);
+  }
+
   // 강의평 조회
   @ApiOperation({
     summary: '강의평 조회',

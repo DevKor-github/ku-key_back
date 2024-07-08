@@ -103,6 +103,16 @@ export class CourseReviewService {
     };
   }
 
+  async getMyCourseReviews(
+    user: AuthorizedUserDto,
+  ): Promise<CourseReviewResponseDto[]> {
+    const courseReviews = await this.courseReviewRepository.find({
+      where: { userId: user.id },
+    });
+
+    return courseReviews;
+  }
+
   async getCourseReviews(
     user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
