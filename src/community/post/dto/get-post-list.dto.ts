@@ -1,9 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Min,
   MinLength,
 } from 'class-validator';
 import { BoardEntity } from 'src/entities/board.entity';
@@ -72,9 +74,7 @@ class PostPreview {
 export class GetPostListResponseDto {
   constructor(boardEntity: BoardEntity, postEntities: PostEntity[]) {
     this.board = new BoardInfo(boardEntity);
-    this.posts = postEntities
-      .map((postEntity) => new PostPreview(postEntity))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    this.posts = postEntities.map((postEntity) => new PostPreview(postEntity));
   }
 
   @ApiProperty({ description: '게시판 정보' })
@@ -93,4 +93,14 @@ export class GetPostListRequestDto {
   @IsString()
   @MinLength(2)
   keyword?: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  pageSize: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  pageNumber: number;
 }

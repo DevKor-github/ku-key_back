@@ -29,6 +29,8 @@ export class PostService {
 
   async getPostList(
     boardId: number,
+    pageSize: number,
+    pageNumber: number,
     keyword?: string,
   ): Promise<GetPostListResponseDto> {
     const board = await this.boardService.getBoardById(boardId);
@@ -36,8 +38,17 @@ export class PostService {
       throw new BadRequestException('Wrong BoardId!');
     }
     const posts = keyword
-      ? await this.postRepository.getPostsByBoardIdwithKeyword(boardId, keyword)
-      : await this.postRepository.getPostsByBoardId(boardId);
+      ? await this.postRepository.getPostsByBoardIdwithKeyword(
+          boardId,
+          keyword,
+          pageSize,
+          pageNumber,
+        )
+      : await this.postRepository.getPostsByBoardId(
+          boardId,
+          pageSize,
+          pageNumber,
+        );
     const postList = new GetPostListResponseDto(board, posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;

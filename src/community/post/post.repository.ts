@@ -8,10 +8,19 @@ export class PostRepository extends Repository<PostEntity> {
     super(PostEntity, dataSource.createEntityManager());
   }
 
-  async getPostsByBoardId(boardId: number): Promise<PostEntity[]> {
+  async getPostsByBoardId(
+    boardId: number,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: { boardId: boardId },
+      order: {
+        createdAt: 'DESC',
+      },
       relations: ['postImages', 'comments', 'user'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
     });
     return posts;
   }
@@ -19,13 +28,20 @@ export class PostRepository extends Repository<PostEntity> {
   async getPostsByBoardIdwithKeyword(
     boardId: number,
     keyword: string,
+    pageSize: number,
+    pageNumber: number,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: [
         { boardId: boardId, title: ILike(`%${keyword}%`) },
         { boardId: boardId, content: ILike(`%${keyword}%`) },
       ],
+      order: {
+        createdAt: 'DESC',
+      },
       relations: ['postImages', 'comments', 'user'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
     });
     return posts;
   }
