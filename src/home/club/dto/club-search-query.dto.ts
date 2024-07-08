@@ -4,9 +4,14 @@ import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class ClubSearchQueryDto {
   @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: '정렬 방식' })
+  sortBy?: string;
+
+  @IsOptional()
   @ToBoolean()
-  @ApiPropertyOptional({ description: '찜 필터링 여부 (true / false)' })
-  like?: boolean;
+  @ApiPropertyOptional({ description: '좋아요 필터링 여부 (true / false)' })
+  wishList?: boolean;
 
   @IsOptional()
   @IsString()

@@ -26,9 +26,18 @@ export class ClubController {
   @ApiOperation({
     summary: '동아리 목록 조회',
     description:
-      '동아리 전체 목록을 조회하거나, 찜 여부, 소속/분과, 검색어(동아리명, 동아리 요약)로 필터링하여 조회합니다.',
+      '동아리 전체 목록을 조회하거나, 좋아요 여부, 소속/분과, 검색어(동아리명, 동아리 요약)로 필터링 및 좋아요 순으로 정렬하여 조회합니다.',
   })
-  @ApiQuery({ name: 'like', description: '찜 여부 필터링', required: false })
+  @ApiQuery({
+    name: 'sortBy',
+    description: '정렬 방식 (좋아요 순 : like)',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'whishList',
+    description: '좋아요 누른 동아리만 필터링 (true / false)',
+    required: false,
+  })
   @ApiQuery({
     name: 'category',
     description: '소속/분과별 필터링',
@@ -40,7 +49,7 @@ export class ClubController {
     required: false,
   })
   @ApiOkResponse({
-    description: '전체 혹은 필터링 된 동아리 목록 반환',
+    description: '전체 혹은 필터링/정렬 된 동아리 목록 반환',
     isArray: true,
     type: GetClubResponseDto,
   })
@@ -81,7 +90,7 @@ export class ClubController {
   @ApiOperation({
     summary: 'Hot Club 목록 조회',
     description:
-      '최근 일주일 동안 찜 누른 개수가 가장 많은 동아리 4개를 반환합니다.',
+      '최근 일주일 동안 좋아요 개수가 가장 많은 동아리 4개를 반환합니다.',
   })
   @ApiOkResponse({
     description: 'Hot Club 목록 4개 반환',

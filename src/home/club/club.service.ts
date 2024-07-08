@@ -21,7 +21,7 @@ export class ClubService {
     clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
-    const { like, category, keyword } = clubSearchQueryDto;
+    const { sortBy, wishList, category, keyword } = clubSearchQueryDto;
 
     const clubs = await this.clubRepository.findClubsByFiltering(
       category,
@@ -38,7 +38,7 @@ export class ClubService {
     }
 
     // 현재 접속 중인 유저의 각 동아리에 대한 찜 여부 함께 반환
-    const clubList = clubs.map((club) => {
+    let clubList = clubs.map((club) => {
       const isLiked = club.clubLikes.some(
         (clubLike) => clubLike.user.id === userId,
       );
@@ -55,9 +55,14 @@ export class ClubService {
       };
     });
 
-    // 찜한 동아리만 보기 시
-    if (like) {
-      return clubList.filter((club) => club.isLiked === true);
+    // 내가 좋아요를 누른 동아리만 보기
+    if (wishList) {
+      clubList = clubList.filter((club) => club.isLiked === true);
+    }
+
+    // 좋아요 순으로 정렬
+    if (sortBy === 'like') {
+      clubList = clubList.sort((a, b) => b.likeCount - a.likeCount);
     }
 
     return clubList;
