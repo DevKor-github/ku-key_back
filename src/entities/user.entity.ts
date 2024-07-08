@@ -11,6 +11,7 @@ import { FriendshipEntity } from './friendship.entity';
 import { TimeTableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
+import { PostScrapEntity } from './post-scrap.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -77,4 +78,7 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
   comments: CommentEntity[];
+
+  @OneToMany(() => PostScrapEntity, (postScrapEntity) => postScrapEntity.user)
+  postScraps: PostScrapEntity[];
 }

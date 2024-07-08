@@ -11,6 +11,7 @@ import { UserEntity } from './user.entity';
 import { BoardEntity } from './board.entity';
 import { PostImageEntity } from './post-image.entity';
 import { CommentEntity } from './comment.entity';
+import { PostScrapEntity } from './post-scrap.entity';
 
 @Entity('post')
 export class PostEntity extends CommonEntity {
@@ -54,4 +55,9 @@ export class PostEntity extends CommonEntity {
     cascade: true,
   })
   comments: CommentEntity[];
+
+  @OneToMany(() => PostScrapEntity, (postScrapEntity) => postScrapEntity.post, {
+    cascade: true,
+  })
+  postScraps: PostScrapEntity[];
 }

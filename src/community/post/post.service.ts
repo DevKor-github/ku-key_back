@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PostRepository } from './post.repository';
-import { PostImageRepository } from './post-image.repository';
 import { BoardService } from '../board/board.service';
 import { GetPostListResponseDto } from './dto/get-post-list.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -16,12 +15,14 @@ import { DeletePostResponseDto } from './dto/delete-post.dto';
 import { DataSource } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
+import { PostScrapRepository } from './post-scrap.repository';
+import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly postImageRepository: PostImageRepository,
+    private readonly postScrapRepository: PostScrapRepository,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
     private readonly dataSource: DataSource,
@@ -246,6 +247,24 @@ export class PostService {
     }
 
     return new DeletePostResponseDto(true);
+  }
+
+  async scrapPost(
+    user: AuthorizedUserDto,
+    postId: number,
+  ): Promise<ScrapPostResponseDto> {
+    if (!(await this.postRepository.isExistingPostId(postId))) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+    const isDeleted = await this.postScrapRepository.deletePostScrap(
+      user.id,
+      postId,
+    );
+    if (!isDeleted) {
+      await this.postScrapRepository.createPostScrap(user.id, postId);
+    }
+
+    return new ScrapPostResponseDto(!isDeleted);
   }
 
   async isExistingPostId(postId: number): Promise<boolean> {

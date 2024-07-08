@@ -48,6 +48,7 @@ export class GetPostResponseDto {
             Math.floor(postEntity.user.username.length / 2),
         );
     this.views = postEntity.views;
+    this.scrapCount = postEntity.postScraps.length;
 
     this.comments = [];
     postEntity.comments
@@ -92,6 +93,9 @@ export class GetPostResponseDto {
 
   @ApiProperty({ description: '조회수' })
   views: number;
+
+  @ApiProperty({ description: '스크랩 수' })
+  scrapCount: number;
 
   @ApiProperty({ description: '댓글', type: [Comment] })
   comments: Comment[];

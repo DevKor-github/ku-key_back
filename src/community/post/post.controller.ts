@@ -35,6 +35,7 @@ import { CreatePostRequestDto } from './dto/create-post.dto';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
+import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 
 @Controller('post')
 @ApiTags('post')
@@ -167,5 +168,27 @@ export class PostController {
     @Param('postId') postId: number,
   ): Promise<DeletePostResponseDto> {
     return await this.postService.deletePost(user, postId);
+  }
+
+  @Post(':postId/scrap')
+  @ApiOperation({
+    summary: '게시글 스크랩',
+    description:
+      '게시글을 스크랩합니다. 만일 이미 스크랩한 게시글이라면 스크랩을 취소합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 스크랩(취소) 성공',
+    type: ScrapPostResponseDto,
+  })
+  async scrapPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+  ): Promise<ScrapPostResponseDto> {
+    return await this.postService.scrapPost(user, postId);
   }
 }
