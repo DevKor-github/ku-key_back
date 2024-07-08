@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { TimeTableCourseEntity } from 'src/entities/timetable-course.entity';
+import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
-export class TimeTableCourseRepository extends Repository<TimeTableCourseEntity> {
+export class TimetableCourseRepository extends Repository<TimetableCourseEntity> {
   constructor(dataSource: DataSource) {
-    super(TimeTableCourseEntity, dataSource.createEntityManager());
+    super(TimetableCourseEntity, dataSource.createEntityManager());
   }
 }

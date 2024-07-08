@@ -8,11 +8,11 @@ import {
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
-import { TimeTableCourseEntity } from './timetable-course.entity';
+import { TimetableCourseEntity } from './timetable-course.entity';
 import { ScheduleEntity } from './schedule.entity';
 
 @Entity('time_table')
-export class TimeTableEntity extends CommonEntity {
+export class TimetableEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
@@ -20,7 +20,7 @@ export class TimeTableEntity extends CommonEntity {
   userId: number;
 
   @Column('varchar', { nullable: false })
-  tableName: string;
+  timetableName: string;
 
   @Column('varchar', { nullable: false })
   semester: string;
@@ -29,27 +29,27 @@ export class TimeTableEntity extends CommonEntity {
   year: string;
 
   @Column('boolean', { nullable: false, default: false })
-  mainTimeTable: boolean;
+  mainTimetable: boolean;
 
   @Column('varchar', { nullable: false, default: 'Red' })
   color: string;
 
   @JoinColumn({ name: 'userId' })
-  @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTables, {
+  @ManyToOne(() => UserEntity, (userEntity) => userEntity.timetables, {
     onDelete: 'CASCADE',
   })
   user: UserEntity;
 
   @OneToMany(
-    () => TimeTableCourseEntity,
-    (timeTableCourseEntity) => timeTableCourseEntity.timeTable,
+    () => TimetableCourseEntity,
+    (timetableCourseEntity) => timetableCourseEntity.timetable,
     { cascade: true },
   )
-  timeTableCourses: TimeTableCourseEntity[];
+  timetableCourses: TimetableCourseEntity[];
 
   @OneToMany(
     () => ScheduleEntity,
-    (scheduleEntity) => scheduleEntity.timeTable,
+    (scheduleEntity) => scheduleEntity.timetable,
     { cascade: true },
   )
   schedules: ScheduleEntity[];
