@@ -32,6 +32,9 @@ export class PostEntity extends CommonEntity {
   @Column('boolean', { nullable: false })
   isAnonymous: boolean;
 
+  @Column('int', { nullable: false, default: 0 })
+  views: number;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.posts, {
     onDelete: 'CASCADE',

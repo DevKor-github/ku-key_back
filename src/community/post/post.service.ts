@@ -72,6 +72,10 @@ export class PostService {
     if (post.deletedAt) {
       throw new BadRequestException('Deleted Post!');
     }
+    const isViewsIncreased = await this.postRepository.increaseViews(postId);
+    if (!isViewsIncreased) {
+      console.log('Views Increase Failed!');
+    }
     const postResponse = new GetPostResponseDto(post, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);

@@ -81,6 +81,11 @@ export class PostRepository extends Repository<PostEntity> {
     return post;
   }
 
+  async increaseViews(postId: number): Promise<boolean> {
+    const result = await this.increment({ id: postId }, 'views', 1);
+    return result.affected ? true : false;
+  }
+
   async updatePost(
     postId: number,
     title: string,

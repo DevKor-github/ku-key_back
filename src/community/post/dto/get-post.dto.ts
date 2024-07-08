@@ -47,6 +47,7 @@ export class GetPostResponseDto {
           postEntity.user.username.length -
             Math.floor(postEntity.user.username.length / 2),
         );
+    this.views = postEntity.views;
 
     this.comments = [];
     postEntity.comments
@@ -88,6 +89,9 @@ export class GetPostResponseDto {
 
   @ApiProperty({ description: '게시글을 생성한 사용자(익명이면 null)' })
   username: string | null;
+
+  @ApiProperty({ description: '조회수' })
+  views: number;
 
   @ApiProperty({ description: '댓글', type: [Comment] })
   comments: Comment[];
