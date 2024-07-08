@@ -25,6 +25,9 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
+import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
+import { CriteriaType } from './dto/course-reviews-filter.dto';
+import { DirectionType } from './dto/course-reviews-filter.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -123,6 +126,16 @@ export class CourseReviewController {
     required: true,
     type: String,
   })
+  @ApiQuery({
+    name: 'criteria',
+    required: true,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'direction',
+    required: true,
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: '강의평 조회 성공',
@@ -132,10 +145,12 @@ export class CourseReviewController {
   async getCourseReviews(
     @User() user: AuthorizedUserDto,
     @Query() getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
+    @Query() courseReviewsFilterDto: CourseReviewsFilterDto,
   ): Promise<GetCourseReviewsResponseDto | []> {
     return await this.courseReviewService.getCourseReviews(
       user,
       getCourseReviewsRequestDto,
+      courseReviewsFilterDto,
     );
   }
 

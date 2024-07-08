@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty } from 'class-validator';
 
-const OrderType = {
-  recent: 'recent',
-  recommend: 'recommend',
-  rating: 'rating',
+const CriteriaType = {
+  createdAt: 'createdAt',
+  recommended: 'recommended',
+  rate: 'rate',
 } as const;
 
 const DirectionType = {
@@ -12,17 +12,17 @@ const DirectionType = {
   DESC: 'DESC',
 } as const;
 
-export type OrderType = (typeof OrderType)[keyof typeof OrderType];
+export type CriteriaType = (typeof CriteriaType)[keyof typeof CriteriaType];
 export type DirectionType = (typeof DirectionType)[keyof typeof DirectionType];
 
 export class CourseReviewsFilterDto {
   @ApiProperty({ description: '검색 필터 기준' })
-  @IsEnum(OrderType)
+  @IsEnum(CriteriaType)
   @IsNotEmpty()
-  order: OrderType;
+  criteria: CriteriaType = CriteriaType.createdAt;
 
   @ApiProperty({ description: '오름차순 / 내림차순' })
   @IsEnum(DirectionType)
   @IsNotEmpty()
-  direction: DirectionType;
+  direction: DirectionType = DirectionType.DESC;
 }

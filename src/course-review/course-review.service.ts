@@ -15,6 +15,7 @@ import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summa
 import { DataSource } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
+import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
 
 @Injectable()
 export class CourseReviewService {
@@ -116,6 +117,7 @@ export class CourseReviewService {
   async getCourseReviews(
     user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
+    courseReviewsFilterDto: CourseReviewsFilterDto,
   ): Promise<GetCourseReviewsResponseDto | []> {
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
@@ -123,11 +125,14 @@ export class CourseReviewService {
       throw new ForbiddenException('열람권을 구매해야 합니다.');
     }
 
+    const { criteria, direction } = courseReviewsFilterDto;
+
     const courseReviews = await this.courseReviewRepository.find({
       where: {
         courseCode: getCourseReviewsRequestDto.courseCode,
         professorName: getCourseReviewsRequestDto.professorName,
       },
+      order: { [criteria]: direction },
     });
 
     if (courseReviews.length === 0) {
