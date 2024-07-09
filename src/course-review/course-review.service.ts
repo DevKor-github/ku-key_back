@@ -231,6 +231,12 @@ export class CourseReviewService {
         throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
       }
 
+      // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
+      const viewableUser = await this.userService.findUserById(user.id);
+      if (!viewableUser.isViewable) {
+        throw new ForbiddenException('열람권을 구매해야 합니다.');
+      }
+
       // 이미 추천했는지 확인
       const isRecommended = await queryRunner.manager.findOne(
         CourseReviewRecommendEntity,
