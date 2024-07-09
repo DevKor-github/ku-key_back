@@ -38,6 +38,9 @@ export class CourseEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   semester: string;
 
+  @Column('varchar', { nullable: false })
+  syllabus: string;
+
   @OneToMany(
     () => CourseDetailEntity,
     (courseDetailEntity) => courseDetailEntity.course,
