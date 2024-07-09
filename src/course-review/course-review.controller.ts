@@ -166,7 +166,7 @@ export class CourseReviewController {
     type: Number,
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: '강의평 추천/추천 취소 성공',
     type: CourseReviewResponseDto,
   })
