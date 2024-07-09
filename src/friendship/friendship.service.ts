@@ -8,10 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
-import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
-import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
@@ -19,6 +17,7 @@ import { TimeTableService } from 'src/timetable/timetable.service';
 import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
+import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -161,7 +160,7 @@ export class FriendshipService {
     }
   }
 
-  async getWaitingFriendList(
+  async getReceivedWaitingFriendList(
     userId: number,
   ): Promise<GetWaitingFriendResponseDto[]> {
     const friendshipRequests =
@@ -173,6 +172,31 @@ export class FriendshipService {
 
     const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
       const waitingFriend = friendshipRequest.fromUser;
+      return {
+        friendshipId: friendshipRequest.id,
+        userId: waitingFriend.id,
+        name: waitingFriend.name,
+        username: waitingFriend.username,
+        major: waitingFriend.major,
+        language: waitingFriend.language,
+      };
+    });
+
+    return waitingFriendList;
+  }
+
+  async getSentWaitingFriendList(
+    userId: number,
+  ): Promise<GetWaitingFriendResponseDto[]> {
+    const friendshipRequests =
+      await this.friendshipRepository.findSentFriendshipsByUserId(userId);
+
+    if (friendshipRequests.length === 0) {
+      return [];
+    }
+
+    const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
+      const waitingFriend = friendshipRequest.toUser;
       return {
         friendshipId: friendshipRequest.id,
         userId: waitingFriend.id,
@@ -220,7 +244,7 @@ export class FriendshipService {
   async rejectFriendshipRequest(
     userId: number,
     friendshipId: number,
-  ): Promise<RejectFriendshipResponseDto> {
+  ): Promise<DeleteFriendshipResponseDto> {
     const friendship =
       await this.friendshipRepository.findFriendshipByFriendshipId(
         friendshipId,
@@ -246,7 +270,39 @@ export class FriendshipService {
     if (!isDeleted) {
       throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
     } else {
-      return new RejectFriendshipResponseDto(true);
+      return new DeleteFriendshipResponseDto(true);
+    }
+  }
+
+  async cancelFriendshipRequest(
+    userId: number,
+    friendshipId: number,
+  ): Promise<DeleteFriendshipResponseDto> {
+    const friendship =
+      await this.friendshipRepository.findFriendshipByFriendshipId(
+        friendshipId,
+      );
+    if (!friendship) {
+      throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
+    }
+
+    if (friendship.fromUser.id !== userId) {
+      throw new BadRequestException(
+        '내가 보낸 친구 요청만 취소할 수 있습니다.',
+      );
+    }
+
+    if (friendship.areWeFriend) {
+      throw new BadRequestException(
+        '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
+      );
+    }
+    const isDeleted =
+      await this.friendshipRepository.deleteFriendship(friendshipId);
+    if (!isDeleted) {
+      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
+    } else {
+      return new DeleteFriendshipResponseDto(true);
     }
   }
 
