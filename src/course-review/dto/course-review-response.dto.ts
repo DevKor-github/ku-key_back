@@ -23,7 +23,7 @@ export class CourseReviewResponseDto {
   attendance: number;
 
   @ApiProperty({ description: '추천수' })
-  recommended: number;
+  recommendCount: number;
 
   @ApiProperty({ description: '강의평 남기기' })
   textReview: string;

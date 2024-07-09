@@ -18,6 +18,9 @@ export class CourseReviewEntity extends CommonEntity {
   @Column({ nullable: false })
   userId: number;
 
+  @Column('varchar', { nullable: false })
+  reviewer: string;
+
   @Column('int', { nullable: false })
   rate: number;
 
@@ -36,10 +39,13 @@ export class CourseReviewEntity extends CommonEntity {
   @Column('int', { nullable: false })
   attendance: number;
 
-  @Column('int', { nullable: false })
-  recommended: number;
+  @Column('boolean', { nullable: false, default: false })
+  myRecommend: boolean;
 
-  @Column('varchar', { nullable: false })
+  @Column('int', { nullable: false, default: 0 })
+  recommendCount: number;
+
+  @Column('varchar', { nullable: false, length: 1000 })
   textReview: string;
 
   @Column('varchar', { nullable: false })

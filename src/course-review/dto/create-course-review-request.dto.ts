@@ -32,11 +32,6 @@ export class CreateCourseReviewRequestDto {
   @IsNotEmpty()
   attendance: number;
 
-  @ApiProperty({ description: '추천수' })
-  @IsNumber()
-  @IsNotEmpty()
-  recommended: number;
-
   @ApiProperty({ description: '강의평 남기기' })
   @IsString()
   @IsNotEmpty()
@@ -56,10 +51,12 @@ export class CreateCourseReviewRequestDto {
   @ApiProperty({ description: '교수님 성함' })
   @IsString()
   @IsNotEmpty()
+  @Length(3)
   professorName: string;
 
   @ApiProperty({ description: '학수번호' })
   @IsString()
   @IsNotEmpty()
+  @Length(7)
   courseCode: string;
 }

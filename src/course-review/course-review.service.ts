@@ -16,12 +16,14 @@ import { DataSource } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
+import { CourseService } from 'src/course/course.service';
 
 @Injectable()
 export class CourseReviewService {
   constructor(
     private readonly courseReviewRepository: CourseReviewRepository,
     private readonly userService: UserService,
+    private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -29,6 +31,16 @@ export class CourseReviewService {
     user: AuthorizedUserDto,
     createCourseReviewRequestDto: CreateCourseReviewRequestDto,
   ): Promise<CourseReviewResponseDto> {
+    // 해당 학수번호-교수명과 일치하는 강의가 존재하는지 체크
+    const course = await this.courseService.searchCourseCodeWithProfessorName(
+      createCourseReviewRequestDto.courseCode,
+      createCourseReviewRequestDto.professorName,
+    );
+
+    if (!course) {
+      throw new NotFoundException('해당 강의가 존재하지 않습니다.');
+    }
+
     // 유저가 이미 강의평을 등록했는 지 체크
     const isAlreadReviewed = await this.courseReviewRepository.findOne({
       where: {
@@ -37,6 +49,7 @@ export class CourseReviewService {
         professorName: createCourseReviewRequestDto.professorName,
       },
     });
+
     if (isAlreadReviewed) {
       throw new ConflictException(
         '이미 해당 강의에 대한 강의평을 등록했습니다.',
@@ -45,6 +58,8 @@ export class CourseReviewService {
 
     const courseReview = this.courseReviewRepository.create({
       ...createCourseReviewRequestDto,
+      createdAt: new Date(),
+      reviewer: user.username,
       userId: user.id,
     });
 
@@ -55,6 +70,16 @@ export class CourseReviewService {
     user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
   ): Promise<GetCourseReviewSummaryResponseDto> {
+    // 해당 학수번호-교수명과 일치하는 강의가 존재하는지 체크
+    const course = await this.courseService.searchCourseCodeWithProfessorName(
+      getCourseReviewsRequestDto.courseCode,
+      getCourseReviewsRequestDto.professorName,
+    );
+
+    if (!course) {
+      throw new NotFoundException('해당 강의가 존재하지 않습니다.');
+    }
+
     const courseReviews = await this.courseReviewRepository.find({
       where: {
         courseCode: getCourseReviewsRequestDto.courseCode,
@@ -119,6 +144,15 @@ export class CourseReviewService {
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
     courseReviewsFilterDto: CourseReviewsFilterDto,
   ): Promise<GetCourseReviewsResponseDto | []> {
+    // 해당 학수번호-교수명과 일치하는 강의가 존재하는지 체크
+    const course = await this.courseService.searchCourseCodeWithProfessorName(
+      getCourseReviewsRequestDto.courseCode,
+      getCourseReviewsRequestDto.professorName,
+    );
+
+    if (!course) {
+      throw new NotFoundException('해당 강의가 존재하지 않습니다.');
+    }
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
     if (!viewableUser.isViewable) {
@@ -133,6 +167,7 @@ export class CourseReviewService {
         professorName: getCourseReviewsRequestDto.professorName,
       },
       order: { [criteria]: direction },
+      relations: ['user'],
     });
 
     if (courseReviews.length === 0) {
@@ -146,9 +181,17 @@ export class CourseReviewService {
     const reviews = courseReviews.map((courseReview) => ({
       id: courseReview.id,
       rate: courseReview.rate,
+      createdAt: courseReview.createdAt,
+      reviewer: courseReview.user.username,
       year: courseReview.year,
       semester: courseReview.semester,
-      recommended: courseReview.recommended,
+      recommendCount: courseReview.recommendCount,
+      myRecommend: courseReview.myRecommend,
+      classLevel: courseReview.classLevel,
+      teamProject: courseReview.teamProject,
+      amountLearned: courseReview.amountLearned,
+      teachingSkills: courseReview.teachingSkills,
+      attendance: courseReview.attendance,
       text: courseReview.textReview,
     }));
 
@@ -192,18 +235,18 @@ export class CourseReviewService {
         });
 
         await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
-          recommended: () => 'recommended - 1',
+          recommendCount: () => 'recommendCount - 1',
         });
-        courseReview.recommended -= 1;
+        courseReview.recommendCount -= 1;
       } else {
         await queryRunner.manager.save(CourseReviewRecommendEntity, {
           userId: user.id,
           courseReviewId,
         });
         await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
-          recommended: () => 'recommended + 1',
+          recommendCount: () => 'recommendCount + 1',
         });
-        courseReview.recommended += 1;
+        courseReview.recommendCount += 1;
       }
       await queryRunner.commitTransaction();
       return courseReview;

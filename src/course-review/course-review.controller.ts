@@ -26,8 +26,6 @@ import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
-import { CriteriaType } from './dto/course-reviews-filter.dto';
-import { DirectionType } from './dto/course-reviews-filter.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
