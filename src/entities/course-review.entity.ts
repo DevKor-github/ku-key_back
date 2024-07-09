@@ -39,9 +39,6 @@ export class CourseReviewEntity extends CommonEntity {
   @Column('int', { nullable: false })
   attendance: number;
 
-  @Column('boolean', { nullable: false, default: false })
-  myRecommend: boolean;
-
   @Column('int', { nullable: false, default: 0 })
   recommendCount: number;
 

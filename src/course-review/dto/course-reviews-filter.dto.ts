@@ -3,7 +3,7 @@ import { IsEnum, IsNotEmpty } from 'class-validator';
 
 const CriteriaType = {
   createdAt: 'createdAt',
-  recommended: 'recommended',
+  recommendCount: 'recommendCount',
   rate: 'rate',
 } as const;
 

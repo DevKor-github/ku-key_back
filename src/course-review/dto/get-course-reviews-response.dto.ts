@@ -19,11 +19,11 @@ export class ReviewDto {
   @ApiProperty({ description: '학기' })
   semester: string;
 
+  @ApiProperty({ description: '추천 여부' })
+  myRecommend: boolean;
+
   @ApiProperty({ description: '추천수' })
   recommendCount: number;
-
-  @ApiProperty({ description: '나의 추천 여부' })
-  myRecommend: boolean;
 
   @ApiProperty({ description: '강의평 텍스트' })
   text: string;

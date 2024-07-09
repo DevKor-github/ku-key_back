@@ -7,21 +7,24 @@ import {
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
 import { CourseReviewResponseDto } from './dto/course-review-response.dto';
-import { CourseReviewRepository } from './course-review.repository';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { UserService } from 'src/user/user.service';
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
 import { CourseService } from 'src/course/course.service';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CourseReviewService {
   constructor(
-    private readonly courseReviewRepository: CourseReviewRepository,
+    @InjectRepository(CourseReviewEntity)
+    private readonly courseReviewRepository: Repository<CourseReviewEntity>,
+    @InjectRepository(CourseReviewRecommendEntity)
+    private readonly courseReviewRecommendRepository: Repository<CourseReviewRecommendEntity>,
     private readonly userService: UserService,
     private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
@@ -178,6 +181,15 @@ export class CourseReviewService {
     const totalRate =
       courseReviews.reduce((sum, review) => sum + review.rate, 0) / reviewCount;
 
+    const myReviews = await this.courseReviewRecommendRepository.find({
+      where: { userId: user.id },
+    });
+
+    // 추천한 리뷰 ID들을 배열로 추출
+    const recommendedReviewIds = myReviews.map(
+      (recommend) => recommend.courseReviewId,
+    );
+
     const reviews = courseReviews.map((courseReview) => ({
       id: courseReview.id,
       rate: courseReview.rate,
@@ -185,8 +197,8 @@ export class CourseReviewService {
       reviewer: courseReview.user.username,
       year: courseReview.year,
       semester: courseReview.semester,
+      myRecommend: recommendedReviewIds.includes(courseReview.id), // id가 추천한 리뷰 ID 중 하나인지 확인
       recommendCount: courseReview.recommendCount,
-      myRecommend: courseReview.myRecommend,
       classLevel: courseReview.classLevel,
       teamProject: courseReview.teamProject,
       amountLearned: courseReview.amountLearned,
