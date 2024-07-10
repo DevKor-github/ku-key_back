@@ -61,12 +61,29 @@ export class CourseReviewService {
 
     const courseReview = this.courseReviewRepository.create({
       ...createCourseReviewRequestDto,
-      createdAt: new Date(),
       reviewer: user.username,
       userId: user.id,
     });
+    await this.courseReviewRepository.save(courseReview);
 
-    return await this.courseReviewRepository.save(courseReview);
+    return {
+      id: courseReview.id,
+      reviewer: courseReview.reviewer,
+      createdAt: courseReview.createdAt,
+      rate: courseReview.rate,
+      classLevel: courseReview.classLevel,
+      teamProject: courseReview.teamProject,
+      amountLearned: courseReview.amountLearned,
+      teachingSkills: courseReview.teachingSkills,
+      attendance: courseReview.attendance,
+      recommendCount: courseReview.recommendCount,
+      textReview: courseReview.textReview,
+      professorName: courseReview.professorName,
+      year: courseReview.year,
+      semester: courseReview.semester,
+      courseCode: courseReview.courseCode,
+      userId: courseReview.userId,
+    };
   }
 
   async getCourseReviewSummary(
@@ -241,9 +258,13 @@ export class CourseReviewService {
     await queryRunner.startTransaction();
 
     try {
-      const courseReview = await this.courseReviewRepository.findOne({
-        where: { id: courseReviewId },
-      });
+      const courseReview = await queryRunner.manager.findOne(
+        CourseReviewEntity,
+        {
+          where: { id: courseReviewId },
+          relations: ['user'],
+        },
+      );
 
       if (!courseReview) {
         throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
@@ -285,7 +306,25 @@ export class CourseReviewService {
         courseReview.recommendCount += 1;
       }
       await queryRunner.commitTransaction();
-      return courseReview;
+
+      return {
+        id: courseReview.id,
+        reviewer: courseReview.user.username,
+        createdAt: courseReview.createdAt,
+        rate: courseReview.rate,
+        classLevel: courseReview.classLevel,
+        teamProject: courseReview.teamProject,
+        amountLearned: courseReview.amountLearned,
+        teachingSkills: courseReview.teachingSkills,
+        attendance: courseReview.attendance,
+        recommendCount: courseReview.recommendCount,
+        textReview: courseReview.textReview,
+        professorName: courseReview.professorName,
+        year: courseReview.year,
+        semester: courseReview.semester,
+        courseCode: courseReview.courseCode,
+        userId: courseReview.userId,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
