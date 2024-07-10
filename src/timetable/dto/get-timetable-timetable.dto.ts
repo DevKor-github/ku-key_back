@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { GetCourseInfoByTimetableIdResponseDto } from './get-courseinfo-Timetable.dto';
-import { GetScheduleInfoByTimetableIdResponseDto } from './get-scheduleinfo-Timetable.dto';
+import { GetCourseInfoByTimetableIdResponseDto } from './get-courseinfo-timetable.dto';
+import { GetScheduleInfoByTimetableIdResponseDto } from './get-scheduleinfo-timetable.dto';
 
 export class GetTimetableByTimetableIdDto {
   @ApiPropertyOptional({ type: [GetCourseInfoByTimetableIdResponseDto] })
