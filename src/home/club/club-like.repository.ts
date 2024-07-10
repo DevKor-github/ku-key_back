@@ -27,4 +27,16 @@ export class ClubLikeRepository extends Repository<ClubLikeEntity> {
 
     return topClubLikes;
   }
+
+  async findLikedClubCategories(userId: number): Promise<string[]> {
+    // 좋아요 누른 동아리의 카테고리 정보
+    const likedClubCategories = await this.createQueryBuilder('club_like')
+      .leftJoinAndSelect('club_like.club', 'club')
+      .where('club_like.user.id = :userId', { userId })
+      .select('club.category')
+      .distinct(true)
+      .getRawMany();
+
+    return likedClubCategories.map((clubLike) => clubLike.club_category);
+  }
 }

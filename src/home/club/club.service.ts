@@ -7,6 +7,7 @@ import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 import { DataSource } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
+import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 
 @Injectable()
 export class ClubService {
@@ -175,5 +176,77 @@ export class ClubService {
       dto.ranking = ranking++;
       return dto;
     });
+  }
+
+  async getRecommendClubList(
+    userId: number,
+  ): Promise<GetRecommendClubResponseDto[]> {
+    const likedClubCategories =
+      await this.clubLikeRepository.findLikedClubCategories(userId);
+
+    // 좋아요 누른 동아리가 없을 경우 무작위로 4개 선정
+    if (likedClubCategories.length === 0) {
+      const recommendClubs = await this.clubRepository.findClubsByRandom();
+      return recommendClubs.map((rc) => {
+        const dto = new GetRecommendClubResponseDto();
+        dto.name = rc.name;
+        dto.summary = rc.summary;
+        dto.category = rc.category;
+        dto.imageUrl = rc.imageUrl;
+        return dto;
+      });
+    }
+
+    const recommendClubList: GetRecommendClubResponseDto[] = [];
+    const clubsPerCategory = Math.ceil(4 / likedClubCategories.length);
+    const shuffledCategories = this.shuffleArray(likedClubCategories);
+
+    // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 4개 선정
+    for (const category of shuffledCategories) {
+      const clubs = await this.clubRepository.findClubsByCategoryAndRandom(
+        category,
+        clubsPerCategory,
+      );
+      const recommendClubs = clubs.map((club) => {
+        const dto = new GetRecommendClubResponseDto();
+        dto.name = club.name;
+        dto.summary = club.summary;
+        dto.category = club.category;
+        dto.imageUrl = club.imageUrl;
+        return dto;
+      });
+      recommendClubList.push(...recommendClubs);
+
+      if (recommendClubs.length >= 4) break;
+    }
+
+    // 부족한 경우, 랜덤으로 채움
+    if (recommendClubList.length < 4) {
+      const existingClubNames = new Set(recommendClubList.map((rc) => rc.name));
+      const randomClubs = await this.clubRepository.findClubsByRandom();
+      const additionalClubs = randomClubs
+        .filter((club) => !existingClubNames.has(club.name))
+        .map((club) => {
+          const dto = new GetRecommendClubResponseDto();
+          dto.name = club.name;
+          dto.summary = club.summary;
+          dto.category = club.category;
+          dto.imageUrl = club.imageUrl;
+          return dto;
+        });
+      recommendClubList.push(...additionalClubs);
+    }
+
+    // 앞에서부터 4개를 랜덤한 순서로 반환
+    return this.shuffleArray(recommendClubList.slice(0, 4));
+  }
+
+  // 리스트를 랜덤하게 섞어서 반환하는 함수
+  private shuffleArray(array: any[]): any[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
   }
 }

@@ -14,6 +14,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
+import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -86,7 +87,7 @@ export class ClubController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('hot-club')
+  @Get('hot')
   @ApiOperation({
     summary: 'Hot Club 목록 조회',
     description:
@@ -99,5 +100,22 @@ export class ClubController {
   })
   async getHotClubList(): Promise<GetHotClubResponseDto[]> {
     return await this.clubService.getHotClubList();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('recommend')
+  @ApiOperation({
+    summary: 'Recommend Club 목록 조회',
+    description:
+      '최초에 무작위로 추천, 이후 좋아요를 누른 동아리가 있다면 그와 같은 카테고리 내에서 추천',
+  })
+  @ApiOkResponse({
+    description: 'Recommend Club 목록 4개 반환',
+    isArray: true,
+    type: GetRecommendClubResponseDto,
+  })
+  async getRecommendClubList(@User() user: AuthorizedUserDto) {
+    const userId = user.id;
+    return await this.clubService.getRecommendClubList(userId);
   }
 }

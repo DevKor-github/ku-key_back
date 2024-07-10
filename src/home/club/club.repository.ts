@@ -43,4 +43,22 @@ export class ClubRepository extends Repository<ClubEntity> {
 
     return clubs;
   }
+
+  async findClubsByRandom(): Promise<ClubEntity[]> {
+    return await this.createQueryBuilder('club')
+      .orderBy('RAND()')
+      .limit(4)
+      .getMany();
+  }
+
+  async findClubsByCategoryAndRandom(
+    category: string,
+    limit: number,
+  ): Promise<ClubEntity[]> {
+    return await this.createQueryBuilder('club')
+      .where('club.category = :category', { category })
+      .orderBy('RAND()')
+      .limit(limit)
+      .getMany();
+  }
 }
