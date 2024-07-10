@@ -8,18 +8,6 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     super(FriendshipEntity, dataSource.createEntityManager());
   }
 
-  async createFriendship(
-    fromUserId: number,
-    toUserId: number,
-  ): Promise<FriendshipEntity> {
-    const friendship = this.create({
-      fromUser: { id: fromUserId },
-      toUser: { id: toUserId },
-      areWeFriend: false,
-    });
-    return await this.save(friendship);
-  }
-
   async findFriendshipByFriendshipId(
     friendshipId: number,
   ): Promise<FriendshipEntity> {
@@ -107,23 +95,5 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       where: [{ fromUser: { id: userId }, areWeFriend: false }],
       relations: ['fromUser', 'toUser'],
     });
-  }
-
-  async updateFriendship(
-    friendshipId: number,
-    areWeFriend: boolean,
-  ): Promise<boolean> {
-    const updateResult = await this.update(
-      { id: friendshipId },
-      { areWeFriend: areWeFriend },
-    );
-
-    return updateResult.affected ? true : false;
-  }
-
-  async deleteFriendship(friendshipId: number): Promise<boolean> {
-    const deleteResult = await this.softDelete(friendshipId);
-
-    return deleteResult.affected ? true : false;
   }
 }

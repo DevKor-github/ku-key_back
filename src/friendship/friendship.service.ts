@@ -18,6 +18,7 @@ import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class FriendshipService {
@@ -26,6 +27,7 @@ export class FriendshipService {
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
     private readonly timeTableService: TimeTableService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getFriendList(
@@ -146,17 +148,34 @@ export class FriendshipService {
       } else {
         throw new BadRequestException('이미 친구인 유저입니다.');
       }
-    } else {
-      const friendship = await this.friendshipRepository.createFriendship(
-        fromUserId,
-        toUserId,
+    }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const friendship = queryRunner.manager.create(FriendshipEntity, {
+        fromUser: { id: fromUserId },
+        toUser: { id: toUserId },
+        areWeFriend: false,
+      });
+
+      const savedFriendship = await queryRunner.manager.save(
+        FriendshipEntity,
+        friendship,
       );
 
-      if (!friendship) {
+      if (!savedFriendship) {
         throw new BadRequestException('친구 요청 보내기에 실패했습니다.');
       } else {
+        await queryRunner.commitTransaction();
         return new SendFriendshipResponseDto(true);
       }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -229,15 +248,30 @@ export class FriendshipService {
       throw new BadRequestException('이미 수락한 요청입니다.');
     }
 
-    const isUpdated = await this.friendshipRepository.updateFriendship(
-      friendshipId,
-      true,
-    );
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!isUpdated) {
-      throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
-    } else {
-      return new UpdateFriendshipResponseDto(true);
+    try {
+      const updatedResult = await queryRunner.manager.update(
+        FriendshipEntity,
+        { id: friendshipId },
+        { areWeFriend: true },
+      );
+
+      if (updatedResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 수락에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new UpdateFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -265,12 +299,28 @@ export class FriendshipService {
         '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
       );
     }
-    const isDeleted =
-      await this.friendshipRepository.deleteFriendship(friendshipId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
-    } else {
-      return new DeleteFriendshipResponseDto(true);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
+        friendshipId,
+      );
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -297,12 +347,29 @@ export class FriendshipService {
         '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
       );
     }
-    const isDeleted =
-      await this.friendshipRepository.deleteFriendship(friendshipId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
-    } else {
-      return new DeleteFriendshipResponseDto(true);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
+        friendshipId,
+      );
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -327,12 +394,28 @@ export class FriendshipService {
       throw new BadRequestException('이미 친구인 경우에만 삭제할 수 있습니다.');
     }
 
-    const isDeleted =
-      await this.friendshipRepository.deleteFriendship(friendshipId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('친구 삭제에 실패했습니다.');
-    } else {
-      return new DeleteFriendshipResponseDto(true);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
+        friendshipId,
+      );
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
