@@ -276,6 +276,12 @@ export class CourseReviewService {
         throw new ForbiddenException('열람권을 구매해야 합니다.');
       }
 
+      if (courseReview.userId === user.id) {
+        throw new ForbiddenException(
+          '본인이 작성한 강의평은 추천할 수 없습니다.',
+        );
+      }
+
       // 이미 추천했는지 확인
       const isRecommended = await queryRunner.manager.findOne(
         CourseReviewRecommendEntity,

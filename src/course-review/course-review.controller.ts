@@ -156,7 +156,7 @@ export class CourseReviewController {
   @ApiOperation({
     summary: '강의평 추천',
     description:
-      '강의평에 추천을 누릅니다. 이미 추천한 강의평이면 추천이 취소됩니다.',
+      '강의평에 추천을 누릅니다. 이미 추천한 강의평이면 추천이 취소됩니다. 내가 쓴 강의평은 추천할 수 없습니다.',
   })
   @ApiParam({
     name: 'courseReviewId',
