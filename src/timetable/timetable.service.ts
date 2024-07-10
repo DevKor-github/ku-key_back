@@ -93,7 +93,7 @@ export class TimetableService {
     courseId: number,
   ): Promise<boolean> {
     // 강의시간 겹치는지 안겹치는지 확인
-    const existingCourseInfo = await this.getTableCourseInfo(timetableId); //요일, 시작시간, 끝나는 시간 받아옴
+    const existingCourseInfo = await this.getTimetableCourseInfo(timetableId); //요일, 시작시간, 끝나는 시간 받아옴
     const newCourseInfo = await this.courseService.getCourseDetails(courseId);
 
     for (const newDetail of newCourseInfo) {
@@ -113,7 +113,8 @@ export class TimetableService {
     }
 
     // 스케줄 시간 겹치는지 안겹치는지 확인
-    const existingScheduleInfo = await this.getTableScheduleInfo(timetableId);
+    const existingScheduleInfo =
+      await this.getTimetableScheduleInfo(timetableId);
     for (const newDetail of newCourseInfo) {
       for (const existingInfo of existingScheduleInfo) {
         if (
@@ -146,7 +147,7 @@ export class TimetableService {
       ])
       .getRawMany();
   }
-  async getTableCourseInfo(
+  async getTimetableCourseInfo(
     timetableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
     const daysAndTimes = await this.getDaysAndTime(timetableId);
@@ -160,7 +161,7 @@ export class TimetableService {
     return result;
   }
 
-  async getTableScheduleInfo(
+  async getTimetableScheduleInfo(
     timetableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
     const schedules =
@@ -222,14 +223,14 @@ export class TimetableService {
         throw new ConflictException('Maximum number of Timetables reached');
       }
 
-      const isFirstTable = existingTimetableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
+      const isFirstTimetable = existingTimetableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
 
       const newTimetable = queryRunner.manager.create(TimetableEntity, {
         userId: user.id,
         timetableName: createTimetableDto.timetableName,
         semester: createTimetableDto.semester,
         year: createTimetableDto.year,
-        mainTimetable: isFirstTable,
+        mainTimetable: isFirstTimetable,
       });
 
       await queryRunner.manager.save(newTimetable);
