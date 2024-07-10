@@ -238,6 +238,10 @@ export class FriendshipService {
         friendshipId,
       );
 
+    if (!friendship) {
+      throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
+    }
+
     if (friendship.toUser.id !== userId) {
       throw new BadRequestException(
         '나에게 온 친구 요청만 수락할 수 있습니다.',
