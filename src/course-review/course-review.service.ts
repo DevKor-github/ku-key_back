@@ -87,7 +87,6 @@ export class CourseReviewService {
   }
 
   async getCourseReviewSummary(
-    user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
   ): Promise<GetCourseReviewSummaryResponseDto> {
     // 해당 학수번호-교수명과 일치하는 강의가 존재하는지 체크
@@ -181,7 +180,7 @@ export class CourseReviewService {
     user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
     courseReviewsFilterDto: CourseReviewsFilterDto,
-  ): Promise<GetCourseReviewsResponseDto | []> {
+  ): Promise<GetCourseReviewsResponseDto> {
     // 해당 학수번호-교수명과 일치하는 강의가 존재하는지 체크
     const course = await this.courseService.searchCourseCodeWithProfessorName(
       getCourseReviewsRequestDto.courseCode,
@@ -209,7 +208,11 @@ export class CourseReviewService {
     });
 
     if (courseReviews.length === 0) {
-      return [];
+      return {
+        totalRate: 0.0,
+        reviewCount: 0,
+        reviews: [],
+      };
     }
 
     const reviewCount = courseReviews.length;

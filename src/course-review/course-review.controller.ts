@@ -82,11 +82,9 @@ export class CourseReviewController {
   })
   @Get('summary')
   async getCourseReviewSummary(
-    @User() user: AuthorizedUserDto,
     @Query() getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
   ): Promise<GetCourseReviewSummaryResponseDto> {
     return await this.courseReviewService.getCourseReviewSummary(
-      user,
       getCourseReviewsRequestDto,
     );
   }
