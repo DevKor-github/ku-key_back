@@ -4,6 +4,12 @@ export class CourseReviewResponseDto {
   @ApiProperty({ description: 'id' })
   id: number;
 
+  @ApiProperty({ description: '작성자' })
+  reviewer: string;
+
+  @ApiProperty({ description: '작성일' })
+  createdAt: Date;
+
   @ApiProperty({ description: '강의 평점' })
   rate: number;
 
