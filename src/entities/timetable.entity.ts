@@ -11,7 +11,7 @@ import { UserEntity } from './user.entity';
 import { TimeTableCourseEntity } from './timetable-course.entity';
 import { ScheduleEntity } from './schedule.entity';
 
-@Entity('time_table')
+@Entity('timetable')
 export class TimeTableEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;

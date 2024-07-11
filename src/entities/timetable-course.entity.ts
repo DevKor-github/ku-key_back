@@ -9,7 +9,7 @@ import { CommonEntity } from './common.entity';
 import { TimeTableEntity } from './timetable.entity';
 import { CourseEntity } from './course.entity';
 
-@Entity('time_table_course')
+@Entity('timetable_course')
 export class TimeTableCourseEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;

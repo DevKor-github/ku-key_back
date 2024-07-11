@@ -61,14 +61,13 @@ export class CourseReviewService {
 
     const courseReview = this.courseReviewRepository.create({
       ...createCourseReviewRequestDto,
-      reviewer: user.username,
       userId: user.id,
     });
     await this.courseReviewRepository.save(courseReview);
 
     return {
       id: courseReview.id,
-      reviewer: courseReview.reviewer,
+      reviewer: user.username,
       createdAt: courseReview.createdAt,
       rate: courseReview.rate,
       classLevel: courseReview.classLevel,

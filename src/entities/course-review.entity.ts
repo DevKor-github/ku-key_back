@@ -18,9 +18,6 @@ export class CourseReviewEntity extends CommonEntity {
   @Column({ nullable: false })
   userId: number;
 
-  @Column('varchar', { nullable: false })
-  reviewer: string;
-
   @Column('int', { nullable: false })
   rate: number;
 
