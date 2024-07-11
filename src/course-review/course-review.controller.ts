@@ -142,7 +142,7 @@ export class CourseReviewController {
     @User() user: AuthorizedUserDto,
     @Query() getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
     @Query() courseReviewsFilterDto: CourseReviewsFilterDto,
-  ): Promise<GetCourseReviewsResponseDto | []> {
+  ): Promise<GetCourseReviewsResponseDto> {
     return await this.courseReviewService.getCourseReviews(
       user,
       getCourseReviewsRequestDto,
