@@ -13,6 +13,9 @@ import { FriendshipModule } from './friendship/friendship.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { ClubModule } from './home/club/club.module';
 import { CommonModule } from './common/common.module';
+import { BoardModule } from './community/board/board.module';
+import { PostModule } from './community/post/post.module';
+import { CommentModule } from './community/comment/comment.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -49,6 +52,9 @@ console.log(`.env.${process.env.NODE_ENV}`);
     FriendshipModule,
     TimeTableModule,
     ScheduleModule,
+    BoardModule,
+    PostModule,
+    CommentModule,
     ClubModule,
   ],
   controllers: [AppController],

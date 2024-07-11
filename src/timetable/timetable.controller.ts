@@ -30,6 +30,7 @@ import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { UpdateTimeTableColorDto } from './dto/update-timetable-color.dto';
 
 @Controller('timetable')
 @ApiTags('timetable')
@@ -105,8 +106,17 @@ export class TimeTableController {
     summary: '대표 시간표 조회',
     description: '해당 유저의 대표 시간표를 조회합니다.',
   })
-  @ApiBody({
-    type: TimeTableDto,
+  @ApiQuery({
+    name: 'year',
+    type: 'string',
+    required: true,
+    description: '연도',
+  })
+  @ApiQuery({
+    name: 'semester',
+    type: 'string',
+    required: true,
+    description: '학기',
   })
   @ApiResponse({
     status: 200,
@@ -114,7 +124,7 @@ export class TimeTableController {
     type: CommonTimeTableResponseDto,
   })
   async getMainTimeTable(
-    @Body() timeTableDto: TimeTableDto,
+    @Query() timeTableDto: TimeTableDto,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonTimeTableResponseDto> {
     return await this.timeTableService.getMainTimeTable(timeTableDto, user);
@@ -154,12 +164,11 @@ export class TimeTableController {
     status: 200,
     description: '특정 시간표 ID로 조회 성공 시',
     type: GetTimeTableByTimeTableIdDto,
-    isArray: true,
   })
   async getTimeTableByTimeTableId(
     @Param('timeTableId') timeTableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     return await this.timeTableService.getTimeTableByTimeTableId(
       timeTableId,
       user.id,
@@ -222,6 +231,36 @@ export class TimeTableController {
     @User() user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
     return await this.timeTableService.deleteTimeTable(timeTableId, user);
+  }
+
+  // 시간표 색상 변경
+  @Patch('/color/:timeTableId')
+  @ApiOperation({
+    summary: '시간표 색상 변경',
+    description: '특정 시간표의 색상을 변경합니다.',
+  })
+  @ApiParam({
+    name: 'timeTableId',
+    description: '변경할 시간표 ID',
+  })
+  @ApiBody({
+    type: UpdateTimeTableColorDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '시간표 색상 변경 성공 시',
+    type: CommonTimeTableResponseDto,
+  })
+  async updateTimeTableColor(
+    @Param('timeTableId') timeTableId: number,
+    @User() user: AuthorizedUserDto,
+    @Body() updateTimeTableColorDto: UpdateTimeTableColorDto,
+  ): Promise<CommonTimeTableResponseDto> {
+    return await this.timeTableService.updateTimeTableColor(
+      timeTableId,
+      user,
+      updateTimeTableColorDto.tableColor,
+    );
   }
 
   // 시간표 이름 변경

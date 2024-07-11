@@ -31,6 +31,9 @@ export class TimeTableEntity extends CommonEntity {
   @Column('boolean', { nullable: false, default: false })
   mainTimeTable: boolean;
 
+  @Column('varchar', { nullable: false, default: 'Red' })
+  color: string;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.timeTables, {
     onDelete: 'CASCADE',

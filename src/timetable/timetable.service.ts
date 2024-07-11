@@ -21,6 +21,7 @@ import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { ColorType } from './dto/update-timetable-color.dto';
 import { GetFriendTimeTableRequestDto } from 'src/friendship/dto/get-friend-timetable.dto';
 
 @Injectable()
@@ -259,7 +260,7 @@ export class TimeTableService {
   async getTimeTableByTimeTableId(
     timeTableId: number,
     userId: number,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: { id: timeTableId, userId },
@@ -277,7 +278,11 @@ export class TimeTableService {
         await this.scheduleService.getScheduleByTimeTableId(timeTableId);
 
       // 코스 정보와 스케줄 정보를 같은 깊이의 객체로 분리하여 반환
-      const getTimeTableByTimeTableIdResponse = [];
+      const getTimeTableByTimeTableIdResponse: GetTimeTableByTimeTableIdDto = {
+        courses: [],
+        schedules: [],
+        color: timeTable.color,
+      };
       timeTable.timeTableCourses.forEach((courseEntry) => {
         const {
           id: courseId,
@@ -290,7 +295,7 @@ export class TimeTableService {
           const { day, startTime, endTime, classroom } = detailEntry;
 
           // 강의 정보 객체
-          getTimeTableByTimeTableIdResponse.push({
+          getTimeTableByTimeTableIdResponse.courses.push({
             courseId,
             professorName,
             courseName,
@@ -305,10 +310,10 @@ export class TimeTableService {
 
       // 스케줄 정보 객체
       schedules.forEach((schedule) => {
-        getTimeTableByTimeTableIdResponse.push({
+        getTimeTableByTimeTableIdResponse.schedules.push({
           scheduleId: schedule.id,
           scheduleTitle: schedule.title,
-          scheduleDay: schedule.day,
+          scheduleDay: schedule.day as DayType,
           scheduleStartTime: schedule.startTime,
           scheduleEndTime: schedule.endTime,
           location: schedule.location,
@@ -346,7 +351,7 @@ export class TimeTableService {
   // 친구 시간표 조회
   async getFriendTimeTable(
     getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
+  ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
       const timeTable = await this.timeTableRepository.findOne({
         where: {
@@ -477,6 +482,31 @@ export class TimeTableService {
       return mainTimeTable;
     } catch (error) {
       console.error('Failed to get MainTimeTable: ', error);
+      throw error;
+    }
+  }
+
+  // 시간표 색상 변경
+  async updateTimeTableColor(
+    timeTableId: number,
+    user: AuthorizedUserDto,
+    tableColor: ColorType,
+  ): Promise<CommonTimeTableResponseDto> {
+    try {
+      const timeTable = await this.timeTableRepository.findOne({
+        where: {
+          id: timeTableId,
+          userId: user.id,
+        },
+      });
+      if (!timeTable) {
+        throw new NotFoundException('TimeTable not found');
+      }
+
+      timeTable.color = tableColor;
+      return await this.timeTableRepository.save(timeTable);
+    } catch (error) {
+      console.error('Failed to update TimeTable color: ', error);
       throw error;
     }
   }
