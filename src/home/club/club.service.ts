@@ -94,13 +94,15 @@ export class ClubService {
       });
 
       if (!clubLike) {
-        const newClubLike = this.clubLikeRepository.create({
+        const newClubLike = queryRunner.manager.create(ClubLikeEntity, {
           club: { id: clubId },
           user: { id: userId },
         });
-        club.allLikes++;
+
+        await queryRunner.manager.update(ClubEntity, clubId, {
+          allLikes: () => 'allLikes + 1',
+        });
         await queryRunner.manager.save(newClubLike);
-        await queryRunner.manager.save(club);
         await queryRunner.commitTransaction();
 
         return {
@@ -111,13 +113,14 @@ export class ClubService {
           recruitmentPeriod: club.recruitmentPeriod,
           description: club.description,
           imageUrl: club.imageUrl,
-          likeCount: club.allLikes,
+          likeCount: club.allLikes + 1,
           isLiked: true,
         };
       } else {
         await queryRunner.manager.delete(ClubLikeEntity, { id: clubLike.id });
-        club.allLikes--;
-        await queryRunner.manager.save(club);
+        await queryRunner.manager.update(ClubEntity, clubId, {
+          allLikes: () => 'allLikes - 1',
+        });
         await queryRunner.commitTransaction();
 
         return {
@@ -128,7 +131,7 @@ export class ClubService {
           recruitmentPeriod: club.recruitmentPeriod,
           description: club.description,
           imageUrl: club.imageUrl,
-          likeCount: club.allLikes,
+          likeCount: club.allLikes - 1,
           isLiked: false,
         };
       }
