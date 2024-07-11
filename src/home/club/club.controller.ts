@@ -2,6 +2,7 @@ import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ClubService } from './club.service';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -74,7 +75,7 @@ export class ClubController {
     name: 'clubId',
     type: Number,
   })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: '좋아요 여부 및 좋아요 개수가 업데이트된 동아리 정보 반환',
     type: GetClubResponseDto,
   })
