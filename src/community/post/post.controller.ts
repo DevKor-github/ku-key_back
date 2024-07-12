@@ -40,6 +40,10 @@ import {
   GetMyPostListRequestDto,
   GetMyPostListResponseDto,
 } from './dto/get-my-post-list.dto';
+import {
+  ReactPostRequestDto,
+  ReactPostResponseDto,
+} from './dto/react-post.dto';
 
 @Controller('post')
 @ApiTags('post')
@@ -240,5 +244,31 @@ export class PostController {
     @Param('postId') postId: number,
   ): Promise<ScrapPostResponseDto> {
     return await this.postService.scrapPost(user, postId);
+  }
+
+  @Post(':postId/reaction')
+  @ApiOperation({
+    summary: '게시글 반응',
+    description:
+      '게시글에 반응을 남깁니다. 만일 이미 반응을 남긴 게시글이라면 반응을 변경합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiBody({
+    type: ReactPostRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 반응(변경) 성공',
+    type: ReactPostResponseDto,
+  })
+  async reactPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+    @Body() body: ReactPostRequestDto,
+  ): Promise<ReactPostResponseDto> {
+    return await this.postService.reactPost(user, postId, body);
   }
 }

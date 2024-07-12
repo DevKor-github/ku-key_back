@@ -29,6 +29,23 @@ class Image {
   imgDir: string;
 }
 
+class ReactionCount {
+  @ApiProperty({ description: '좋아요' })
+  good: number;
+
+  @ApiProperty({ description: '슬퍼요' })
+  sad: number;
+
+  @ApiProperty({ description: '놀라워요' })
+  amazing: number;
+
+  @ApiProperty({ description: '화나요' })
+  angry: number;
+
+  @ApiProperty({ description: '웃겨요' })
+  funny: number;
+}
+
 export class GetPostResponseDto {
   constructor(postEntity: PostEntity, userId: number) {
     this.id = postEntity.id;
@@ -49,6 +66,12 @@ export class GetPostResponseDto {
         );
     this.views = postEntity.views;
     this.scrapCount = postEntity.scrapCount;
+    this.reaction = new ReactionCount();
+    this.reaction.good = postEntity.goodReactionCount;
+    this.reaction.sad = postEntity.sadReactionCount;
+    this.reaction.amazing = postEntity.amazingReactionCount;
+    this.reaction.angry = postEntity.angryReactionCount;
+    this.reaction.funny = postEntity.funnyReactionCount;
 
     this.comments = [];
     postEntity.comments
@@ -96,6 +119,9 @@ export class GetPostResponseDto {
 
   @ApiProperty({ description: '스크랩 수' })
   scrapCount: number;
+
+  @ApiProperty({ description: '반응' })
+  reaction: ReactionCount;
 
   @ApiProperty({ description: '댓글', type: [Comment] })
   comments: Comment[];

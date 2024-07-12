@@ -42,6 +42,21 @@ export class PostEntity extends CommonEntity {
   @Column('int', { nullable: false, default: 0 })
   commentCount: number;
 
+  @Column('int', { nullable: false, default: 0 })
+  goodReactionCount: number;
+
+  @Column('int', { nullable: false, default: 0 })
+  sadReactionCount: number;
+
+  @Column('int', { nullable: false, default: 0 })
+  amazingReactionCount: number;
+
+  @Column('int', { nullable: false, default: 0 })
+  angryReactionCount: number;
+
+  @Column('int', { nullable: false, default: 0 })
+  funnyReactionCount: number;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.posts, {
     onDelete: 'CASCADE',

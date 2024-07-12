@@ -10,10 +10,16 @@ import { BoardModule } from '../board/board.module';
 import { CommonModule } from 'src/common/common.module';
 import { PostScrapRepository } from './post-scrap.repository';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
+import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostEntity, PostImageEntity, PostScrapEntity]),
+    TypeOrmModule.forFeature([
+      PostEntity,
+      PostImageEntity,
+      PostScrapEntity,
+      PostReactionEntity,
+    ]),
     BoardModule,
     CommonModule,
   ],

@@ -19,6 +19,11 @@ import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import { GetMyPostListResponseDto } from './dto/get-my-post-list.dto';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
+import {
+  ReactPostRequestDto,
+  ReactPostResponseDto,
+} from './dto/react-post.dto';
+import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 
 @Injectable()
 export class PostService {
@@ -360,6 +365,95 @@ export class PostService {
     });
 
     return postList;
+  }
+
+  async reactPost(
+    user: AuthorizedUserDto,
+    postId: number,
+    requestDto: ReactPostRequestDto,
+  ): Promise<ReactPostResponseDto> {
+    if (!(await this.postRepository.isExistingPostId(postId))) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+
+    const ReactionColumn = [
+      'goodReactionCount',
+      'sadReactionCount',
+      'amazingReactionCount',
+      'angryReactionCount',
+      'funnyReactionCount',
+    ];
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const existingReaction = await queryRunner.manager.findOne(
+        PostReactionEntity,
+        { where: { userId: user.id, postId: postId } },
+      );
+
+      if (!existingReaction) {
+        const reaction = queryRunner.manager.create(PostReactionEntity, {
+          userId: user.id,
+          postId: postId,
+          reaction: requestDto.reaction,
+        });
+        await queryRunner.manager.save(reaction);
+
+        const updateResult = await queryRunner.manager.increment(
+          PostEntity,
+          { id: postId },
+          ReactionColumn[requestDto.reaction],
+          1,
+        );
+        if (!updateResult.affected) {
+          throw new InternalServerErrorException('React Failed!');
+        }
+      } else {
+        if (existingReaction.reaction === requestDto.reaction) {
+          throw new BadRequestException('Same Reaction!');
+        }
+
+        const decreasingUpdateResult = await queryRunner.manager.decrement(
+          PostEntity,
+          { id: postId },
+          ReactionColumn[existingReaction.reaction],
+          1,
+        );
+        if (!decreasingUpdateResult.affected) {
+          throw new InternalServerErrorException('Reaction Change Failed!');
+        }
+
+        const updateReactionResult = await queryRunner.manager.update(
+          PostReactionEntity,
+          { id: existingReaction.id },
+          { reaction: requestDto.reaction },
+        );
+        if (!updateReactionResult.affected) {
+          throw new InternalServerErrorException('Reaction Change Failed!');
+        }
+
+        const increasingUpdateResult = await queryRunner.manager.increment(
+          PostEntity,
+          { id: postId },
+          ReactionColumn[requestDto.reaction],
+          1,
+        );
+        if (!increasingUpdateResult.affected) {
+          throw new InternalServerErrorException('Reaction Change Failed!');
+        }
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+    return new ReactPostResponseDto(requestDto.reaction);
   }
 
   async isExistingPostId(postId: number): Promise<boolean> {
