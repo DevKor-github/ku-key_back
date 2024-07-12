@@ -31,8 +31,9 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -68,19 +69,19 @@ export class FriendshipController {
     description:
       'username(친구 추가용 id)를 query로 받아 해당하는 유저를 검색합니다.',
   })
-  @ApiQuery({ name: 'username', description: '친구 추가용 id' })
+  @ApiQuery({ name: 'username', description: '친구 추가용 id', required: true })
   @ApiOkResponse({
     description: '검색된 유저 정보 반환',
     type: SearchUserResponseDto,
   })
   async searchUserForFriendshipRequest(
-    @Query('username') username: string,
+    @Query() searchUserQueryDto: SearchUserQueryDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
-    const myUsername = user.username;
+    const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
-      myUsername,
-      username,
+      myId,
+      searchUserQueryDto,
     );
   }
 
@@ -91,21 +92,36 @@ export class FriendshipController {
     description:
       '친구 ID, 연도, 학기를 입력받아 해당 학기에 친구의 대표 시간표를 조회합니다.',
   })
-  @ApiBody({
-    type: GetFriendTimeTableRequestDto,
+  @ApiQuery({
+    name: 'friendId',
+    type: 'string',
+    required: true,
+    description: '친구 ID',
+  })
+  @ApiQuery({
+    name: 'year',
+    type: 'string',
+    required: true,
+    description: '연도',
+  })
+  @ApiQuery({
+    name: 'semester',
+    type: 'string',
+    required: true,
+    description: '학기',
   })
   @ApiOkResponse({
     description: '친구 시간표 반환',
-    type: GetTimeTableByTimeTableIdDto,
+    type: GetTimetableByTimetableIdDto,
     isArray: true,
   })
-  async getFriendTimeTable(
-    @Body() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+  async getFriendTimetable(
+    @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
-    return await this.friendshipService.getFriendTimeTable(
+  ): Promise<GetTimetableByTimetableIdDto> {
+    return await this.friendshipService.getFriendTimetable(
       user.id,
-      getFriendTimeTableRequestDto,
+      getFriendTimetableRequestDto,
     );
   }
 

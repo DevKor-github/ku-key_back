@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class GetTimeTableByUserIdResponseDto {
+export class GetTimetableByUserIdResponseDto {
   @ApiProperty({ description: '시간표 ID' })
   @IsNumber()
   @IsNotEmpty()
-  timeTableId: number;
+  timetableId: number;
 
   @ApiProperty({ description: '학기' })
   @IsString()
@@ -20,10 +20,10 @@ export class GetTimeTableByUserIdResponseDto {
   @ApiProperty({ description: '대표 시간표 여부' })
   @IsBoolean()
   @IsNotEmpty()
-  mainTimeTable: boolean;
+  mainTimetable: boolean;
 
   @ApiProperty({ description: '시간표 이름' })
   @IsString()
   @IsNotEmpty()
-  tableName: string;
+  timetableName: string;
 }

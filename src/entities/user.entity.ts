@@ -8,7 +8,7 @@ import {
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
 import { FriendshipEntity } from './friendship.entity';
-import { TimeTableEntity } from './timetable.entity';
+import { TimetableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
 import { PostScrapEntity } from './post-scrap.entity';
@@ -70,8 +70,8 @@ export class UserEntity extends CommonEntity {
   @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
   receivedFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
-  timeTables: TimeTableEntity[];
+  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user)
+  timetables: TimetableEntity[];
 
   @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
   posts: PostEntity[];

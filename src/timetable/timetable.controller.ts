@@ -9,14 +9,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { TimeTableDto } from './dto/timetable.dto';
-import { TimeTableService } from './timetable.service';
+import { TimetableDto } from './dto/timetable.dto';
+import { TimetableService } from './timetable.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { CreateTimeTableDto } from './dto/create-timetable.dto';
-import { GetTimeTableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import { UpdateTimeTableNameDto } from './dto/update-timetable-name.dto';
+import { CreateTimetableDto } from './dto/create-timetable.dto';
+import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
+import { UpdateTimetableNameDto } from './dto/update-timetable-name.dto';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -26,17 +26,18 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateTimeTableCourseResponseDto } from './dto/create-timetable-course-response.dto';
-import { CommonTimeTableResponseDto } from './dto/common-timetable-response.dto';
+import { CreateTimetableCourseResponseDto } from './dto/create-timetable-course-response.dto';
+import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
-import { GetTimeTableByTimeTableIdDto } from './dto/get-timetable-timetable.dto';
+import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
+import { UpdateTimetableColorDto } from './dto/update-timetable-color.dto';
 
 @Controller('timetable')
 @ApiTags('timetable')
 @ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard) // 시간표 관련 API는 인증 필요해서 JwtAuthGuard 사용
-export class TimeTableController {
-  constructor(private readonly timeTableService: TimeTableService) {}
+export class TimetableController {
+  constructor(private readonly timetableService: TimetableService) {}
 
   // timetable 에 course 추가 (존재하는 강의가 있을 때 추가하지 못하도록)
   @Post('course')
@@ -46,7 +47,7 @@ export class TimeTableController {
       '시간표에 특정 강의를 추가합니다. 해당 시간에 이미 등록된 개인 스케쥴이나 강의가 있을 경우 추가되지 않습니다.',
   })
   @ApiQuery({
-    name: 'timeTableId',
+    name: 'timetableId',
     type: 'number',
     required: true,
     description: '특정 시간표 ID',
@@ -60,15 +61,15 @@ export class TimeTableController {
   @ApiResponse({
     status: 201,
     description: '강의 추가 성공 시',
-    type: CreateTimeTableCourseResponseDto,
+    type: CreateTimetableCourseResponseDto,
   })
-  async createTimeTableCourse(
-    @Query('timeTableId') timeTableId: number,
+  async createTimetableCourse(
+    @Query('timetableId') timetableId: number,
     @Query('courseId') courseId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<CreateTimeTableCourseResponseDto> {
-    return await this.timeTableService.createTimeTableCourse(
-      timeTableId,
+  ): Promise<CreateTimetableCourseResponseDto> {
+    return await this.timetableService.createTimetableCourse(
+      timetableId,
       courseId,
       user,
     );
@@ -82,19 +83,19 @@ export class TimeTableController {
       '해당 연도, 학기에 시간표를 생성합니다. 처음 만들어진 시간표가 대표시간표가 되며, 한 학기에 최대 3개까지 시간표 생성이 가능합니다.',
   })
   @ApiBody({
-    type: CreateTimeTableDto,
+    type: CreateTimetableDto,
   })
   @ApiResponse({
     status: 201,
     description: '시간표 생성 성공 시',
-    type: CommonTimeTableResponseDto,
+    type: CommonTimetableResponseDto,
   })
-  async createTimeTable(
-    @Body() createTimeTableDto: CreateTimeTableDto,
+  async createTimetable(
+    @Body() createTimetableDto: CreateTimetableDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<CommonTimeTableResponseDto> {
-    return await this.timeTableService.createTimeTable(
-      createTimeTableDto,
+  ): Promise<CommonTimetableResponseDto> {
+    return await this.timetableService.createTimetable(
+      createTimetableDto,
       user,
     );
   }
@@ -105,19 +106,28 @@ export class TimeTableController {
     summary: '대표 시간표 조회',
     description: '해당 유저의 대표 시간표를 조회합니다.',
   })
-  @ApiBody({
-    type: TimeTableDto,
+  @ApiQuery({
+    name: 'year',
+    type: 'string',
+    required: true,
+    description: '연도',
+  })
+  @ApiQuery({
+    name: 'semester',
+    type: 'string',
+    required: true,
+    description: '학기',
   })
   @ApiResponse({
     status: 200,
     description: '대표 시간표 조회 성공 시',
-    type: CommonTimeTableResponseDto,
+    type: CommonTimetableResponseDto,
   })
-  async getMainTimeTable(
-    @Body() timeTableDto: TimeTableDto,
+  async getMainTimetable(
+    @Query() timetableDto: TimetableDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<CommonTimeTableResponseDto> {
-    return await this.timeTableService.getMainTimeTable(timeTableDto, user);
+  ): Promise<CommonTimetableResponseDto> {
+    return await this.timetableService.getMainTimetable(timetableDto, user);
   }
 
   // 유저id -> 유저가 가지고 있는 시간표 id 리스트, 각각의 학기, 대표 시간표 여부, 시간표 이름
@@ -130,38 +140,37 @@ export class TimeTableController {
   @ApiResponse({
     status: 200,
     description: '유저 ID로 시간표 리스트 조회 성공 시',
-    type: GetTimeTableByUserIdResponseDto,
+    type: GetTimetableByUserIdResponseDto,
     isArray: true,
   })
-  async getTimeTableByUserId(
+  async getTimetableByUserId(
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByUserIdResponseDto[]> {
-    return await this.timeTableService.getTimeTableByUserId(user.id);
+  ): Promise<GetTimetableByUserIdResponseDto[]> {
+    return await this.timetableService.getTimetableByUserId(user.id);
   }
 
   // 특정 시간표 가져오기
-  @Get('/:timeTableId')
+  @Get('/:timetableId')
   @ApiOperation({
     summary: '시간표 ID로 시간표 관련 정보 조회',
     description:
       '시간표 ID로 해당 시간표와 관련된 강의,일정 정보를 반환합니다.',
   })
   @ApiParam({
-    name: 'timeTableId',
+    name: 'timetableId',
     description: '특정 시간표 ID',
   })
   @ApiResponse({
     status: 200,
     description: '특정 시간표 ID로 조회 성공 시',
-    type: GetTimeTableByTimeTableIdDto,
-    isArray: true,
+    type: GetTimetableByTimetableIdDto,
   })
-  async getTimeTableByTimeTableId(
-    @Param('timeTableId') timeTableId: number,
+  async getTimetableByTimetableId(
+    @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto[]> {
-    return await this.timeTableService.getTimeTableByTimeTableId(
-      timeTableId,
+  ): Promise<GetTimetableByTimetableIdDto> {
+    return await this.timetableService.getTimetableByTimetableId(
+      timetableId,
       user.id,
     );
   }
@@ -173,7 +182,7 @@ export class TimeTableController {
     description: '해당 시간표에 등록한 특정 강의를 삭제합니다.',
   })
   @ApiQuery({
-    name: 'timeTableId',
+    name: 'timetableId',
     type: 'number',
     required: true,
     description: '특정 시간표 ID',
@@ -189,27 +198,27 @@ export class TimeTableController {
     description: '시간표에 등록한 강의 삭제 성공 시',
     type: CommonDeleteResponseDto,
   })
-  async deleteTimeTableCourse(
-    @Query('timeTableId') timeTableId: number,
+  async deleteTimetableCourse(
+    @Query('timetableId') timetableId: number,
     @Query('courseId') courseId: number,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
-    return await this.timeTableService.deleteTimeTableCourse(
-      timeTableId,
+    return await this.timetableService.deleteTimetableCourse(
+      timetableId,
       courseId,
       user,
     );
   }
 
   // 시간표 삭제
-  @Delete('/:timeTableId')
+  @Delete('/:timetableId')
   @ApiOperation({
     summary: '시간표 삭제',
     description:
       '특정 시간표를 삭제합니다. 삭제 시 해당 시간표에 등록된 모든 강의도 삭제됩니다.',
   })
   @ApiParam({
-    name: 'timeTableId',
+    name: 'timetableId',
     description: '삭제할 시간표 ID',
   })
   @ApiResponse({
@@ -217,71 +226,101 @@ export class TimeTableController {
     description: '시간표 삭제 성공 시',
     type: CommonDeleteResponseDto,
   })
-  async deleteTimeTable(
-    @Param('timeTableId') timeTableId: number,
+  async deleteTimetable(
+    @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
-    return await this.timeTableService.deleteTimeTable(timeTableId, user);
+    return await this.timetableService.deleteTimetable(timetableId, user);
+  }
+
+  // 시간표 색상 변경
+  @Patch('/color/:timetableId')
+  @ApiOperation({
+    summary: '시간표 색상 변경',
+    description: '특정 시간표의 색상을 변경합니다.',
+  })
+  @ApiParam({
+    name: 'timetableId',
+    description: '변경할 시간표 ID',
+  })
+  @ApiBody({
+    type: UpdateTimetableColorDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '시간표 색상 변경 성공 시',
+    type: CommonTimetableResponseDto,
+  })
+  async updateTimetableColor(
+    @Param('timetableId') timetableId: number,
+    @User() user: AuthorizedUserDto,
+    @Body() updateTimetableColorDto: UpdateTimetableColorDto,
+  ): Promise<CommonTimetableResponseDto> {
+    return await this.timetableService.updateTimetableColor(
+      timetableId,
+      user,
+      updateTimetableColorDto.timetableColor,
+    );
   }
 
   // 시간표 이름 변경
-  @Patch('/name/:timeTableId')
+  @Patch('/name/:timetableId')
   @ApiOperation({
     summary: '시간표 이름 변경',
     description: '특정 시간표의 이름을 변경합니다.',
   })
   @ApiParam({
-    name: 'timeTableId',
+    name: 'timetableId',
     description: '변경할 시간표 ID',
   })
   @ApiBody({
-    type: UpdateTimeTableNameDto,
+    type: UpdateTimetableNameDto,
   })
   @ApiResponse({
     status: 200,
     description: '시간표 이름 변경 성공 시',
-    type: CommonTimeTableResponseDto,
+    type: CommonTimetableResponseDto,
   })
-  async updateTimeTableName(
-    @Param('timeTableId') timeTableId: number,
+  async updateTimetableName(
+    @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
-    @Body() updateTimeTableNameDto: UpdateTimeTableNameDto,
-  ): Promise<CommonTimeTableResponseDto> {
-    return await this.timeTableService.updateTimeTableName(
-      timeTableId,
+    @Body() updateTimetableNameDto: UpdateTimetableNameDto,
+  ): Promise<CommonTimetableResponseDto> {
+    return await this.timetableService.updateTimetableName(
+      timetableId,
       user,
-      updateTimeTableNameDto.tableName,
+      updateTimetableNameDto.timetableName,
     );
   }
 
   // 대표 시간표 변경
-  @Patch('/:timeTableId')
+  @Patch('/:timetableId')
   @ApiOperation({
     summary: '대표 시간표 변경',
     description:
       '특정 시간표를 대표 시간표로 변경합니다. 기존에 이미 대표시간표이면 변경되지 않습니다.',
   })
   @ApiParam({
-    name: 'timeTableId',
+    name: 'timetableId',
     description: '대표 시간표로 변경할 시간표 ID',
   })
   @ApiBody({
-    type: TimeTableDto,
+    type: TimetableDto,
   })
   @ApiResponse({
     status: 200,
     description: '대표 시간표 변경 성공 시',
-    type: CommonTimeTableResponseDto,
+    type: CommonTimetableResponseDto,
   })
-  async updateMainTimeTable(
-    @Param('timeTableId') timeTableId: number,
+  async updateMainTimetable(
+    @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
-    @Body() timeTableDto: TimeTableDto,
-  ): Promise<CommonTimeTableResponseDto> {
-    return await this.timeTableService.updateMainTimeTable(
-      timeTableId,
+    @Body() timetableDto: TimetableDto,
+  ): Promise<CommonTimetableResponseDto> {
+    return await this.timetableService.updateMainTimetable(
+      timetableId,
       user,
-      timeTableDto,
+      timetableDto,
     );
   }
 }

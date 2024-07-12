@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
-import { TimeTableEntity } from './timetable.entity';
+import { TimetableEntity } from './timetable.entity';
 
 @Entity('schedule')
 export class ScheduleEntity extends CommonEntity {
@@ -14,7 +14,7 @@ export class ScheduleEntity extends CommonEntity {
   id: number;
 
   @Column({ nullable: false })
-  timeTableId: number;
+  timetableId: number;
 
   @Column('varchar', { nullable: false })
   title: string;
@@ -31,13 +31,13 @@ export class ScheduleEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   location: string;
 
-  @JoinColumn({ name: 'timeTableId' })
+  @JoinColumn({ name: 'timetableId' })
   @ManyToOne(
-    () => TimeTableEntity,
-    (timeTableEntity) => timeTableEntity.schedules,
+    () => TimetableEntity,
+    (timetableEntity) => timetableEntity.schedules,
     {
       onDelete: 'CASCADE',
     },
   )
-  timeTable: TimeTableEntity;
+  timetable: TimetableEntity;
 }

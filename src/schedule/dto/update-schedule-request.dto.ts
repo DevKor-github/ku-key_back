@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 
 const DayType = {
@@ -19,33 +20,36 @@ const DayType = {
 
 export type DayType = (typeof DayType)[keyof typeof DayType];
 
-export class CreateScheduleRequestDto {
+export class UpdateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })
   @IsNumber()
   @IsNotEmpty()
   timetableId: number;
 
-  @ApiProperty({ description: '일정 이름' })
+  @ApiPropertyOptional({ description: '일정 이름' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   title: string;
 
-  @ApiProperty({ description: '요일' })
+  @ApiPropertyOptional({ description: '요일' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsEnum(DayType)
   @IsNotEmpty()
   day: DayType;
 
-  @ApiProperty({ description: '시작 시간' })
+  @ApiPropertyOptional({ description: '시작 시간' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsString()
   @IsNotEmpty()
   startTime: string;
 
-  @ApiProperty({ description: '종료 시간' })
+  @ApiPropertyOptional({ description: '종료 시간' })
+  @ValidateIf((o) => o.day || o.startTime || o.endTime)
   @IsString()
   @IsNotEmpty()
   endTime: string;
 
-  @ApiProperty({ description: '장소' })
+  @ApiPropertyOptional({ description: '장소' })
   @IsString()
   @IsOptional()
   location: string;

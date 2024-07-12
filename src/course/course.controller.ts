@@ -1,21 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { CreateCourseDto } from './dto/create-course.dto';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { CourseService } from './course.service';
-import { CreateCourseDetailDto } from './dto/create-course-detail.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
-import { UpdateCourseDetailDto } from './dto/update-course-detail.dto';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -23,7 +9,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
-import { CommonCourseDetailResponseDto } from './dto/common-course-detail-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
@@ -33,41 +18,6 @@ import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 @Controller('course')
 export class CourseController {
   constructor(private courseService: CourseService) {}
-
-  @Post()
-  @ApiOperation({ summary: '강의 등록', description: '강의를 등록합니다.' })
-  @ApiBody({
-    type: CreateCourseDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '강의 등록 성공 시',
-    type: CommonCourseResponseDto,
-  })
-  async createCourse(
-    @Body() createCourseDto: CreateCourseDto,
-  ): Promise<CommonCourseResponseDto> {
-    return await this.courseService.createCourse(createCourseDto);
-  }
-
-  @Post('detail')
-  @ApiOperation({
-    summary: '강의 상세 등록',
-    description: '강의 세부 정보를 등록합니다.',
-  })
-  @ApiBody({
-    type: CreateCourseDetailDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '강의 상세 등록 성공 시',
-    type: CommonCourseDetailResponseDto,
-  })
-  async createCourseDetail(
-    @Body() createCourseDetailDto: CreateCourseDetailDto,
-  ): Promise<CommonCourseDetailResponseDto> {
-    return await this.courseService.createCourseDetail(createCourseDetailDto);
-  }
 
   @Get()
   @ApiOperation({
@@ -92,8 +42,10 @@ export class CourseController {
     summary: '학수번호로 강의 검색',
     description: '학수번호를 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseCodeDto,
+  @ApiQuery({
+    name: 'courseCode',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -102,7 +54,7 @@ export class CourseController {
     isArray: true,
   })
   async searchCourseCode(
-    @Body() searchCourseCodeDto: SearchCourseCodeDto,
+    @Query() searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
@@ -115,11 +67,13 @@ export class CourseController {
     summary: '전공 과목명 강의 검색',
     description: '전공 과목명을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseNameDto,
-  })
   @ApiQuery({
     name: 'major',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'courseName',
     required: true,
     type: 'string',
   })
@@ -131,7 +85,7 @@ export class CourseController {
   })
   async searchMajorCourseName(
     @Query('major') major: string,
-    @Body() searchCourseNameDto: SearchCourseNameDto,
+    @Query() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorCourseName(
       major,
@@ -147,8 +101,10 @@ export class CourseController {
     summary: '교양 과목명 강의 검색',
     description: '교양 과목명을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchCourseNameDto,
+  @ApiQuery({
+    name: 'courseName',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -157,7 +113,7 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralCourseName(
-    @Body() searchCourseNameDto: SearchCourseNameDto,
+    @Query() searchCourseNameDto: SearchCourseNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchGeneralCourseName(
       searchCourseNameDto,
@@ -172,11 +128,13 @@ export class CourseController {
     summary: '전공 과목 담당 교수님 성함으로 강의 검색',
     description: '전공 과목 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchProfessorNameDto,
-  })
   @ApiQuery({
     name: 'major',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({
+    name: 'professorName',
     required: true,
     type: 'string',
   })
@@ -188,7 +146,7 @@ export class CourseController {
   })
   async searchMajorProfessorName(
     @Query('major') major: string,
-    @Body() searchProfessorNameDto: SearchProfessorNameDto,
+    @Query() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchMajorProfessorName(
       major,
@@ -204,8 +162,10 @@ export class CourseController {
     summary: '교양 담당 교수님 성함으로 강의 검색',
     description: '교양 담당 교수님 성함을 입력하여 강의를 검색합니다.',
   })
-  @ApiBody({
-    type: SearchProfessorNameDto,
+  @ApiQuery({
+    name: 'professorName',
+    required: true,
+    type: 'string',
   })
   @ApiResponse({
     status: 200,
@@ -214,7 +174,7 @@ export class CourseController {
     isArray: true,
   })
   async searchGeneralProfessorName(
-    @Body() searchProfessorNameDto: SearchProfessorNameDto,
+    @Query() searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<CommonCourseResponseDto[]> {
     return await this.courseService.searchGeneralProfessorName(
       searchProfessorNameDto,
@@ -307,56 +267,5 @@ export class CourseController {
     @Param('courseId') courseId: number,
   ): Promise<CommonCourseResponseDto> {
     return await this.courseService.getCourse(courseId);
-  }
-
-  @Patch('detail/:courseDetailId')
-  @ApiOperation({
-    summary: '강의 세부 사항 수정',
-    description: '특정 강의의 세부 사항을 수정합니다.',
-  })
-  @ApiParam({
-    name: 'courseDetailId',
-    description: '특정 강의 세부 사항 ID',
-  })
-  @ApiBody({
-    type: UpdateCourseDetailDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '강의 세부 사항 수정 성공 시',
-    type: CommonCourseDetailResponseDto,
-  })
-  async updateCourseDetail(
-    @Param('courseDetailId') courseDetailId: number,
-    @Body() updateCourseDetailDto: UpdateCourseDetailDto,
-  ): Promise<CommonCourseDetailResponseDto> {
-    return await this.courseService.updateCourseDetail(
-      updateCourseDetailDto,
-      courseDetailId,
-    );
-  }
-
-  @Patch('/:courseId')
-  @ApiOperation({
-    summary: '강의 정보 수정',
-    description: '특정 강의의 정보를 수정합니다.',
-  })
-  @ApiParam({
-    name: 'courseId',
-    description: '특정 강의 ID',
-  })
-  @ApiBody({
-    type: UpdateCourseDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '강의 정보 수정 성공 시',
-    type: CommonCourseResponseDto,
-  })
-  async updateCourse(
-    @Param('courseId') courseId: number,
-    @Body() updateCourseDto: UpdateCourseDto,
-  ): Promise<CommonCourseResponseDto> {
-    return await this.courseService.updateCourse(updateCourseDto, courseId);
   }
 }

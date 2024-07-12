@@ -62,4 +62,9 @@ export class CommonCourseResponseDto {
   @IsString()
   @IsNotEmpty()
   semester: string;
+
+  @ApiProperty({ description: '강의계획서 url' })
+  @IsString()
+  @IsNotEmpty()
+  syllabus: string;
 }
