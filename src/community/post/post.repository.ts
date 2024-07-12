@@ -18,7 +18,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user'],
+      relations: ['postImages', 'user'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });
@@ -39,7 +39,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user'],
+      relations: ['postImages', 'user'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });
@@ -76,7 +76,7 @@ export class PostRepository extends Repository<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
       withDeleted: true,
-      relations: ['user', 'postImages', 'comments.user', 'postScraps'],
+      relations: ['user', 'postImages', 'comments.user'],
     });
     return post;
   }
@@ -91,7 +91,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user', 'board'],
+      relations: ['postImages', 'user', 'board'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });
@@ -108,7 +108,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user', 'board'],
+      relations: ['postImages', 'user', 'board'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });

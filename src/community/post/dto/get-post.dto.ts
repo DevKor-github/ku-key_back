@@ -48,7 +48,7 @@ export class GetPostResponseDto {
             Math.floor(postEntity.user.username.length / 2),
         );
     this.views = postEntity.views;
-    this.scrapCount = postEntity.postScraps.length;
+    this.scrapCount = postEntity.scrapCount;
 
     this.comments = [];
     postEntity.comments

@@ -10,12 +10,16 @@ import { PostService } from '../post/post.service';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
+import { DataSource } from 'typeorm';
+import { CommentEntity } from 'src/entities/comment.entity';
+import { PostEntity } from 'src/entities/post.entity';
 
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly postService: PostService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createComment(
@@ -40,17 +44,45 @@ export class CommentService {
         parentCommentId = parentComment.parentCommentId;
       }
     }
-    const comment = await this.commentRepository.createComment(
-      user.id,
-      postId,
-      requestDto.content,
-      requestDto.isAnonymous,
-      parentCommentId,
-    );
-    const createdComment = await this.commentRepository.getCommentByCommentId(
-      comment.id,
-    );
-    return new GetCommentResponseDto(createdComment, user.id);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const comment = queryRunner.manager.create(CommentEntity, {
+        userId: user.id,
+        postId: postId,
+        content: requestDto.content,
+        isAnonymous: requestDto.isAnonymous,
+      });
+      if (parentCommentId) {
+        comment.parentCommentId = parentCommentId;
+      }
+      const createResult = await queryRunner.manager.save(comment);
+
+      const updateResult = await queryRunner.manager.increment(
+        PostEntity,
+        { id: postId },
+        'commentCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Comment Create Failed!');
+      }
+
+      await queryRunner.commitTransaction();
+
+      const createdComment = await this.commentRepository.getCommentByCommentId(
+        createResult.id,
+      );
+      return new GetCommentResponseDto(createdComment, user.id);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async updateComment(
@@ -94,9 +126,34 @@ export class CommentService {
       throw new BadRequestException("Other user's comment!");
     }
 
-    const isDeleted = await this.commentRepository.deleteComment(commentId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('Comment Delete Failed!');
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const deleteResult = await queryRunner.manager.softDelete(CommentEntity, {
+        id: commentId,
+      });
+      if (!deleteResult.affected) {
+        throw new InternalServerErrorException('Comment Delete Failed!');
+      }
+
+      const updateResult = await queryRunner.manager.decrement(
+        PostEntity,
+        { id: comment.postId },
+        'commentCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Comment Delete Failed!');
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
 
     return new DeleteCommentResponseDto(true);

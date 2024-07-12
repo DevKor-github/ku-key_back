@@ -44,7 +44,8 @@ export class PostPreview {
           postEntity.user.username.length -
             Math.floor(postEntity.user.username.length / 2),
         );
-    this.commentNumber = postEntity.comments.length;
+    this.commentCount = postEntity.commentCount;
+    this.scrapCount = postEntity.scrapCount;
     this.thumbnailDir =
       postEntity.postImages.length > 0 ? postEntity.postImages[0].imgDir : null;
   }
@@ -65,7 +66,10 @@ export class PostPreview {
   username: string | null;
 
   @ApiProperty({ description: '댓글 수' })
-  commentNumber: number;
+  commentCount: number;
+
+  @ApiProperty({ description: '스크랩 수' })
+  scrapCount: number;
 
   @ApiProperty({ description: '사진 미리보기(사진이 없으면 null)' })
   thumbnailDir: string | null;

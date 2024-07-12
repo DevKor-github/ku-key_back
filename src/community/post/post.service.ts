@@ -18,6 +18,7 @@ import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import { GetMyPostListResponseDto } from './dto/get-my-post-list.dto';
+import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 
 @Injectable()
 export class PostService {
@@ -257,15 +258,63 @@ export class PostService {
     if (!(await this.postRepository.isExistingPostId(postId))) {
       throw new BadRequestException('Wrong PostId!');
     }
-    const isDeleted = await this.postScrapRepository.deletePostScrap(
-      user.id,
-      postId,
-    );
-    if (!isDeleted) {
-      await this.postScrapRepository.createPostScrap(user.id, postId);
-    }
 
-    return new ScrapPostResponseDto(!isDeleted);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const scrap = await queryRunner.manager.findOne(PostScrapEntity, {
+        where: {
+          userId: user.id,
+          postId: postId,
+        },
+      });
+
+      if (scrap) {
+        const deleteResult = await queryRunner.manager.delete(PostScrapEntity, {
+          userId: user.id,
+          postId: postId,
+        });
+        if (!deleteResult.affected) {
+          throw new InternalServerErrorException('Scrap Cancel Failed!');
+        }
+
+        const updateResult = await queryRunner.manager.decrement(
+          PostEntity,
+          { id: postId },
+          'scrapCount',
+          1,
+        );
+        if (!updateResult.affected) {
+          throw new InternalServerErrorException('Scrap Cancel Failed!');
+        }
+      } else {
+        const newScrap = queryRunner.manager.create(PostScrapEntity, {
+          userId: user.id,
+          postId: postId,
+        });
+        await queryRunner.manager.save(newScrap);
+
+        const updateResult = await queryRunner.manager.increment(
+          PostEntity,
+          { id: postId },
+          'scrapCount',
+          1,
+        );
+        if (!updateResult.affected) {
+          throw new InternalServerErrorException('Scrap Failed!');
+        }
+      }
+      await queryRunner.commitTransaction();
+
+      return new ScrapPostResponseDto(!scrap);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getMyPostList(
