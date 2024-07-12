@@ -15,9 +15,9 @@ import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dt
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
-import { TimeTableService } from 'src/timetable/timetable.service';
-import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { TimetableService } from 'src/timetable/timetable.service';
+import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class FriendshipService {
     @InjectRepository(FriendshipRepository)
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
-    private readonly timeTableService: TimeTableService,
+    private readonly timetableService: TimetableService,
   ) {}
 
   async getFriendList(
@@ -280,30 +280,30 @@ export class FriendshipService {
     }
   }
 
-  async getFriendTimeTable(
+  async getFriendTimetable(
     userId: number,
-    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
-  ): Promise<GetTimeTableByTimeTableIdDto> {
+    getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
+  ): Promise<GetTimetableByTimetableIdDto> {
     try {
       // 친구인지 아닌지 체크
       const checkFriendship =
         await this.friendshipRepository.findFriendshipBetweenUsers(
           userId,
-          getFriendTimeTableRequestDto.friendId,
+          getFriendTimetableRequestDto.friendId,
         );
 
       if (!checkFriendship || !checkFriendship.areWeFriend) {
         throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
       }
 
-      const friendTimeTable = await this.timeTableService.getFriendTimeTable(
-        getFriendTimeTableRequestDto,
+      const friendTimetable = await this.timetableService.getFriendTimetable(
+        getFriendTimetableRequestDto,
       );
 
-      if (!friendTimeTable) {
+      if (!friendTimetable) {
         throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
       }
-      return friendTimeTable;
+      return friendTimetable;
     } catch (error) {
       throw error;
     }
