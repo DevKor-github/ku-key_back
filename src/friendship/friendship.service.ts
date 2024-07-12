@@ -136,24 +136,32 @@ export class FriendshipService {
       );
     }
 
-    const checkFriendship =
-      await this.friendshipRepository.findFriendshipBetweenUsers(
-        fromUserId,
-        toUserId,
-      );
-
-    if (checkFriendship) {
-      if (!checkFriendship.areWeFriend) {
-        throw new BadRequestException('이미 친구 요청을 보냈거나 받았습니다.');
-      } else {
-        throw new BadRequestException('이미 친구인 유저입니다.');
-      }
-    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const checkFriendship = await queryRunner.manager.findOne(
+        FriendshipEntity,
+        {
+          where: [
+            { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
+            { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
+          ],
+          relations: ['fromUser', 'toUser'],
+        },
+      );
+
+      if (checkFriendship) {
+        if (!checkFriendship.areWeFriend) {
+          throw new BadRequestException(
+            '이미 친구 요청을 보냈거나 받았습니다.',
+          );
+        } else {
+          throw new BadRequestException('이미 친구인 유저입니다.');
+        }
+      }
+
       const friendship = queryRunner.manager.create(FriendshipEntity, {
         fromUser: { id: fromUserId },
         toUser: { id: toUserId },
@@ -233,30 +241,29 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
-      );
-
-    if (!friendship) {
-      throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
-    }
-
-    if (friendship.toUser.id !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 수락할 수 있습니다.',
-      );
-    }
-
-    if (friendship.areWeFriend) {
-      throw new BadRequestException('이미 수락한 요청입니다.');
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser', 'toUser'],
+      });
+
+      if (!friendship) {
+        throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.toUser.id !== userId) {
+        throw new BadRequestException(
+          '나에게 온 친구 요청만 수락할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException('이미 수락한 요청입니다.');
+      }
       const updatedResult = await queryRunner.manager.update(
         FriendshipEntity,
         { id: friendshipId },
@@ -283,31 +290,31 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
-      );
-
-    if (!friendship) {
-      throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
-    }
-
-    if (friendship.toUser.id !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 거절할 수 있습니다.',
-      );
-    }
-
-    if (friendship.areWeFriend) {
-      throw new BadRequestException(
-        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
-      );
-    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser', 'toUser'],
+      });
+
+      if (!friendship) {
+        throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.toUser.id !== userId) {
+        throw new BadRequestException(
+          '나에게 온 친구 요청만 거절할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException(
+          '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+        );
+      }
       const deleteResult = await queryRunner.manager.softDelete(
         FriendshipEntity,
         friendshipId,
@@ -332,31 +339,31 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
-      );
-    if (!friendship) {
-      throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
-    }
-
-    if (friendship.fromUser.id !== userId) {
-      throw new BadRequestException(
-        '내가 보낸 친구 요청만 취소할 수 있습니다.',
-      );
-    }
-
-    if (friendship.areWeFriend) {
-      throw new BadRequestException(
-        '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
-      );
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser', 'toUser'],
+      });
+
+      if (!friendship) {
+        throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.fromUser.id !== userId) {
+        throw new BadRequestException(
+          '내가 보낸 친구 요청만 취소할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException(
+          '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
+        );
+      }
       const deleteResult = await queryRunner.manager.softDelete(
         FriendshipEntity,
         friendshipId,
@@ -381,28 +388,32 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
-      );
-
-    if (!friendship) {
-      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
-    }
-
-    if (friendship.toUser.id !== userId && friendship.fromUser.id !== userId) {
-      throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
-    }
-
-    if (!friendship.areWeFriend) {
-      throw new BadRequestException('이미 친구인 경우에만 삭제할 수 있습니다.');
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser', 'toUser'],
+      });
+
+      if (!friendship) {
+        throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+      }
+
+      if (
+        friendship.toUser.id !== userId &&
+        friendship.fromUser.id !== userId
+      ) {
+        throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
+      }
+
+      if (!friendship.areWeFriend) {
+        throw new BadRequestException(
+          '이미 친구인 경우에만 삭제할 수 있습니다.',
+        );
+      }
       const deleteResult = await queryRunner.manager.softDelete(
         FriendshipEntity,
         friendshipId,
