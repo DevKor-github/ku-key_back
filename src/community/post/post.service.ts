@@ -289,6 +289,30 @@ export class PostService {
     return postList;
   }
 
+  async getScrapPostList(
+    user: AuthorizedUserDto,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<GetMyPostListResponseDto> {
+    const postIds = await this.postScrapRepository.getScrapPostIdsWithUserId(
+      user.id,
+    );
+    const posts = await this.postRepository.getScrapPostsByPostIds(
+      postIds,
+      pageSize,
+      pageNumber,
+    );
+    const postList = new GetMyPostListResponseDto(posts);
+    postList.posts.map((postPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
+
+    return postList;
+  }
+
   async isExistingPostId(postId: number): Promise<boolean> {
     return await this.postRepository.isExistingPostId(postId);
   }

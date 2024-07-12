@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostEntity } from 'src/entities/post.entity';
-import { DataSource, ILike, Repository } from 'typeorm';
+import { DataSource, ILike, In, Repository } from 'typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -88,6 +88,23 @@ export class PostRepository extends Repository<PostEntity> {
   ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: { userId: userId },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'comments', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getScrapPostsByPostIds(
+    postIds: number[],
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: { id: In(postIds) },
       order: {
         createdAt: 'DESC',
       },

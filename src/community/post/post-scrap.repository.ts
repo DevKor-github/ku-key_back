@@ -28,4 +28,9 @@ export class PostScrapRepository extends Repository<PostScrapEntity> {
 
     return deleteResult.affected ? true : false;
   }
+
+  async getScrapPostIdsWithUserId(userId: number): Promise<number[]> {
+    const scrapList = await this.find({ where: { userId: userId } });
+    return scrapList.map((scrap) => scrap.postId);
+  }
 }
