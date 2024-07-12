@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalenderRepository } from './calender.repository';
 import { GetCalenderDataResponseDto } from './dto/get-calender-data-response-dto';
+import { CreateCalenderDataRequestDto } from './dto/create-calender-data-request.dto';
 
 @Injectable()
 export class CalenderService {
@@ -23,6 +24,20 @@ export class CalenderService {
         description: '',
       };
     }
+
+    return {
+      title: calenderData.title,
+      description: calenderData.description,
+    };
+  }
+
+  async createCalenderData(requestDto: CreateCalenderDataRequestDto) {
+    const { date, title, description } = requestDto;
+    const calenderData = await this.calenderRepository.createCalenderData(
+      date,
+      title,
+      description,
+    );
 
     return {
       title: calenderData.title,
