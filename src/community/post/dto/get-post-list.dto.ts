@@ -28,7 +28,7 @@ class BoardInfo {
   description: string;
 }
 
-class PostPreview {
+export class PostPreview {
   constructor(postEntity: PostEntity) {
     this.id = postEntity.id;
     this.title = postEntity.title;

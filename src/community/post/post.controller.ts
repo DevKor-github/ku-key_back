@@ -36,6 +36,10 @@ import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
+import {
+  GetMyPostListRequestDto,
+  GetMyPostListResponseDto,
+} from './dto/get-my-post-list.dto';
 
 @Controller('post')
 @ApiTags('post')
@@ -66,6 +70,29 @@ export class PostController {
       requestDto.pageSize,
       requestDto.pageNumber,
       requestDto.keyword,
+    );
+  }
+
+  @Get('/my')
+  @ApiOperation({
+    summary: '내가 쓴 글 목록 조회',
+    description: '내가 쓴 글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: '내가 쓴 글 목록 조회 성공',
+    type: GetMyPostListResponseDto,
+  })
+  async getMyPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetMyPostListRequestDto,
+  ): Promise<GetMyPostListResponseDto> {
+    return await this.postService.getMyPostList(
+      user,
+      requestDto.pageSize,
+      requestDto.pageNumber,
     );
   }
 

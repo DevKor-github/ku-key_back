@@ -81,6 +81,23 @@ export class PostRepository extends Repository<PostEntity> {
     return post;
   }
 
+  async getPostsByUserId(
+    userId: number,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: { userId: userId },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'comments', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
   async increaseViews(postId: number): Promise<boolean> {
     const result = await this.increment({ id: postId }, 'views', 1);
     return result.affected ? true : false;

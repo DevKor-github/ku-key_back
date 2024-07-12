@@ -17,6 +17,7 @@ import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
+import { GetMyPostListResponseDto } from './dto/get-my-post-list.dto';
 
 @Injectable()
 export class PostService {
@@ -265,6 +266,27 @@ export class PostService {
     }
 
     return new ScrapPostResponseDto(!isDeleted);
+  }
+
+  async getMyPostList(
+    user: AuthorizedUserDto,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<GetMyPostListResponseDto> {
+    const posts = await this.postRepository.getPostsByUserId(
+      user.id,
+      pageSize,
+      pageNumber,
+    );
+    const postList = new GetMyPostListResponseDto(posts);
+    postList.posts.map((postPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
+
+    return postList;
   }
 
   async isExistingPostId(postId: number): Promise<boolean> {
