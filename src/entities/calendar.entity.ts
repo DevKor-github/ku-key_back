@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
 
-@Entity('calender')
-export class CalenderEntity extends CommonEntity {
+@Entity('calendar')
+export class CalendarEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
