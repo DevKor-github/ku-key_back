@@ -9,6 +9,7 @@ import {
 import { CommonEntity } from './common.entity';
 import { PostEntity } from './post.entity';
 import { UserEntity } from './user.entity';
+import { CommentLikeEntity } from './comment-like.entity';
 
 @Entity('comment')
 export class CommentEntity extends CommonEntity {
@@ -57,4 +58,10 @@ export class CommentEntity extends CommonEntity {
     (commentEntity) => commentEntity.parentComment,
   )
   replyComments: CommentEntity[];
+
+  @OneToMany(
+    () => CommentLikeEntity,
+    (commentLikeEntity) => commentLikeEntity.comment,
+  )
+  commentLikes: CommentLikeEntity[];
 }
