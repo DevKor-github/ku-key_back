@@ -20,10 +20,10 @@ import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.d
 @Controller('club')
 @ApiTags('club')
 @ApiBearerAuth('accessToken')
+@UseGuards(JwtAuthGuard)
 export class ClubController {
   constructor(private readonly clubService: ClubService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: '동아리 목록 조회',
@@ -63,7 +63,6 @@ export class ClubController {
     return await this.clubService.getClubList(userId, clubSearchQueryDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('/like/:clubId')
   @ApiOperation({
     summary: '동아리 좋아요 등록/해제',
@@ -87,7 +86,6 @@ export class ClubController {
     return await this.clubService.toggleLikeClub(userId, clubId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('hot')
   @ApiOperation({
     summary: 'Hot Club 목록 조회',
@@ -103,7 +101,6 @@ export class ClubController {
     return await this.clubService.getHotClubList();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('recommend')
   @ApiOperation({
     summary: 'Recommend Club 목록 조회',
