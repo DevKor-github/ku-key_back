@@ -79,7 +79,6 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    console.log('user : ', user);
     const keepingLogin = body.keepingLogin;
     return await this.authService.logIn(user, keepingLogin);
   }
@@ -98,7 +97,6 @@ export class AuthController {
   })
   @Post('refresh')
   async refreshToken(@User() user: AuthorizedUserDto): Promise<JwtTokenDto> {
-    console.log('user : ', user);
     return await this.authService.refreshToken(user);
   }
 
