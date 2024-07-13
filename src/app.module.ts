@@ -35,7 +35,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         entities: [path.join(__dirname, '/entities/**/*.entity.{js, ts}')],
-        synchronize: false,
+        synchronize: true,
         logging: true,
         timezone: 'Asia/Seoul',
       }),
