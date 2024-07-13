@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -15,6 +16,7 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -26,6 +28,7 @@ import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
+import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -77,11 +80,33 @@ export class CalendarController {
     summary: '특정 행사/일정 수정',
     description: '행사/일정 id를 받아 해당하는 행사/일정을 수정합니다.',
   })
-  @ApiOkResponse()
+  @ApiParam({ name: 'calendarId', description: '행사/일정 id' })
+  @ApiBody({ type: UpdateCalendarDataRequestDto })
+  @ApiOkResponse({
+    description: '행사/일정 수정 성공',
+    type: UpdateCalendarDataResponseDto,
+  })
   async updateCalendarData(
     @Param('calendarId') calendarId: number,
     @Body() body: UpdateCalendarDataRequestDto,
   ): Promise<UpdateCalendarDataResponseDto> {
     return await this.calendarService.updateCalendarData(calendarId, body);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Delete('/:calendarId')
+  @ApiOperation({
+    summary: '특정 행사/일정 삭제',
+    description: '행사/일정 id를 받아 해당하는 행사/일정을 삭제합니다.',
+  })
+  @ApiParam({ name: 'calendarId', description: '행사/일정 id' })
+  @ApiOkResponse({
+    description: '행사/일정 삭제 성공',
+    type: DeleteCalendarDataResponseDto,
+  })
+  async deleteCalendarData(
+    @Param('calendarId') calendarId: number,
+  ): Promise<DeleteCalendarDataResponseDto> {
+    return await this.calendarService.deleteCalendarData(calendarId);
   }
 }

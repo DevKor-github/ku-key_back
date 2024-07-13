@@ -40,4 +40,10 @@ export class CalendarRepository extends Repository<CalendarEntity> {
 
     return updated.affected ? true : false;
   }
+
+  async deleteCalendarData(calendarId: number): Promise<boolean> {
+    const deleted = await this.softDelete({ id: calendarId });
+
+    return deleted.affected ? true : false;
+  }
 }

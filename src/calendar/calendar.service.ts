@@ -8,6 +8,7 @@ import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-respon
 import { Between } from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
+import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
 
 @Injectable()
 export class CalendarService {
@@ -82,6 +83,19 @@ export class CalendarService {
     }
 
     return new UpdateCalendarDataResponseDto(true);
+  }
+
+  async deleteCalendarData(
+    calendarId: number,
+  ): Promise<DeleteCalendarDataResponseDto> {
+    const isDeleted =
+      await this.calendarRepository.deleteCalendarData(calendarId);
+
+    if (!isDeleted) {
+      throw new InternalServerErrorException('삭제에 실패했습니다.');
+    }
+
+    return new DeleteCalendarDataResponseDto(true);
   }
 
   // 월-날짜 매핑 함수
