@@ -67,7 +67,7 @@ export class PostRepository extends Repository<PostEntity> {
   ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: {
-        allReactionCount: MoreThanOrEqual(2),
+        allReactionCount: MoreThanOrEqual(10),
       },
       order: {
         createdAt: 'DESC',
