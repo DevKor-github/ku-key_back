@@ -58,6 +58,9 @@ export class PostEntity extends CommonEntity {
   @Column('int', { nullable: false, default: 0 })
   funnyReactionCount: number;
 
+  @Column('int', { nullable: false, default: 0 })
+  allReactionCount: number;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.posts, {
     onDelete: 'CASCADE',

@@ -427,6 +427,17 @@ export class PostService {
         if (!updateResult.affected) {
           throw new InternalServerErrorException('React Failed!');
         }
+
+        const allReactionCountUpdateResult =
+          await queryRunner.manager.increment(
+            PostEntity,
+            { id: postId },
+            'allReactionCount',
+            1,
+          );
+        if (!allReactionCountUpdateResult.affected) {
+          throw new InternalServerErrorException('React Failed!');
+        }
       } else {
         if (existingReaction.reaction === requestDto.reaction) {
           throw new BadRequestException('Same Reaction!');
