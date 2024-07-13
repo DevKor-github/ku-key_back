@@ -19,11 +19,6 @@ export class SetProfileRequestDto {
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ description: '사용가능 언어' })
-  language: string;
-
-  @IsOptional()
-  @IsString()
   @ApiProperty({ description: '전공' })
   major: string;
 
