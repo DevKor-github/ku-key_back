@@ -19,7 +19,6 @@ import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
-import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import {
   ApiBearerAuth,
@@ -93,10 +92,10 @@ export class FriendshipController {
       '친구 ID, 연도, 학기를 입력받아 해당 학기에 친구의 대표 시간표를 조회합니다.',
   })
   @ApiQuery({
-    name: 'friendId',
+    name: 'username',
     type: 'string',
     required: true,
-    description: '친구 ID',
+    description: '친구 추가용 ID (username)',
   })
   @ApiQuery({
     name: 'year',
@@ -162,11 +161,29 @@ export class FriendshipController {
     isArray: true,
     type: GetWaitingFriendResponseDto,
   })
-  async getWaitingFriendList(
+  async getReceivedWaitingFriendList(
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
     const userId = user.id;
-    return await this.friendshipService.getWaitingFriendList(userId);
+    return await this.friendshipService.getReceivedWaitingFriendList(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('sent')
+  @ApiOperation({
+    summary: '내가 친구 요청을 보낸 유저 목록 조회',
+    description: '내가 친구 요청을 보낸 유저 목록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    description: '내가 친구 요청을 보낸 유저 목록',
+    isArray: true,
+    type: GetWaitingFriendResponseDto,
+  })
+  async getSentWaitingFriendList(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetWaitingFriendResponseDto[]> {
+    const userId = user.id;
+    return await this.friendshipService.getSentWaitingFriendList(userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -209,14 +226,40 @@ export class FriendshipController {
   })
   @ApiOkResponse({
     description: '친구 요청 거절 성공 시',
-    type: RejectFriendshipResponseDto,
+    type: DeleteFriendshipResponseDto,
   })
   async rejectFriendshipRequest(
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
-  ): Promise<RejectFriendshipResponseDto> {
+  ): Promise<DeleteFriendshipResponseDto> {
     const userId = user.id;
     return await this.friendshipService.rejectFriendshipRequest(
+      userId,
+      friendshipId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('sent/:friendshipId')
+  @ApiOperation({
+    summary: '보낸 친구 요청 취소하기',
+    description: 'friendshipId를 받아 해당 friendship 레코드를 삭제합니다.',
+  })
+  @ApiParam({
+    name: 'friendshipId',
+    description: '해당 친구 요청에 대한 friendship id',
+    type: Number,
+  })
+  @ApiOkResponse({
+    description: '친구 요청 취소 성공 시',
+    type: DeleteFriendshipResponseDto,
+  })
+  async cancelFriendshipRequest(
+    @User() user: AuthorizedUserDto,
+    @Param('friendshipId') friendshipId: number,
+  ): Promise<DeleteFriendshipResponseDto> {
+    const userId = user.id;
+    return await this.friendshipService.cancelFriendshipRequest(
       userId,
       friendshipId,
     );
