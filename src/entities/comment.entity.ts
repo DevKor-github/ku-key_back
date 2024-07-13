@@ -52,6 +52,9 @@ export class CommentEntity extends CommonEntity {
   )
   parentComment: CommentEntity;
 
-  @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
+  @OneToMany(
+    () => CommentEntity,
+    (commentEntity) => commentEntity.parentComment,
+  )
   replyComments: CommentEntity[];
 }
