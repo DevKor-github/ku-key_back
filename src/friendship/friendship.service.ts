@@ -66,7 +66,7 @@ export class FriendshipService {
         name: friend.name,
         username: friend.username,
         major: friend.major,
-        language: friend.language,
+        country: friend.country,
       };
     });
 
@@ -112,7 +112,7 @@ export class FriendshipService {
     userInfo.name = user.name;
     userInfo.username = user.username;
     userInfo.major = user.major;
-    userInfo.language = user.language;
+    userInfo.country = user.country;
 
     return userInfo;
   }
@@ -179,7 +179,7 @@ export class FriendshipService {
         name: waitingFriend.name,
         username: waitingFriend.username,
         major: waitingFriend.major,
-        language: waitingFriend.language,
+        country: waitingFriend.country,
       };
     });
 
