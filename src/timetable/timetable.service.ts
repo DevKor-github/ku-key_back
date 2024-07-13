@@ -22,7 +22,6 @@ import { CreateTimetableCourseResponseDto } from './dto/create-timetable-course-
 import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
 import { ColorType } from './dto/update-timetable-color.dto';
-import { GetFriendTimetableRequestDto } from 'src/friendship/dto/get-friend-timetable.dto';
 
 @Injectable()
 export class TimetableService {
@@ -283,6 +282,7 @@ export class TimetableService {
         courses: [],
         schedules: [],
         color: timetable.color,
+        tableName: timetable.timetableName,
       };
       timetable.timetableCourses.forEach((courseEntry) => {
         const {
@@ -351,32 +351,27 @@ export class TimetableService {
 
   // 친구 시간표 조회
   async getFriendTimetable(
-    getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
+    friendId: number,
+    semester: string,
+    year: string,
   ): Promise<GetTimetableByTimetableIdDto> {
-    try {
-      const timetable = await this.timetableRepository.findOne({
-        where: {
-          userId: getFriendTimetableRequestDto.friendId,
-          year: getFriendTimetableRequestDto.year,
-          semester: getFriendTimetableRequestDto.semester,
-          mainTimetable: true,
-        },
-      });
+    const timetable = await this.timetableRepository.findOne({
+      where: {
+        userId: friendId,
+        year,
+        semester,
+        mainTimetable: true,
+      },
+    });
 
-      // 시간표가 없을 경우
-      if (!timetable) {
-        throw new NotFoundException('친구 시간표가 존재하지 않습니다!');
-      }
-
-      // 시간표 id 추출 후 구현해놓은 함수 사용
-      const friendTimetableId = timetable.id;
-      return await this.getTimetableByTimetableId(
-        friendTimetableId,
-        getFriendTimetableRequestDto.friendId,
-      );
-    } catch (error) {
-      throw error;
+    // 시간표가 없을 경우
+    if (!timetable) {
+      throw new NotFoundException('친구 시간표가 존재하지 않습니다!');
     }
+
+    // 시간표 id 추출 후 구현해놓은 함수 사용
+    const friendTimetableId = timetable.id;
+    return await this.getTimetableByTimetableId(friendTimetableId, friendId);
   }
 
   // 시간표에 등록한 강의 삭제

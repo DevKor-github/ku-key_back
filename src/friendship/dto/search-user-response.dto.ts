@@ -38,6 +38,7 @@ export class SearchUserResponseDto {
   @ApiProperty({
     description:
       '유저 상태 (본인 / 친구 / 상대방의 수락 대기 중 / 나의 수락 보류 중 / 그 외)',
+    enum: Status,
   })
   status: Status;
 }
