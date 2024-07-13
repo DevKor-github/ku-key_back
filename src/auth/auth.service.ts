@@ -93,9 +93,9 @@ export class AuthService {
   }
 
   createRefreshToken(id: number, keepingLogin: boolean): string {
-    const expiresIn = keepingLogin ? '30d' : '1w';
+    const expiresIn = keepingLogin ? '14d' : '2d';
     return this.jwtService.sign(
-      { id },
+      {},
       {
         expiresIn: expiresIn,
       },
