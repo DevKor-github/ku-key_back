@@ -51,6 +51,18 @@ export class CourseService {
     return course ? true : false;
   }
 
+  async searchCoursesByCourseCodeAndProfessorName(
+    courseCode: string,
+    professorName: string,
+  ): Promise<CourseEntity[]> {
+    return await this.courseRepository.find({
+      where: {
+        courseCode: Like(`${courseCode}%`),
+        professorName,
+      },
+    });
+  }
+
   // 학수번호 검색
   async searchCourseCode(
     searchCourseCodeDto: SearchCourseCodeDto,
@@ -163,5 +175,16 @@ export class CourseService {
     return await this.courseRepository.find({
       where: { category: 'Academic Foundations', college: college },
     });
+  }
+
+  async updateCourseTotalRate(
+    courseIds: number[],
+    totalRate: number,
+  ): Promise<void> {
+    for (const id of courseIds) {
+      await this.courseRepository.update(id, {
+        totalRate: parseFloat(totalRate.toFixed(1)),
+      });
+    }
   }
 }
