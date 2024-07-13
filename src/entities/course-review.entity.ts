@@ -51,7 +51,7 @@ export class CourseReviewEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   semester: string;
 
-  @Column('varchar', { nullable: false })
+  @Column('varchar', { nullable: false, length: 7 })
   courseCode: string;
 
   @JoinColumn({ name: 'userId' })
