@@ -29,7 +29,7 @@ class Image {
   imgDir: string;
 }
 
-class ReactionCount {
+export class ReactionCount {
   @ApiProperty({ description: '좋아요' })
   good: number;
 

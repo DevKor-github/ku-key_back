@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { BoardEntity } from 'src/entities/board.entity';
 import { PostEntity } from 'src/entities/post.entity';
+import { ReactionCount } from './get-post.dto';
 
 class BoardInfo {
   constructor(boardEntity: BoardEntity) {
@@ -48,6 +49,12 @@ export class PostPreview {
     this.scrapCount = postEntity.scrapCount;
     this.thumbnailDir =
       postEntity.postImages.length > 0 ? postEntity.postImages[0].imgDir : null;
+    this.reaction = new ReactionCount();
+    this.reaction.good = postEntity.goodReactionCount;
+    this.reaction.sad = postEntity.sadReactionCount;
+    this.reaction.amazing = postEntity.amazingReactionCount;
+    this.reaction.angry = postEntity.angryReactionCount;
+    this.reaction.funny = postEntity.funnyReactionCount;
   }
 
   @ApiProperty({ description: '게시글 고유 ID' })
@@ -73,6 +80,9 @@ export class PostPreview {
 
   @ApiProperty({ description: '사진 미리보기(사진이 없으면 null)' })
   thumbnailDir: string | null;
+
+  @ApiProperty({ description: '반응' })
+  reaction: ReactionCount;
 }
 
 export class GetPostListWithBoardResponseDto {
