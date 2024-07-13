@@ -8,13 +8,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compare } from 'bcrypt';
+import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
 import { EmailService } from 'src/common/email.service';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { AccessTokenDto } from './dto/accessToken.dto';
 import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -114,7 +114,7 @@ export class AuthService {
       );
     }
 
-    const isMatches = await compare(refreshToken, user.refreshToken);
+    const isMatches = await argon2.verify(user.refreshToken, refreshToken);
 
     if (!isMatches) {
       throw new BadRequestException('refreshToken is not matched!');
@@ -140,9 +140,9 @@ export class AuthService {
     return new LogoutResponseDto(result);
   }
 
-  refreshToken(user: AuthorizedUserDto): AccessTokenDto {
-    const accessToken = this.createAccessToken(user);
-    return new AccessTokenDto(accessToken);
+  async refreshToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
+    const jwtToken = await this.createToken(user, user.keepingLogin);
+    return jwtToken;
   }
 
   async requestEmailVerification(

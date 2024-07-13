@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash, compare } from 'bcrypt';
+import * as argon2 from 'argon2';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { SetProfileResponseDto } from './dto/set-profile-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
@@ -109,7 +110,7 @@ export class UserService {
       return await this.userRepository.setCurrentRefreshToken(id, refreshToken);
     }
 
-    const hashedToken = await hash(refreshToken, 10);
+    const hashedToken = await argon2.hash(refreshToken);
 
     return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
   }

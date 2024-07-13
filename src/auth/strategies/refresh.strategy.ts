@@ -26,6 +26,7 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
       refreshToken,
       payload.id,
     );
+    user.keepingLogin = payload.keepingLogin;
 
     return user;
   }
