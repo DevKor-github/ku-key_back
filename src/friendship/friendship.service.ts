@@ -229,7 +229,7 @@ export class FriendshipService {
         name: waitingFriend.name,
         username: waitingFriend.username,
         major: waitingFriend.major,
-        language: waitingFriend.language,
+        country: waitingFriend.country,
       };
     });
 
