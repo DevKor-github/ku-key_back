@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from 'class-validator';
 
-export class CreateTimeTableCourseResponseDto {
+export class CreateTimetableCourseResponseDto {
   @ApiProperty({ description: 'ID' })
   @IsNumber()
   @IsNotEmpty()
@@ -10,7 +10,7 @@ export class CreateTimeTableCourseResponseDto {
   @ApiProperty({ description: '시간표 ID' })
   @IsNumber()
   @IsNotEmpty()
-  timeTableId: number;
+  timetableId: number;
 
   @ApiProperty({ description: '강의 ID' })
   @IsNumber()
