@@ -37,6 +37,7 @@ export class CalendarService {
       const dayCalendarData = new GetCalendarDataResponseDto();
       dayCalendarData.date = new Date(currentDate);
       dayCalendarData.event = dayEvents.map((event) => ({
+        id: event.id,
         title: event.title,
         description: event.description,
       }));
@@ -58,6 +59,7 @@ export class CalendarService {
     );
 
     return {
+      id: calendarData.id,
       date: calendarData.date,
       title: calendarData.title,
       description: calendarData.description,

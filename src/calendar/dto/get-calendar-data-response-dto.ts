@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 class Event {
+  @ApiProperty({ description: '행사/일정 id' })
+  id: number;
+
   @ApiProperty({ description: '행사/일정 제목' })
   title: string;
 
