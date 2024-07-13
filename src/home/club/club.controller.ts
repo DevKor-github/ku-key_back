@@ -36,7 +36,7 @@ export class ClubController {
     required: false,
   })
   @ApiQuery({
-    name: 'whishList',
+    name: 'wishList',
     description: '좋아요 누른 동아리만 필터링 (true / false)',
     required: false,
   })
