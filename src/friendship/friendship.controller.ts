@@ -30,8 +30,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 
 @Controller('friendship')
@@ -111,16 +111,16 @@ export class FriendshipController {
   })
   @ApiOkResponse({
     description: '친구 시간표 반환',
-    type: GetTimeTableByTimeTableIdDto,
+    type: GetTimetableByTimetableIdDto,
     isArray: true,
   })
-  async getFriendTimeTable(
-    @Query() getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
+  async getFriendTimetable(
+    @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimeTableByTimeTableIdDto> {
-    return await this.friendshipService.getFriendTimeTable(
+  ): Promise<GetTimetableByTimetableIdDto> {
+    return await this.friendshipService.getFriendTimetable(
       user.id,
-      getFriendTimeTableRequestDto,
+      getFriendTimetableRequestDto,
     );
   }
 

@@ -13,9 +13,9 @@ import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dt
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
-import { TimeTableService } from 'src/timetable/timetable.service';
-import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { TimetableService } from 'src/timetable/timetable.service';
+import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { DataSource } from 'typeorm';
@@ -26,7 +26,7 @@ export class FriendshipService {
     @InjectRepository(FriendshipRepository)
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
-    private readonly timeTableService: TimeTableService,
+    private readonly timetableService: TimetableService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -433,13 +433,13 @@ export class FriendshipService {
     }
   }
 
-  async getFriendTimeTable(
+  async getFriendTimetable(
     userId: number,
-    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
-  ): Promise<GetTimeTableByTimeTableIdDto> {
+    getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
+  ): Promise<GetTimetableByTimetableIdDto> {
     // username으로 친구정보 가져오기
     const friend = await this.userService.findUserByUsername(
-      getFriendTimeTableRequestDto.username,
+      getFriendTimetableRequestDto.username,
     );
 
     if (!friend) {
@@ -456,15 +456,15 @@ export class FriendshipService {
       throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
     }
 
-    const friendTimeTable = await this.timeTableService.getFriendTimeTable(
+    const friendTimetable = await this.timetableService.getFriendTimetable(
       friend.id,
-      getFriendTimeTableRequestDto.semester,
-      getFriendTimeTableRequestDto.year,
+      getFriendTimetableRequestDto.semester,
+      getFriendTimetableRequestDto.year,
     );
 
-    if (!friendTimeTable) {
+    if (!friendTimetable) {
       throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
     }
-    return friendTimeTable;
+    return friendTimetable;
   }
 }

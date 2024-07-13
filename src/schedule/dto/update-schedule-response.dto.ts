@@ -10,7 +10,7 @@ export class UpdateScheduleResponseDto {
   @ApiProperty({ description: '시간표 ID' })
   @IsNumber()
   @IsNotEmpty()
-  timeTableId: number;
+  timetableId: number;
 
   @ApiProperty({ description: '일정 이름' })
   @IsString()
