@@ -45,7 +45,7 @@ export class CourseReviewService {
     }
 
     // 유저가 이미 강의평을 등록했는 지 체크
-    const isAlreadReviewed = await this.courseReviewRepository.findOne({
+    const isAlreadyReviewed = await this.courseReviewRepository.findOne({
       where: {
         userId: user.id,
         courseCode: createCourseReviewRequestDto.courseCode,
@@ -53,7 +53,7 @@ export class CourseReviewService {
       },
     });
 
-    if (isAlreadReviewed) {
+    if (isAlreadyReviewed) {
       throw new ConflictException(
         '이미 해당 강의에 대한 강의평을 등록했습니다.',
       );
@@ -152,12 +152,11 @@ export class CourseReviewService {
   ): Promise<CourseReviewResponseDto[]> {
     const courseReviews = await this.courseReviewRepository.find({
       where: { userId: user.id },
-      relations: ['user'],
     });
 
     return courseReviews.map((courseReview) => ({
       id: courseReview.id,
-      reviewer: courseReview.user.username,
+      reviewer: user.username,
       createdAt: courseReview.createdAt,
       rate: courseReview.rate,
       classLevel: courseReview.classLevel,

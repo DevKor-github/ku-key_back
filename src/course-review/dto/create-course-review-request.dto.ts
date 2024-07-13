@@ -69,6 +69,6 @@ export class CreateCourseReviewRequestDto {
   @ApiProperty({ description: '학수번호' })
   @IsString()
   @IsNotEmpty()
-  @Length(7)
+  @Length(7, 7)
   courseCode: string;
 }
