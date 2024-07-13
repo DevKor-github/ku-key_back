@@ -30,7 +30,7 @@ export class PostReactionEntity extends CommonEntity {
   user: UserEntity;
 
   @JoinColumn({ name: 'postId' })
-  @ManyToOne(() => PostEntity, (postEntity) => postEntity.postScraps, {
+  @ManyToOne(() => PostEntity, (postEntity) => postEntity.postReactions, {
     onDelete: 'CASCADE',
   })
   post: PostEntity;

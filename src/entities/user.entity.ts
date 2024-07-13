@@ -12,6 +12,7 @@ import { TimetableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
 import { PostScrapEntity } from './post-scrap.entity';
+import { PostReactionEntity } from './post-reaction.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -81,4 +82,10 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => PostScrapEntity, (postScrapEntity) => postScrapEntity.user)
   postScraps: PostScrapEntity[];
+
+  @OneToMany(
+    () => PostReactionEntity,
+    (postReactionEntity) => postReactionEntity.user,
+  )
+  postReaction: PostReactionEntity[];
 }
