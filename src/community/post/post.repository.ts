@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostEntity } from 'src/entities/post.entity';
-import { DataSource, ILike, In, Repository } from 'typeorm';
+import { DataSource, ILike, In, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -51,6 +51,24 @@ export class PostRepository extends Repository<PostEntity> {
     pageNumber: number,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getHotPosts(
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: {
+        allReactionCount: MoreThanOrEqual(2),
+      },
       order: {
         createdAt: 'DESC',
       },
