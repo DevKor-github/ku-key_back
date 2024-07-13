@@ -343,6 +343,22 @@ export class PostService {
     return postList;
   }
 
+  async getAllPostList(
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<GetPostListResponseDto> {
+    const posts = await this.postRepository.getAllPosts(pageSize, pageNumber);
+    const postList = new GetPostListResponseDto(posts);
+    postList.posts.map((postPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
+
+    return postList;
+  }
+
   async getScrapPostList(
     user: AuthorizedUserDto,
     pageSize: number,

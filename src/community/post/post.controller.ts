@@ -100,6 +100,27 @@ export class PostController {
     );
   }
 
+  @Get('/all')
+  @ApiOperation({
+    summary: '전체 게시글 목록 조회',
+    description: '전체 게시글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: '내가 쓴 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getAllPostList(
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getAllPostList(
+      requestDto.pageSize,
+      requestDto.pageNumber,
+    );
+  }
+
   @Get('/scrap')
   @ApiOperation({
     summary: '스크랩한 글 목록 조회',

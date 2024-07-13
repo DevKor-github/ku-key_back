@@ -46,6 +46,21 @@ export class PostRepository extends Repository<PostEntity> {
     return posts;
   }
 
+  async getAllPosts(
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
   async createPost(
     userId: number,
     boardId: number,
