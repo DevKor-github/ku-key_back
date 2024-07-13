@@ -17,6 +17,15 @@ export class CommentRepository extends Repository<CommentEntity> {
     return comment;
   }
 
+  async getCommentByCommentIdWithLike(commentId: number) {
+    const comment = await this.findOne({
+      where: { id: commentId },
+      relations: ['user', 'commentLikes'],
+    });
+
+    return comment;
+  }
+
   async createComment(
     userId: number,
     postId: number,

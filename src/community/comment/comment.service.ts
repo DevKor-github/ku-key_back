@@ -120,7 +120,7 @@ export class CommentService {
     commentId: number,
   ): Promise<DeleteCommentResponseDto> {
     const comment =
-      await this.commentRepository.getCommentByCommentId(commentId);
+      await this.commentRepository.getCommentByCommentIdWithLike(commentId);
     if (!comment) {
       throw new BadRequestException('Wrong commentId!');
     }
@@ -133,10 +133,11 @@ export class CommentService {
     await queryRunner.startTransaction();
 
     try {
-      const deleteResult = await queryRunner.manager.softDelete(CommentEntity, {
-        id: commentId,
-      });
-      if (!deleteResult.affected) {
+      const deleteResult = await queryRunner.manager.softRemove(
+        CommentEntity,
+        comment,
+      );
+      if (!deleteResult.deletedAt) {
         throw new InternalServerErrorException('Comment Delete Failed!');
       }
 

@@ -141,7 +141,12 @@ export class PostRepository extends Repository<PostEntity> {
   async deletePost(postId: number): Promise<boolean> {
     const post = await this.findOne({
       where: { id: postId },
-      relations: ['postImages', 'comments', 'postScraps', 'postReactions'],
+      relations: [
+        'postImages',
+        'comments.commentLikes',
+        'postScraps',
+        'postReactions',
+      ],
     });
     const deleteResult = await this.softRemove(post);
     return deleteResult.deletedAt ? true : false;
