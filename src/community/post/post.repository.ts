@@ -185,11 +185,11 @@ export class PostRepository extends Repository<PostEntity> {
     return deleteResult.deletedAt ? true : false;
   }
 
-  async isExistingPostId(postId: number): Promise<boolean> {
+  async isExistingPostId(postId: number): Promise<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
     });
 
-    return post ? true : false;
+    return post;
   }
 }

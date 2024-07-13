@@ -499,7 +499,7 @@ export class PostService {
     return new ReactPostResponseDto(requestDto.reaction);
   }
 
-  async isExistingPostId(postId: number): Promise<boolean> {
+  async isExistingPostId(postId: number): Promise<PostEntity> {
     return await this.postRepository.isExistingPostId(postId);
   }
 }

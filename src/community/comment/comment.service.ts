@@ -101,6 +101,11 @@ export class CommentService {
       throw new BadRequestException("Other user's comment!");
     }
 
+    const post = await this.postService.isExistingPostId(comment.postId);
+    if (Number(post.boardId) === 2) {
+      throw new BadRequestException('Cannot update comment in Question Board!');
+    }
+
     const isUpdated = await this.commentRepository.updateComment(
       commentId,
       requestDto.content,
@@ -126,6 +131,11 @@ export class CommentService {
     }
     if (comment.userId !== user.id) {
       throw new BadRequestException("Other user's comment!");
+    }
+
+    const post = await this.postService.isExistingPostId(comment.postId);
+    if (Number(post.boardId) === 2) {
+      throw new BadRequestException('Cannot delete comment in Question Board!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
