@@ -102,6 +102,7 @@ export class ClubService {
         await queryRunner.manager.update(ClubEntity, clubId, {
           allLikes: () => 'allLikes + 1',
         });
+        club.allLikes++;
         await queryRunner.manager.save(newClubLike);
         await queryRunner.commitTransaction();
 
@@ -113,7 +114,7 @@ export class ClubService {
           recruitmentPeriod: club.recruitmentPeriod,
           description: club.description,
           imageUrl: club.imageUrl,
-          likeCount: club.allLikes + 1,
+          likeCount: club.allLikes,
           isLiked: true,
         };
       } else {
@@ -121,6 +122,7 @@ export class ClubService {
         await queryRunner.manager.update(ClubEntity, clubId, {
           allLikes: () => 'allLikes - 1',
         });
+        club.allLikes--;
         await queryRunner.commitTransaction();
 
         return {
@@ -131,7 +133,7 @@ export class ClubService {
           recruitmentPeriod: club.recruitmentPeriod,
           description: club.description,
           imageUrl: club.imageUrl,
-          likeCount: club.allLikes - 1,
+          likeCount: club.allLikes,
           isLiked: false,
         };
       }
