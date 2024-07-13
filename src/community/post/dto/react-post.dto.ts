@@ -23,6 +23,6 @@ export class ReactPostResponseDto {
     this.isReacted = isReacted;
   }
 
-  @ApiProperty({ description: '남겨진 반응 종류' })
+  @ApiProperty({ description: '남겨진 반응 종류', enum: Reaction })
   isReacted: Reaction;
 }
