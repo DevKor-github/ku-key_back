@@ -19,11 +19,6 @@ export class GetProfileResponseDto {
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ description: '사용가능 언어' })
-  language: string;
-
-  @IsNotEmpty()
-  @IsString()
   @ApiProperty({ description: '전공' })
   major: string;
 

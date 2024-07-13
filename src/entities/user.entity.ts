@@ -26,23 +26,20 @@ export class UserEntity extends CommonEntity {
   @Column('varchar')
   password: string;
 
-  @Column('varchar', { nullable: true })
-  homeUniversity: string | null;
+  @Column('varchar', { nullable: false })
+  homeUniversity: string;
 
-  @Column('varchar', { nullable: true })
-  language: string | null;
+  @Column('varchar', { nullable: false })
+  country: string;
 
-  @Column('varchar', { nullable: true })
-  country: string | null;
-
-  @Column('varchar', { nullable: true })
-  major: string | null;
+  @Column('varchar', { nullable: false })
+  major: string;
 
   @Column('boolean', { default: false })
   isVerified: boolean;
 
-  @Column('varchar', { nullable: true })
-  name: string | null;
+  @Column('varchar', { nullable: false })
+  name: string;
 
   @Column('timestamp', { nullable: true })
   startDay: Date | null;

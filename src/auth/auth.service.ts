@@ -207,6 +207,10 @@ export class AuthService {
       email: requestDto.email,
       password: requestDto.password,
       username: requestDto.username,
+      name: requestDto.name,
+      country: requestDto.country,
+      homeUniversity: requestDto.homeUniversity,
+      major: requestDto.major,
     });
 
     const studentNumber = requestDto.studentNumber;

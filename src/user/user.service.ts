@@ -88,7 +88,6 @@ export class UserService {
       name: user.name,
       country: user.country,
       homeUniversity: user.homeUniversity,
-      language: user.language,
       major: user.major,
       startDay: user.startDay,
       endDay: user.endDay,
