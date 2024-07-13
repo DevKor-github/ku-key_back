@@ -19,7 +19,7 @@ const DayType = {
 
 export type DayType = (typeof DayType)[keyof typeof DayType];
 
-export class GetCourseInfoByTimeTableIdResponseDto {
+export class GetCourseInfoByTimetableIdResponseDto {
   @ApiProperty({ description: '강의 ID' })
   @IsNumber()
   @IsNotEmpty()

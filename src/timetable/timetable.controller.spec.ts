@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TimeTableController } from './timetable.controller';
+import { TimetableController } from './timetable.controller';
 
 describe('TimetableController', () => {
-  let controller: TimeTableController;
+  let controller: TimetableController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [TimeTableController],
+      controllers: [TimetableController],
     }).compile();
 
-    controller = module.get<TimeTableController>(TimeTableController);
+    controller = module.get<TimetableController>(TimetableController);
   });
 
   it('should be defined', () => {

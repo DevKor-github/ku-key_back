@@ -6,34 +6,34 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
-import { TimeTableEntity } from './timetable.entity';
+import { TimetableEntity } from './timetable.entity';
 import { CourseEntity } from './course.entity';
 
 @Entity('timetable_course')
-export class TimeTableCourseEntity extends CommonEntity {
+export class TimetableCourseEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
   @Column({ nullable: false })
-  timeTableId: number;
+  timetableId: number;
 
   @Column({ nullable: false })
   courseId: number;
 
-  @JoinColumn({ name: 'timeTableId' })
+  @JoinColumn({ name: 'timetableId' })
   @ManyToOne(
-    () => TimeTableEntity,
-    (timeTableEntity) => timeTableEntity.timeTableCourses,
+    () => TimetableEntity,
+    (timetableEntity) => timetableEntity.timetableCourses,
     {
       onDelete: 'CASCADE',
     },
   )
-  timeTable: TimeTableEntity;
+  timetable: TimetableEntity;
 
   @JoinColumn({ name: 'courseId' })
   @ManyToOne(
     () => CourseEntity,
-    (courseEntity) => courseEntity.timeTableCourses,
+    (courseEntity) => courseEntity.timetableCourses,
     {
       onDelete: 'CASCADE',
     },

@@ -50,6 +50,8 @@ export class PostController {
   })
   @ApiQuery({ name: 'boardId', description: '조회하고자 하는 게시판 ID' })
   @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
@@ -60,6 +62,8 @@ export class PostController {
   ): Promise<GetPostListResponseDto> {
     return await this.postService.getPostList(
       requestDto.boardId,
+      requestDto.pageSize,
+      requestDto.pageNumber,
       requestDto.keyword,
     );
   }

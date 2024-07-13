@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { CourseDetailEntity } from './course-detail.entity';
-import { TimeTableCourseEntity } from './timetable-course.entity';
+import { TimetableCourseEntity } from './timetable-course.entity';
 
 @Entity('course')
 export class CourseEntity extends CommonEntity {
@@ -48,8 +48,8 @@ export class CourseEntity extends CommonEntity {
   courseDetails: CourseDetailEntity[];
 
   @OneToMany(
-    () => TimeTableCourseEntity,
-    (timeTableCourseEntity) => timeTableCourseEntity.course,
+    () => TimetableCourseEntity,
+    (timetableCourseEntity) => timetableCourseEntity.course,
   )
-  timeTableCourses: TimeTableCourseEntity[];
+  timetableCourses: TimetableCourseEntity[];
 }
