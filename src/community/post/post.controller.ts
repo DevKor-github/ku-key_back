@@ -25,9 +25,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import {
-  GetPostListRequestDto,
-  GetPostListResponseDto,
-} from './dto/get-post-list.dto';
+  GetPostListWithBoardRequestDto,
+  GetPostListWithBoardResponseDto,
+} from './dto/get-post-list-with-board.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -37,9 +37,9 @@ import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import {
-  GetMyPostListRequestDto,
-  GetMyPostListResponseDto,
-} from './dto/get-my-post-list.dto';
+  GetPostListRequestDto,
+  GetPostListResponseDto,
+} from './dto/get-post-list.dto';
 import {
   ReactPostRequestDto,
   ReactPostResponseDto,
@@ -64,11 +64,11 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
-    type: GetPostListResponseDto,
+    type: GetPostListWithBoardResponseDto,
   })
   async getPostList(
-    @Query() requestDto: GetPostListRequestDto,
-  ): Promise<GetPostListResponseDto> {
+    @Query() requestDto: GetPostListWithBoardRequestDto,
+  ): Promise<GetPostListWithBoardResponseDto> {
     return await this.postService.getPostList(
       requestDto.boardId,
       requestDto.pageSize,
@@ -87,12 +87,12 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '내가 쓴 글 목록 조회 성공',
-    type: GetMyPostListResponseDto,
+    type: GetPostListResponseDto,
   })
   async getMyPostList(
     @User() user: AuthorizedUserDto,
-    @Query() requestDto: GetMyPostListRequestDto,
-  ): Promise<GetMyPostListResponseDto> {
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
     return await this.postService.getMyPostList(
       user,
       requestDto.pageSize,
@@ -110,12 +110,12 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '스크랩한 글 목록 조회 성공',
-    type: GetMyPostListResponseDto,
+    type: GetPostListResponseDto,
   })
   async getScrapPostList(
     @User() user: AuthorizedUserDto,
-    @Query() requestDto: GetMyPostListRequestDto,
-  ): Promise<GetMyPostListResponseDto> {
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
     return await this.postService.getScrapPostList(
       user,
       requestDto.pageSize,

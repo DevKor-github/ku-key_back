@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { BoardService } from '../board/board.service';
-import { GetPostListResponseDto } from './dto/get-post-list.dto';
+import { GetPostListWithBoardResponseDto } from './dto/get-post-list-with-board.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
 import { FileService } from 'src/common/file.service';
@@ -17,7 +17,7 @@ import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
-import { GetMyPostListResponseDto } from './dto/get-my-post-list.dto';
+import { GetPostListResponseDto } from './dto/get-post-list.dto';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 import {
   ReactPostRequestDto,
@@ -40,7 +40,7 @@ export class PostService {
     pageSize: number,
     pageNumber: number,
     keyword?: string,
-  ): Promise<GetPostListResponseDto> {
+  ): Promise<GetPostListWithBoardResponseDto> {
     const board = await this.boardService.getBoardById(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
@@ -57,7 +57,7 @@ export class PostService {
           pageSize,
           pageNumber,
         );
-    const postList = new GetPostListResponseDto(board, posts);
+    const postList = new GetPostListWithBoardResponseDto(board, posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;
       if (imgDir) {
@@ -326,13 +326,13 @@ export class PostService {
     user: AuthorizedUserDto,
     pageSize: number,
     pageNumber: number,
-  ): Promise<GetMyPostListResponseDto> {
+  ): Promise<GetPostListResponseDto> {
     const posts = await this.postRepository.getPostsByUserId(
       user.id,
       pageSize,
       pageNumber,
     );
-    const postList = new GetMyPostListResponseDto(posts);
+    const postList = new GetPostListResponseDto(posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;
       if (imgDir) {
@@ -347,7 +347,7 @@ export class PostService {
     user: AuthorizedUserDto,
     pageSize: number,
     pageNumber: number,
-  ): Promise<GetMyPostListResponseDto> {
+  ): Promise<GetPostListResponseDto> {
     const postIds = await this.postScrapRepository.getScrapPostIdsWithUserId(
       user.id,
     );
@@ -356,7 +356,7 @@ export class PostService {
       pageSize,
       pageNumber,
     );
-    const postList = new GetMyPostListResponseDto(posts);
+    const postList = new GetPostListResponseDto(posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;
       if (imgDir) {
