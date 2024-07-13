@@ -5,7 +5,7 @@ export class GetRecommendClubResponseDto extends PickType(GetClubResponseDto, [
   'name',
   'summary',
   'imageUrl',
-] as const) {
+]) {
   @ApiProperty({ description: '동아리 카테고리' })
   category: string;
 }
