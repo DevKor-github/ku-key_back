@@ -13,6 +13,8 @@ import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
 import { DataSource } from 'typeorm';
 import { CommentEntity } from 'src/entities/comment.entity';
 import { PostEntity } from 'src/entities/post.entity';
+import { LikeCommentResponseDto } from './dto/like-comment.dto';
+import { CommentLikeEntity } from 'src/entities/comment-like.entity';
 
 @Injectable()
 export class CommentService {
@@ -157,5 +159,74 @@ export class CommentService {
     }
 
     return new DeleteCommentResponseDto(true);
+  }
+
+  async likeComment(
+    user: AuthorizedUserDto,
+    commentId: number,
+  ): Promise<LikeCommentResponseDto> {
+    if (!(await this.commentRepository.isExistingCommentId(commentId))) {
+      throw new BadRequestException('Wrong CommentId!');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const like = await queryRunner.manager.findOne(CommentLikeEntity, {
+        where: {
+          userId: user.id,
+          commentId: commentId,
+        },
+      });
+
+      if (like) {
+        const deleteResult = await queryRunner.manager.delete(
+          CommentLikeEntity,
+          {
+            userId: user.id,
+            commentId: commentId,
+          },
+        );
+        if (!deleteResult.affected) {
+          throw new InternalServerErrorException('Like Cancel Failed!');
+        }
+
+        const updateResult = await queryRunner.manager.decrement(
+          CommentEntity,
+          { id: commentId },
+          'likeCount',
+          1,
+        );
+        if (!updateResult.affected) {
+          throw new InternalServerErrorException('Like Cancel Failed!');
+        }
+      } else {
+        const newLike = queryRunner.manager.create(CommentLikeEntity, {
+          userId: user.id,
+          commentId: commentId,
+        });
+        await queryRunner.manager.save(newLike);
+
+        const updateResult = await queryRunner.manager.increment(
+          CommentEntity,
+          { id: commentId },
+          'likeCount',
+          1,
+        );
+        if (!updateResult.affected) {
+          throw new InternalServerErrorException('Like Failed!');
+        }
+      }
+      await queryRunner.commitTransaction();
+
+      return new LikeCommentResponseDto(!like);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

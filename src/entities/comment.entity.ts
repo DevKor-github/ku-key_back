@@ -31,6 +31,9 @@ export class CommentEntity extends CommonEntity {
   @Column('boolean', { nullable: false })
   isAnonymous: boolean;
 
+  @Column('int', { nullable: false, default: 0 })
+  likeCount: number;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.comments, {
     onDelete: 'CASCADE',

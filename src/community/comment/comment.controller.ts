@@ -26,6 +26,7 @@ import { CreateCommentRequestDto } from './dto/create-comment.dto';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
+import { LikeCommentResponseDto } from './dto/like-comment.dto';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -117,5 +118,26 @@ export class CommentController {
     @Param('commentId') commentId: number,
   ): Promise<DeleteCommentResponseDto> {
     return await this.commentService.deleteComment(user, commentId);
+  }
+
+  @Post(':commentId/like')
+  @ApiOperation({
+    summary: '댓글 좋아요',
+    description: '댓글을 좋아요 합니다. 이미 눌렀다면 취소합니다.',
+  })
+  @ApiParam({
+    name: 'commentId',
+    description: '댓글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '댓글 좋아요(취소) 성공',
+    type: LikeCommentResponseDto,
+  })
+  async scrapPost(
+    @User() user: AuthorizedUserDto,
+    @Param('commentId') commentId: number,
+  ): Promise<LikeCommentResponseDto> {
+    return await this.commentService.likeComment(user, commentId);
   }
 }

@@ -20,6 +20,7 @@ export class GetCommentResponseDto {
             commentEntity.user.username.length -
               Math.floor(commentEntity.user.username.length / 2),
           );
+      this.likeCount = commentEntity.likeCount;
     }
   }
   @ApiProperty({ description: '댓글 고유 ID' })
@@ -42,4 +43,7 @@ export class GetCommentResponseDto {
 
   @ApiProperty({ description: '댓글을 작성한 사용자(익명이면 null)' })
   username?: string | null;
+
+  @ApiProperty({ description: '좋아요 수' })
+  likeCount?: number;
 }

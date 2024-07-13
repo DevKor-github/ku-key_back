@@ -56,4 +56,9 @@ export class CommentRepository extends Repository<CommentEntity> {
     const deleteResult = await this.softDelete({ id: commentId });
     return deleteResult.affected ? true : false;
   }
+
+  async isExistingCommentId(commentId: number): Promise<boolean> {
+    const comment = await this.findOne({ where: { id: commentId } });
+    return comment ? true : false;
+  }
 }
