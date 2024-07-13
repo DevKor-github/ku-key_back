@@ -8,7 +8,7 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     super(CalendarEntity, dataSource.createEntityManager());
   }
 
-  async createcalendarData(
+  async createCalendarData(
     date: string,
     title: string,
     description: string,

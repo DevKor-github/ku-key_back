@@ -57,6 +57,6 @@ export class CalendarController {
   async createCalendarData(
     @Body() body: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
-    return await this.calendarService.createcalendarData(body);
+    return await this.calendarService.createCalendarData(body);
   }
 }

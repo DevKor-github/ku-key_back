@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
 import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
-// import { Between } from 'typeorm';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-response.dto';
@@ -48,11 +47,11 @@ export class CalendarService {
     return monthCalendarData;
   }
 
-  async createcalendarData(
+  async createCalendarData(
     requestDto: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
     const { date, title, description } = requestDto;
-    const calendarData = await this.calendarRepository.createcalendarData(
+    const calendarData = await this.calendarRepository.createCalendarData(
       date,
       title,
       description,
