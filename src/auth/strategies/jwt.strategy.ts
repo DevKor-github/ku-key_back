@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(request: Request, payload: any): Promise<AuthorizedUserDto> {
-    if (!payload.id) {
+    if (payload.keepingLogin) {
       throw new BadRequestException("Don't use RefreshToken as AccessToken!");
     }
     if (request.url !== '/auth/logout') {
