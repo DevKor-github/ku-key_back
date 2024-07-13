@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import {
   ApiBearerAuth,
@@ -14,7 +23,9 @@ import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto
 import { GetCalendarDataQueryDto } from './dto/get-calendar-data-query-dto';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
-import { CreateCalendarDataResponseDto } from './dto/create-calendar-response.dto';
+import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
+import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
+import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -58,5 +69,19 @@ export class CalendarController {
     @Body() body: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
     return await this.calendarService.createCalendarData(body);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Patch('/:calendarId')
+  @ApiOperation({
+    summary: '특정 행사/일정 수정',
+    description: '행사/일정 id를 받아 해당하는 행사/일정을 수정합니다.',
+  })
+  @ApiOkResponse()
+  async updateCalendarData(
+    @Param('calendarId') calendarId: number,
+    @Body() body: UpdateCalendarDataRequestDto,
+  ): Promise<UpdateCalendarDataResponseDto> {
+    return await this.calendarService.updateCalendarData(calendarId, body);
   }
 }

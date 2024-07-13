@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 import { DataSource, Repository } from 'typeorm';
+import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 
 @Injectable()
 export class CalendarRepository extends Repository<CalendarEntity> {
@@ -20,5 +21,23 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     });
 
     return await this.save(calendarData);
+  }
+
+  async updateCalendarData(
+    calendarId: number,
+    requestDto: UpdateCalendarDataRequestDto,
+  ): Promise<boolean> {
+    if (requestDto.date) {
+      const { date, ...others } = requestDto;
+      const newDate = new Date(date);
+      const updated = await this.update(
+        { id: calendarId },
+        { date: newDate, ...others },
+      );
+      return updated.affected ? true : false;
+    }
+    const updated = await this.update({ id: calendarId }, requestDto);
+
+    return updated.affected ? true : false;
   }
 }

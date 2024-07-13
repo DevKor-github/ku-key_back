@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
 import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
-import { CreateCalendarDataResponseDto } from './dto/create-calendar-response.dto';
+import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { Between } from 'typeorm';
+import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
+import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 
 @Injectable()
 export class CalendarService {
@@ -64,6 +66,22 @@ export class CalendarService {
       title: calendarData.title,
       description: calendarData.description,
     };
+  }
+
+  async updateCalendarData(
+    calendarId: number,
+    requestDto: UpdateCalendarDataRequestDto,
+  ): Promise<UpdateCalendarDataResponseDto> {
+    const isUpdated = await this.calendarRepository.updateCalendarData(
+      calendarId,
+      requestDto,
+    );
+
+    if (!isUpdated) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return new UpdateCalendarDataResponseDto(true);
   }
 
   // 월-날짜 매핑 함수
