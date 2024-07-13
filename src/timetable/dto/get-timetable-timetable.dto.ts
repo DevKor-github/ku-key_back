@@ -13,5 +13,5 @@ export class GetTimetableByTimetableIdDto {
   color: string;
 
   @ApiProperty({ description: '시간표 이름' })
-  tableName: string;
+  timetableName: string;
 }

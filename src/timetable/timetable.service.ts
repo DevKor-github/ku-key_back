@@ -282,7 +282,7 @@ export class TimetableService {
         courses: [],
         schedules: [],
         color: timetable.color,
-        tableName: timetable.timetableName,
+        timetableName: timetable.timetableName,
       };
       timetable.timetableCourses.forEach((courseEntry) => {
         const {
