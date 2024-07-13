@@ -148,7 +148,6 @@ export class FriendshipService {
             { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
             { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
           ],
-          relations: ['fromUser', 'toUser'],
         },
       );
 
@@ -248,7 +247,7 @@ export class FriendshipService {
     try {
       const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
         where: { id: friendshipId },
-        relations: ['fromUser', 'toUser'],
+        relations: ['toUser'],
       });
 
       if (!friendship) {
@@ -297,7 +296,7 @@ export class FriendshipService {
     try {
       const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
         where: { id: friendshipId },
-        relations: ['fromUser', 'toUser'],
+        relations: ['toUser'],
       });
 
       if (!friendship) {
@@ -346,7 +345,7 @@ export class FriendshipService {
     try {
       const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
         where: { id: friendshipId },
-        relations: ['fromUser', 'toUser'],
+        relations: ['fromUser'],
       });
 
       if (!friendship) {
