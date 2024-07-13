@@ -11,6 +11,8 @@ import { FriendshipEntity } from './friendship.entity';
 import { TimetableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
+import { CourseReviewEntity } from './course-review.entity';
+import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -56,6 +58,9 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
+  @Column('boolean', { default: false })
+  isViewable: boolean;
+
   @OneToOne(
     () => KuVerificationEntity,
     (kuVerification) => kuVerification.user,
@@ -77,4 +82,17 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
   comments: CommentEntity[];
+
+  @OneToMany(
+    () => CourseReviewEntity,
+    (courseReviewEntity) => courseReviewEntity.user,
+  )
+  courseReviews: CourseReviewEntity[];
+
+  @OneToMany(
+    () => CourseReviewRecommendEntity,
+    (courseReviewRecommendEntity) => courseReviewRecommendEntity.user,
+    { cascade: true },
+  )
+  courseReviewRecommends: CourseReviewRecommendEntity[];
 }

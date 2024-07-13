@@ -39,6 +39,18 @@ export class CourseService {
     });
   }
 
+  // 학수번호-교수님 성함으로 강의 존재 여부 확인
+  async searchCourseCodeWithProfessorName(
+    courseCode: string,
+    professorName: string,
+  ): Promise<boolean> {
+    const course = await this.courseRepository.findOne({
+      where: { courseCode: Like(`${courseCode}%`), professorName },
+    });
+
+    return course ? true : false;
+  }
+
   // 학수번호 검색
   async searchCourseCode(
     searchCourseCodeDto: SearchCourseCodeDto,
