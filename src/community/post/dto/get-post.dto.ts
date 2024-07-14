@@ -5,8 +5,12 @@ import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostEntity } from 'src/entities/post.entity';
 
 class Comment extends GetCommentResponseDto {
-  constructor(commentEntity: CommentEntity, userId: number) {
-    super(commentEntity, userId);
+  constructor(
+    commentEntity: CommentEntity,
+    userId: number,
+    anonymousNumber: number,
+  ) {
+    super(commentEntity, userId, anonymousNumber);
     if (!commentEntity.parentCommentId) {
       this.reply = [];
     }
@@ -77,15 +81,19 @@ export class GetPostResponseDto {
     postEntity.comments
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map((comment) => {
+        const anonymousNumber = postEntity.commentAnonymousNumbers.filter(
+          (commentAnonymousNumber) =>
+            commentAnonymousNumber.userId === comment.userId,
+        )[0].anonymousNumber;
         if (!comment.parentCommentId) {
-          this.comments.push(new Comment(comment, userId));
+          this.comments.push(new Comment(comment, userId, anonymousNumber));
         } else {
           this.comments
             .find(
               (existingComment) =>
                 existingComment.id === comment.parentCommentId,
             )
-            .reply.push(new Comment(comment, userId));
+            .reply.push(new Comment(comment, userId, anonymousNumber));
         }
       });
 

@@ -109,7 +109,12 @@ export class PostRepository extends Repository<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
       withDeleted: true,
-      relations: ['user', 'postImages', 'comments.user'],
+      relations: [
+        'user',
+        'postImages',
+        'comments.user',
+        'commentAnonymousNumbers',
+      ],
     });
     return post;
   }

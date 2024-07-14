@@ -16,6 +16,7 @@ import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
+import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -113,4 +114,10 @@ export class UserEntity extends CommonEntity {
     (commentLikeEntity) => commentLikeEntity.user,
   )
   commentLikes: CommentLikeEntity[];
+
+  @OneToMany(
+    () => CommentAnonymousNumberEntity,
+    (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.user,
+  )
+  commentAnonymousNumbers: CommentAnonymousNumberEntity[];
 }

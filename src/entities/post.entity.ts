@@ -13,6 +13,7 @@ import { PostImageEntity } from './post-image.entity';
 import { CommentEntity } from './comment.entity';
 import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
+import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
 
 @Entity('post')
 export class PostEntity extends CommonEntity {
@@ -94,4 +95,13 @@ export class PostEntity extends CommonEntity {
     },
   )
   postReactions: PostReactionEntity[];
+
+  @OneToMany(
+    () => CommentAnonymousNumberEntity,
+    (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.post,
+    {
+      cascade: true,
+    },
+  )
+  commentAnonymousNumbers: CommentAnonymousNumberEntity[];
 }

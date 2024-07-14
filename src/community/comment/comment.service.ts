@@ -10,11 +10,13 @@ import { PostService } from '../post/post.service';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { CommentEntity } from 'src/entities/comment.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { LikeCommentResponseDto } from './dto/like-comment.dto';
 import { CommentLikeEntity } from 'src/entities/comment-like.entity';
+import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-number.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CommentService {
@@ -22,6 +24,8 @@ export class CommentService {
     private readonly commentRepository: CommentRepository,
     private readonly postService: PostService,
     private readonly dataSource: DataSource,
+    @InjectRepository(CommentAnonymousNumberEntity)
+    private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
   ) {}
 
   async createComment(
@@ -30,7 +34,8 @@ export class CommentService {
     requestDto: CreateCommentRequestDto,
     parentCommentId?: number,
   ) {
-    if (!(await this.postService.isExistingPostId(postId))) {
+    const post = await this.postService.isExistingPostId(postId);
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
     if (parentCommentId) {
@@ -72,13 +77,70 @@ export class CommentService {
       if (!updateResult.affected) {
         throw new InternalServerErrorException('Comment Create Failed!');
       }
+      let anonymousNumber: number;
+      const myAnonymousNumber = await queryRunner.manager.findOne(
+        CommentAnonymousNumberEntity,
+        { where: { postId: postId, userId: user.id } },
+      );
+      if (myAnonymousNumber) {
+        anonymousNumber = myAnonymousNumber.anonymousNumber;
+      } else {
+        if (post.userId === user.id) {
+          const newAnonymousNumber = queryRunner.manager.create(
+            CommentAnonymousNumberEntity,
+            {
+              userId: user.id,
+              postId: postId,
+              anonymousNumber: 0,
+            },
+          );
+          await queryRunner.manager.save(newAnonymousNumber);
+          anonymousNumber = 0;
+        } else {
+          const recentAnonymousNumber = await queryRunner.manager.findOne(
+            CommentAnonymousNumberEntity,
+            {
+              where: { postId: postId, anonymousNumber: Not(0) },
+              order: { createdAt: 'DESC' },
+            },
+          );
+          console.log(recentAnonymousNumber);
+          if (!recentAnonymousNumber) {
+            const newAnonymousNumber = queryRunner.manager.create(
+              CommentAnonymousNumberEntity,
+              {
+                userId: user.id,
+                postId: postId,
+                anonymousNumber: 1,
+              },
+            );
+            await queryRunner.manager.save(newAnonymousNumber);
+            anonymousNumber = 1;
+          } else {
+            const newAnonymousNumber = queryRunner.manager.create(
+              CommentAnonymousNumberEntity,
+              {
+                userId: user.id,
+                postId: postId,
+                anonymousNumber: recentAnonymousNumber.anonymousNumber + 1,
+              },
+            );
+            await queryRunner.manager.save(newAnonymousNumber);
+            anonymousNumber = recentAnonymousNumber.anonymousNumber + 1;
+          }
+        }
+      }
 
       await queryRunner.commitTransaction();
 
       const createdComment = await this.commentRepository.getCommentByCommentId(
         createResult.id,
       );
-      return new GetCommentResponseDto(createdComment, user.id);
+      return new GetCommentResponseDto(
+        createdComment,
+        user.id,
+        anonymousNumber,
+      );
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -117,7 +179,15 @@ export class CommentService {
 
     const updatedComment =
       await this.commentRepository.getCommentByCommentId(commentId);
-    return new GetCommentResponseDto(updatedComment, user.id);
+    const anonymousNumber = (
+      await this.commentAnonymousNumberRepository.findOne({
+        where: {
+          postId: updatedComment.postId,
+          userId: user.id,
+        },
+      })
+    ).anonymousNumber;
+    return new GetCommentResponseDto(updatedComment, user.id, anonymousNumber);
   }
 
   async deleteComment(
