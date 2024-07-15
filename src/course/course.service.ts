@@ -258,11 +258,29 @@ export class CourseService {
   }
 
   // 전공 리스트 반환
-  async getMajorCourses(major: string): Promise<CommonCourseResponseDto[]> {
+  async getMajorCourses(
+    major: string,
+    cursorId: number,
+  ): Promise<PaginatedCoursesDto> {
     if (!major) throw new BadRequestException('Major is required!');
-    return await this.courseRepository.find({
-      where: { category: 'Major', major: major },
-    });
+    let courses = [];
+    if (cursorId) {
+      courses = await this.courseRepository.find({
+        where: { category: 'Major', major: major, id: MoreThan(cursorId) },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: { category: 'Major', major: major },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   // 학문의 기초 리스트 반환

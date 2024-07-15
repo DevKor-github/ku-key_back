@@ -239,16 +239,21 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async getMajorCourses(
     @Query('major') major: string,
-  ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getMajorCourses(major);
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getMajorCourses(major, cursorId);
   }
 
   // 학문의 기초 리스트
