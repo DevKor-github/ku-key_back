@@ -48,15 +48,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '학수번호로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchCourseCode(
     @Query() searchCourseCodeDto: SearchCourseCodeDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
 

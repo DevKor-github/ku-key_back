@@ -3,7 +3,7 @@ import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { Like } from 'typeorm';
+import { Like, MoreThan } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
@@ -67,10 +67,28 @@ export class CourseService {
   // 학수번호 검색
   async searchCourseCode(
     searchCourseCodeDto: SearchCourseCodeDto,
-  ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
-    });
+  ): Promise<PaginatedCoursesDto> {
+    let courses = [];
+    if (searchCourseCodeDto.cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          courseCode: Like(`${searchCourseCodeDto.courseCode}%`),
+          id: MoreThan(searchCourseCodeDto.cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   // 전공 과목명 검색 (띄어쓰기로 단어 구분)
