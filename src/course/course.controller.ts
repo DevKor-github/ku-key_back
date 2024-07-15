@@ -269,16 +269,24 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '학문의 기초 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async getAcademicFoundationCourses(
     @Query('college') college: string,
-  ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getAcademicFoundationCourses(college);
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getAcademicFoundationCourses(
+      college,
+      cursorId,
+    );
   }
 
   @Get('/:courseId')

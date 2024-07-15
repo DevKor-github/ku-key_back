@@ -286,11 +286,31 @@ export class CourseService {
   // 학문의 기초 리스트 반환
   async getAcademicFoundationCourses(
     college: string,
-  ): Promise<CommonCourseResponseDto[]> {
+    cursorId: number,
+  ): Promise<PaginatedCoursesDto> {
     if (!college) throw new BadRequestException('College is required!');
-    return await this.courseRepository.find({
-      where: { category: 'Academic Foundations', college: college },
-    });
+    let courses = [];
+    if (cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          category: 'Academic Foundations',
+          college: college,
+          id: MoreThan(cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: { category: 'Academic Foundations', college: college },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   async updateCourseTotalRate(
