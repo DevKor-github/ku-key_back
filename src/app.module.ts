@@ -16,6 +16,7 @@ import { BoardModule } from './community/board/board.module';
 import { PostModule } from './community/post/post.module';
 import { CommentModule } from './community/comment/comment.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { InstitutionModule } from './institution/institution.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -56,6 +57,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
     PostModule,
     CommentModule,
     CalendarModule,
+    InstitutionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
