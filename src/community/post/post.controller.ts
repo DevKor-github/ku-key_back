@@ -109,7 +109,7 @@ export class PostController {
   @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
-    description: '내가 쓴 글 목록 조회 성공',
+    description: '전체 게시글 목록 조회 성공',
     type: GetPostListResponseDto,
   })
   async getAllPostList(
@@ -130,7 +130,7 @@ export class PostController {
   @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
-    description: '내가 쓴 글 목록 조회 성공',
+    description: 'hot 게시글 목록 조회 성공',
     type: GetPostListResponseDto,
   })
   async getHotPostList(
