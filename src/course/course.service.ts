@@ -17,10 +17,6 @@ export class CourseService {
     private courseDetailRepository: CourseDetailRepository,
   ) {}
 
-  async getAllCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find();
-  }
-
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
     return await this.courseRepository.findOne({
       where: { id: courseId },

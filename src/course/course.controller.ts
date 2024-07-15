@@ -20,21 +20,6 @@ import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 export class CourseController {
   constructor(private courseService: CourseService) {}
 
-  @Get()
-  @ApiOperation({
-    summary: '모든 강의 조회',
-    description: '등록된 모든 강의를 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '모든 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
-  })
-  async getAllCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getAllCourses();
-  }
-
   // 학수번호 검색
   @UseGuards(JwtAuthGuard)
   @Get('search-course-code')
