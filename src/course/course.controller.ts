@@ -210,14 +210,20 @@ export class CourseController {
     summary: '교양 강의 조회',
     description: '모든 교양 강의를 조회합니다.',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
-  async getGeneralCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getGeneralCourses();
+  async getGeneralCourses(
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getGeneralCourses(cursorId);
   }
 
   // 전공 리스트 (학부별)

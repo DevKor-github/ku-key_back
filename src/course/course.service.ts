@@ -236,10 +236,25 @@ export class CourseService {
   }
 
   // 교양 리스트 반환
-  async getGeneralCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseRepository.find({
-      where: { category: 'General Studies' },
-    });
+  async getGeneralCourses(cursorId: number): Promise<PaginatedCoursesDto> {
+    let courses = [];
+    if (cursorId) {
+      courses = await this.courseRepository.find({
+        where: { category: 'General Studies', id: MoreThan(cursorId) },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: { category: 'General Studies' },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   // 전공 리스트 반환
