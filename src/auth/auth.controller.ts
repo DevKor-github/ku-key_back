@@ -17,7 +17,6 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from './dto/authorized-user-dto';
 import { VerificationRequestDto } from './dto/verification-request.dto';
 import { VerifyEmailRequestDto } from './dto/verify-email-request.dto';
-import { AccessTokenDto } from './dto/accessToken.dto';
 import { VerificationResponseDto } from './dto/verification-response.dto';
 import { VerifyEmailResponseDto } from './dto/verify-email-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -51,6 +50,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AdminRequestDto } from './dto/admin-request.dto';
+import { JwtTokenDto } from './dto/jwtToken.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -79,26 +79,25 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    console.log('user : ', user);
     const keepingLogin = body.keepingLogin;
     return await this.authService.logIn(user, keepingLogin);
   }
 
   @UseGuards(RefreshAuthGuard)
   @ApiOperation({
-    summary: 'Access Token 재발급',
-    description: 'Refresh Token을 사용하여 Access Token을 재발급받습니다.',
+    summary: 'Token 재발급',
+    description:
+      'Refresh Token을 사용하여 Access Token과 Refresh Token을 재발급받습니다.',
   })
   @ApiBearerAuth('refreshToken')
   @ApiResponse({
     status: 201,
-    description: 'Access Token 재발급 성공',
-    type: AccessTokenDto,
+    description: 'Token 재발급 성공',
+    type: JwtTokenDto,
   })
   @Post('refresh')
-  refreshToken(@User() user: AuthorizedUserDto): AccessTokenDto {
-    console.log('user : ', user);
-    return this.authService.refreshToken(user);
+  async refreshToken(@User() user: AuthorizedUserDto): Promise<JwtTokenDto> {
+    return await this.authService.refreshToken(user);
   }
 
   @UseGuards(JwtAuthGuard)

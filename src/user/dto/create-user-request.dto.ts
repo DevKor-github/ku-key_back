@@ -17,4 +17,24 @@ export class CreateUserRequestDto {
   @IsString()
   @ApiProperty({ description: '중복확인 완료된 userId' })
   username: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: '본명' })
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: '국적' })
+  country: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: '모교' })
+  homeUniversity: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: '전공' })
+  major: string;
 }

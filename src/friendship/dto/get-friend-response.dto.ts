@@ -29,6 +29,6 @@ export class GetFriendResponseDto {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ description: '사용 언어' })
-  language: string;
+  @ApiProperty({ description: '출신 나라' })
+  country: string;
 }
