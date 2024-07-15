@@ -134,7 +134,7 @@ export class CommentController {
     description: '댓글 좋아요(취소) 성공',
     type: LikeCommentResponseDto,
   })
-  async scrapPost(
+  async likeComment(
     @User() user: AuthorizedUserDto,
     @Param('commentId') commentId: number,
   ): Promise<LikeCommentResponseDto> {
