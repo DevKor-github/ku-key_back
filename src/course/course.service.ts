@@ -133,18 +133,38 @@ export class CourseService {
   async searchMajorProfessorName(
     major: string,
     searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     if (!major) {
       throw new BadRequestException('전공을 입력하세요!');
     }
+    let courses = [];
 
-    return await this.courseRepository.find({
-      where: {
-        professorName: Like(`%${searchProfessorNameDto.professorName}%`),
-        major: major,
-        category: 'Major',
-      },
-    });
+    if (searchProfessorNameDto.cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          major: major,
+          category: 'Major',
+          id: MoreThan(searchProfessorNameDto.cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          major: major,
+          category: 'Major',
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   // 교양 과목명 검색 (띄어쓰기로 단어 구분)
@@ -186,13 +206,33 @@ export class CourseService {
   // 교양 교수님 성함 검색
   async searchGeneralProfessorName(
     searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CourseEntity[]> {
-    return await this.courseRepository.find({
-      where: {
-        professorName: Like(`%${searchProfessorNameDto.professorName}%`),
-        category: 'General Studies',
-      },
-    });
+  ): Promise<PaginatedCoursesDto> {
+    let courses = [];
+
+    if (searchProfessorNameDto.cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          category: 'General Studies',
+          id: MoreThan(searchProfessorNameDto.cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: {
+          professorName: Like(`%${searchProfessorNameDto.professorName}%`),
+          category: 'General Studies',
+        },
+        order: { id: 'ASC' },
+        take: 5,
+      });
+    }
+    const response = courses.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 
   // 교양 리스트 반환

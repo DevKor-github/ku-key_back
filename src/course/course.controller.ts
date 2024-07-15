@@ -151,16 +151,20 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursor ID',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 과목 담당 교수님 성함으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchMajorProfessorName(
     @Query('major') major: string,
     @Query() searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchMajorProfessorName(
       major,
       searchProfessorNameDto,
@@ -180,15 +184,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursor ID',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 담당 교수님 성함으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchGeneralProfessorName(
     @Query() searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchGeneralProfessorName(
       searchProfessorNameDto,
     );
