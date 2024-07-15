@@ -13,6 +13,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
+import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 
 @ApiTags('course')
 @Controller('course')
@@ -77,16 +78,20 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursor ID',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 과목명으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchMajorCourseName(
     @Query('major') major: string,
     @Query() searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchMajorCourseName(
       major,
       searchCourseNameDto,
@@ -106,15 +111,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursor ID',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 과목명으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchGeneralCourseName(
     @Query() searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchGeneralCourseName(
       searchCourseNameDto,
     );

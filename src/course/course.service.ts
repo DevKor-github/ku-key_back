@@ -8,6 +8,7 @@ import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
+import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 
 @Injectable()
 export class CourseService {
@@ -76,7 +77,7 @@ export class CourseService {
   async searchMajorCourseName(
     major: string,
     searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     if (!major) throw new BadRequestException('전공을 입력하세요!');
 
     try {
@@ -84,14 +85,26 @@ export class CourseService {
         .split(/\s+/)
         .filter((word) => word.length);
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-      return await this.courseRepository
+      const queryBuilder = this.courseRepository
         .createQueryBuilder('course')
         .where(`course.courseName REGEXP :pattern`, {
           pattern: `^${searchPattern}.*$`,
         })
         .andWhere('course.major = :major', { major })
         .andWhere('course.category = :category', { category: 'Major' })
-        .getMany();
+        .orderBy('course.id', 'ASC')
+        .limit(5);
+
+      if (searchCourseNameDto.cursorId) {
+        queryBuilder.andWhere('course.id > :cursorId', {
+          cursorId: searchCourseNameDto.cursorId,
+        });
+      }
+      const majorCourses = await queryBuilder.getMany();
+      const response = majorCourses.map(
+        (course) => new CommonCourseResponseDto(course),
+      );
+      return new PaginatedCoursesDto(response);
     } catch (error) {
       console.log(error);
       throw error;
@@ -119,13 +132,13 @@ export class CourseService {
   // 교양 과목명 검색 (띄어쓰기로 단어 구분)
   async searchGeneralCourseName(
     searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CourseEntity[]> {
+  ): Promise<PaginatedCoursesDto> {
     try {
       const words = searchCourseNameDto.courseName
         .split(/\s+/)
         .filter((word) => word.length);
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-      return await this.courseRepository
+      const queryBuilder = await this.courseRepository
         .createQueryBuilder('course')
         .where(`course.courseName REGEXP :pattern`, {
           pattern: `^${searchPattern}.*$`,
@@ -133,7 +146,19 @@ export class CourseService {
         .andWhere('course.category = :category', {
           category: 'General Studies',
         })
-        .getMany();
+        .orderBy('course.id', 'ASC')
+        .limit(5);
+
+      if (searchCourseNameDto.cursorId) {
+        queryBuilder.andWhere('course.id > :cursorId', {
+          cursorId: searchCourseNameDto.cursorId,
+        });
+      }
+      const generalCourses = await queryBuilder.getMany();
+      const response = generalCourses.map(
+        (course) => new CommonCourseResponseDto(course),
+      );
+      return new PaginatedCoursesDto(response);
     } catch (error) {
       console.log(error);
       throw error;

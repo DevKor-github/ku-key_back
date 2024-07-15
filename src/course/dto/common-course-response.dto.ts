@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { CourseEntity } from 'src/entities/course.entity';
 
 export class CommonCourseResponseDto {
   @ApiProperty({ description: 'ID' })
@@ -40,4 +40,20 @@ export class CommonCourseResponseDto {
 
   @ApiProperty({ description: '강의평점' })
   totalRate: number;
+
+  constructor(course: CourseEntity) {
+    this.id = course.id;
+    this.professorName = course.professorName;
+    this.category = course.category;
+    this.college = course.college;
+    this.courseName = course.courseName;
+    this.courseCode = course.courseCode;
+    this.credit = course.credit;
+    this.major = course.major;
+    this.hasExchangeSeat = course.hasExchangeSeat;
+    this.year = course.year;
+    this.semester = course.semester;
+    this.syllabus = course.syllabus;
+    this.totalRate = course.totalRate;
+  }
 }
