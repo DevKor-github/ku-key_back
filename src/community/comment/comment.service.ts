@@ -17,6 +17,7 @@ import { LikeCommentResponseDto } from './dto/like-comment.dto';
 import { CommentLikeEntity } from 'src/entities/comment-like.entity';
 import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-number.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { NoticeService } from 'src/notice/notice.service';
 
 @Injectable()
 export class CommentService {
@@ -26,6 +27,7 @@ export class CommentService {
     private readonly dataSource: DataSource,
     @InjectRepository(CommentAnonymousNumberEntity)
     private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
+    private readonly noticeService: NoticeService,
   ) {}
 
   async createComment(
@@ -118,6 +120,23 @@ export class CommentService {
       const createdComment = await this.commentRepository.getCommentByCommentId(
         createResult.id,
       );
+
+      if (post.userId !== user.id) {
+        this.noticeService.emitNotice(
+          post.userId,
+          'New comment was posted on your post!',
+        );
+      }
+
+      if (
+        createdComment.parentCommentId &&
+        createdComment.parentComment.userId !== user.id
+      ) {
+        this.noticeService.emitNotice(
+          createdComment.parentComment.userId,
+          'New reply was posted on your comment!',
+        );
+      }
       return new GetCommentResponseDto(
         createdComment,
         user.id,
