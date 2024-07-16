@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  NotImplementedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -9,7 +9,7 @@ import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash, compare } from 'bcrypt';
 import * as argon2 from 'argon2';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
-import { SetProfileResponseDto } from './dto/set-profile-response.dto';
+import { SetResponseDto } from './dto/set-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
 import { SetProfileRequestDto } from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
@@ -47,7 +47,7 @@ export class UserService {
   async deleteUser(userId: number): Promise<void> {
     const isDeleted = await this.userRepository.deleteUser(userId);
     if (!isDeleted) {
-      throw new NotImplementedException('remove user failed!');
+      throw new InternalServerErrorException('remove user failed!');
     }
   }
 
@@ -74,13 +74,13 @@ export class UserService {
   async setProfile(
     id: number,
     profileDto: SetProfileRequestDto,
-  ): Promise<SetProfileResponseDto> {
+  ): Promise<SetResponseDto> {
     const isSet = await this.userRepository.setProfile(id, profileDto);
     if (!isSet) {
-      throw new NotImplementedException('Profile setting failed!');
+      throw new InternalServerErrorException('Profile setting failed!');
     }
 
-    return new SetProfileResponseDto(true);
+    return new SetResponseDto(true);
   }
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
