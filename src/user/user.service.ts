@@ -16,12 +16,19 @@ import {
   SetProfileRequestDto,
 } from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
+import { PointHistoryEntity } from 'src/entities/point-history.entity';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
+    private readonly dataSource: DataSource,
+    @InjectRepository(PointHistoryEntity)
+    private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
@@ -156,5 +163,64 @@ export class UserService {
     }
     const hashedPassword = await hash(newPassword, 10);
     return await this.userRepository.updatePassword(userId, hashedPassword);
+  }
+
+  async changePoint(
+    userId: number,
+    changePoint: number,
+    history: string,
+  ): Promise<number> {
+    const user = await this.userRepository.findUserById(userId);
+    if (!user) {
+      throw new BadRequestException('Wrong userId!');
+    }
+    const originPoint = user.point;
+    if (originPoint + changePoint < 0) {
+      throw new BadRequestException("Don't have enough point!");
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      user.point = originPoint + changePoint;
+      await queryRunner.manager.save(user);
+
+      const newHistory = queryRunner.manager.create(PointHistoryEntity, {
+        userId: userId,
+        history: history,
+        changePoint: changePoint,
+        resultPoint: user.point,
+      });
+      await queryRunner.manager.save(newHistory);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+
+    return user.point;
+  }
+
+  async getPointHistory(
+    user: AuthorizedUserDto,
+  ): Promise<GetPointHistoryResponseDto[]> {
+    const histories = await this.pointHistoryRepository.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+    });
+
+    return histories.map(
+      (history) =>
+        new GetPointHistoryResponseDto(
+          history.createdAt,
+          history.history,
+          history.changePoint,
+          history.resultPoint,
+        ),
+    );
   }
 }

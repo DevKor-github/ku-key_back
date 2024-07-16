@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
@@ -83,5 +84,22 @@ export class UserController {
   ): Promise<GetProfileResponseDto> {
     const id = user.id;
     return await this.userService.getProfile(id);
+  }
+
+  @ApiOperation({
+    summary: '포인트 내역 조회',
+    description: '포인트 획득/사용 내역을 조회 합니다',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '포인트 내역 성공',
+    type: [GetPointHistoryResponseDto],
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('point-history')
+  async getPointHistory(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetPointHistoryResponseDto[]> {
+    return await this.userService.getPointHistory(user);
   }
 }
