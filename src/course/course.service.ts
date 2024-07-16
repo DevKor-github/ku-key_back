@@ -18,9 +18,33 @@ export class CourseService {
   ) {}
 
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
-    return await this.courseRepository.findOne({
+    const course = await this.courseRepository.findOne({
       where: { id: courseId },
+      relations: ['courseDetails'],
     });
+
+    const courseInformations = {
+      id: course.id,
+      professorName: course.professorName,
+      category: course.category,
+      college: course.college,
+      courseName: course.courseName,
+      courseCode: course.courseCode,
+      credit: course.credit,
+      major: course.major,
+      hasExchangeSeat: course.hasExchangeSeat,
+      year: course.year,
+      semester: course.semester,
+      syllabus: course.syllabus,
+      totalRate: course.totalRate,
+      details: course.courseDetails.map((detail) => ({
+        day: detail.day,
+        startTime: detail.startTime,
+        endTime: detail.endTime,
+        classroom: detail.classroom,
+      })),
+    };
+    return new CommonCourseResponseDto(courseInformations);
   }
 
   async getCourseWithCourseDetails(courseId: number): Promise<CourseEntity> {
@@ -64,7 +88,7 @@ export class CourseService {
   async searchCourseCode(
     searchCourseCodeDto: SearchCourseCodeDto,
   ): Promise<PaginatedCoursesDto> {
-    let courses = [];
+    let courses: CourseEntity[] = [];
     if (searchCourseCodeDto.cursorId) {
       courses = await this.courseRepository.find({
         where: {
@@ -73,18 +97,17 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   // 전공 과목명 검색 (띄어쓰기로 단어 구분)
@@ -101,6 +124,7 @@ export class CourseService {
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
       const queryBuilder = this.courseRepository
         .createQueryBuilder('course')
+        .leftJoinAndSelect('course.courseDetails', 'courseDetails')
         .where(`course.courseName REGEXP :pattern`, {
           pattern: `^${searchPattern}.*$`,
         })
@@ -115,10 +139,7 @@ export class CourseService {
         });
       }
       const majorCourses = await queryBuilder.getMany();
-      const response = majorCourses.map(
-        (course) => new CommonCourseResponseDto(course),
-      );
-      return new PaginatedCoursesDto(response);
+      return await this.mappingCourseDetailsToCourses(majorCourses);
     } catch (error) {
       console.log(error);
       throw error;
@@ -145,6 +166,7 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
@@ -155,12 +177,11 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   // 교양 과목명 검색 (띄어쓰기로 단어 구분)
@@ -174,6 +195,7 @@ export class CourseService {
       const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
       const queryBuilder = await this.courseRepository
         .createQueryBuilder('course')
+        .leftJoinAndSelect('course.courseDetails', 'courseDetails')
         .where(`course.courseName REGEXP :pattern`, {
           pattern: `^${searchPattern}.*$`,
         })
@@ -189,10 +211,7 @@ export class CourseService {
         });
       }
       const generalCourses = await queryBuilder.getMany();
-      const response = generalCourses.map(
-        (course) => new CommonCourseResponseDto(course),
-      );
-      return new PaginatedCoursesDto(response);
+      return await this.mappingCourseDetailsToCourses(generalCourses);
     } catch (error) {
       console.log(error);
       throw error;
@@ -214,6 +233,7 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
@@ -223,12 +243,11 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   // 교양 리스트 반환
@@ -239,18 +258,18 @@ export class CourseService {
         where: { category: 'General Studies', id: MoreThan(cursorId) },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'General Studies' },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   // 전공 리스트 반환
@@ -265,18 +284,18 @@ export class CourseService {
         where: { category: 'Major', major: major, id: MoreThan(cursorId) },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'Major', major: major },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   // 학문의 기초 리스트 반환
@@ -295,18 +314,17 @@ export class CourseService {
         },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'Academic Foundations', college: college },
         order: { id: 'ASC' },
         take: 5,
+        relations: ['courseDetails'],
       });
     }
-    const response = courses.map(
-      (course) => new CommonCourseResponseDto(course),
-    );
-    return new PaginatedCoursesDto(response);
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   async updateCourseTotalRate(
@@ -318,5 +336,35 @@ export class CourseService {
         totalRate: parseFloat(totalRate.toFixed(1)),
       });
     }
+  }
+
+  async mappingCourseDetailsToCourses(
+    courses: CourseEntity[],
+  ): Promise<PaginatedCoursesDto> {
+    const courseInformations = courses.map((course) => ({
+      id: course.id,
+      professorName: course.professorName,
+      category: course.category,
+      college: course.college,
+      courseName: course.courseName,
+      courseCode: course.courseCode,
+      credit: course.credit,
+      major: course.major,
+      hasExchangeSeat: course.hasExchangeSeat,
+      year: course.year,
+      semester: course.semester,
+      syllabus: course.syllabus,
+      totalRate: course.totalRate,
+      details: course.courseDetails.map((detail) => ({
+        day: detail.day,
+        startTime: detail.startTime,
+        endTime: detail.endTime,
+        classroom: detail.classroom,
+      })),
+    }));
+    const response = courseInformations.map(
+      (course) => new CommonCourseResponseDto(course),
+    );
+    return new PaginatedCoursesDto(response);
   }
 }
