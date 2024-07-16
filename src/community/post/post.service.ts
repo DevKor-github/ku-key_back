@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -24,6 +25,8 @@ import {
   ReactPostResponseDto,
 } from './dto/react-post.dto';
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class PostService {
@@ -33,6 +36,7 @@ export class PostService {
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
     private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async getPostList(
@@ -80,10 +84,15 @@ export class PostService {
     if (post.deletedAt) {
       throw new BadRequestException('Deleted Post!');
     }
-    const isViewsIncreased = await this.postRepository.increaseViews(postId);
-    if (!isViewsIncreased) {
-      console.log('Views Increase Failed!');
+
+    if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
+      await this.cacheManager.set(`${postId}-${user.id}`, new Date());
+      const isViewsIncreased = await this.postRepository.increaseViews(postId);
+      if (!isViewsIncreased) {
+        console.log('Views Increase Failed!');
+      }
     }
+
     const postResponse = new GetPostResponseDto(post, user.id);
     postResponse.imageDirs.map((image) => {
       image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
