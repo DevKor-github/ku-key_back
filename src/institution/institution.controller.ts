@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -21,6 +22,7 @@ import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
 import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
 import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
+import { DeleteInstitutionResponseDto } from './dto/delete-institution-response-dto';
 
 @Controller('institution')
 export class InstitutionController {
@@ -66,11 +68,31 @@ export class InstitutionController {
   })
   @ApiParam({ name: 'institutionId', description: '기관 id' })
   @ApiBody({ type: UpdateInstitutionRequestDto })
-  @ApiOkResponse()
+  @ApiOkResponse({
+    description: '기관 정보 수정 성공',
+    type: UpdateInstitutionResponseDto,
+  })
   async updateInstitution(
     @Param('institutionId') institutionId: number,
     @Body() body: UpdateInstitutionRequestDto,
   ): Promise<UpdateInstitutionResponseDto> {
     return await this.institutionService.updateInstitution(institutionId, body);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Delete('/:institutionId')
+  @ApiOperation({
+    summary: '기관 정보 삭제',
+    description: '기관 id를 받아 admin page에서 기관 정보를 삭제합니다.',
+  })
+  @ApiParam({ name: 'institutionId', description: '기관 id' })
+  @ApiOkResponse({
+    description: '기관 정보 삭제 성공',
+    type: DeleteInstitutionResponseDto,
+  })
+  async deleteInstitution(
+    @Param('institutionId') institutionId: number,
+  ): Promise<DeleteInstitutionResponseDto> {
+    return await this.institutionService.deleteInstitution(institutionId);
   }
 }
