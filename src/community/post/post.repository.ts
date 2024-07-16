@@ -61,6 +61,26 @@ export class PostRepository extends Repository<PostEntity> {
     return posts;
   }
 
+  async getAllPostsWithKeyword(
+    keyword: string,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: [
+        { title: ILike(`%${keyword}%`) },
+        { content: ILike(`%${keyword}%`) },
+      ],
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
   async getHotPosts(
     pageSize: number,
     pageNumber: number,

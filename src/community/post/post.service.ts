@@ -363,8 +363,15 @@ export class PostService {
   async getAllPostList(
     pageSize: number,
     pageNumber: number,
+    keyword?: string,
   ): Promise<GetPostListResponseDto> {
-    const posts = await this.postRepository.getAllPosts(pageSize, pageNumber);
+    const posts = keyword
+      ? await this.postRepository.getAllPostsWithKeyword(
+          keyword,
+          pageSize,
+          pageNumber,
+        )
+      : await this.postRepository.getAllPosts(pageSize, pageNumber);
     const postList = new GetPostListResponseDto(posts);
     postList.posts.map((postPreview) => {
       const imgDir = postPreview.thumbnailDir;

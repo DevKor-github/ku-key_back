@@ -29,3 +29,8 @@ export class GetPostListRequestDto extends PickType(
   GetPostListWithBoardRequestDto,
   ['pageSize', 'pageNumber'],
 ) {}
+
+export class getAllPostListRequestDto extends PickType(
+  GetPostListWithBoardRequestDto,
+  ['keyword', 'pageSize', 'pageNumber'],
+) {}

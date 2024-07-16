@@ -37,6 +37,7 @@ import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import {
+  getAllPostListRequestDto,
   GetPostListRequestDto,
   GetPostListResponseDto,
 } from './dto/get-post-list.dto';
@@ -54,7 +55,7 @@ export class PostController {
 
   @Get()
   @ApiOperation({
-    summary: '게시글 목록 조회',
+    summary: '게시판 별 게시글 목록 조회',
     description: '게시판 별로 게시글 목록을 조회합니다.',
   })
   @ApiQuery({ name: 'boardId', description: '조회하고자 하는 게시판 ID' })
@@ -105,6 +106,7 @@ export class PostController {
     summary: '전체 게시글 목록 조회',
     description: '전체 게시글 목록을 조회합니다.',
   })
+  @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
   @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
   @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
@@ -113,11 +115,12 @@ export class PostController {
     type: GetPostListResponseDto,
   })
   async getAllPostList(
-    @Query() requestDto: GetPostListRequestDto,
+    @Query() requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
     return await this.postService.getAllPostList(
       requestDto.pageSize,
       requestDto.pageNumber,
+      requestDto.keyword,
     );
   }
 
