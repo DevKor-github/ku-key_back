@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ClubEntity } from 'src/entities/club.entity';
 
 export class GetClubResponseDto {
   @ApiProperty({ description: 'club table의 PK' })
@@ -27,4 +28,16 @@ export class GetClubResponseDto {
 
   @ApiProperty({ description: '좋아요 여부' })
   isLiked: boolean;
+
+  constructor(club: ClubEntity, isLiked: boolean) {
+    this.clubId = club.id;
+    this.name = club.name;
+    this.summary = club.summary;
+    this.regularMeeting = club.regularMeeting;
+    this.recruitmentPeriod = club.recruitmentPeriod;
+    this.description = club.description;
+    this.imageUrl = club.imageUrl;
+    this.likeCount = club.allLikes;
+    this.isLiked = isLiked;
+  }
 }

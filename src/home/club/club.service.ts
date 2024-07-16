@@ -43,17 +43,7 @@ export class ClubService {
       const isLiked = club.clubLikes.some(
         (clubLike) => clubLike.user.id === userId,
       );
-      return {
-        clubId: club.id,
-        name: club.name,
-        summary: club.summary,
-        regularMeeting: club.regularMeeting,
-        recruitmentPeriod: club.recruitmentPeriod,
-        description: club.description,
-        imageUrl: club.imageUrl,
-        likeCount: club.allLikes,
-        isLiked: isLiked,
-      };
+      return new GetClubResponseDto(club, isLiked);
     });
 
     // 내가 좋아요를 누른 동아리만 보기
@@ -106,17 +96,7 @@ export class ClubService {
         await queryRunner.manager.save(newClubLike);
         await queryRunner.commitTransaction();
 
-        return {
-          clubId: club.id,
-          name: club.name,
-          summary: club.summary,
-          regularMeeting: club.regularMeeting,
-          recruitmentPeriod: club.recruitmentPeriod,
-          description: club.description,
-          imageUrl: club.imageUrl,
-          likeCount: club.allLikes,
-          isLiked: true,
-        };
+        return new GetClubResponseDto(club, true);
       } else {
         await queryRunner.manager.delete(ClubLikeEntity, { id: clubLike.id });
         await queryRunner.manager.update(ClubEntity, clubId, {
@@ -125,17 +105,7 @@ export class ClubService {
         club.allLikes--;
         await queryRunner.commitTransaction();
 
-        return {
-          clubId: club.id,
-          name: club.name,
-          summary: club.summary,
-          regularMeeting: club.regularMeeting,
-          recruitmentPeriod: club.recruitmentPeriod,
-          description: club.description,
-          imageUrl: club.imageUrl,
-          likeCount: club.allLikes,
-          isLiked: false,
-        };
+        return new GetClubResponseDto(club, false);
       }
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -173,13 +143,7 @@ export class ClubService {
     let ranking = 1;
 
     return combinedClubs.map((club) => {
-      const dto = new GetHotClubResponseDto();
-      dto.name = club.name;
-      dto.summary = club.summary;
-      dto.imageUrl = club.imageUrl;
-      dto.category = club.category;
-      dto.ranking = ranking++;
-      return dto;
+      return new GetHotClubResponseDto(club, ranking++);
     });
   }
 
@@ -192,13 +156,8 @@ export class ClubService {
     // 좋아요 누른 동아리가 없을 경우 무작위로 4개 선정
     if (likedClubCategories.length === 0) {
       const recommendClubs = await this.clubRepository.findClubsByRandom();
-      return recommendClubs.map((rc) => {
-        const dto = new GetRecommendClubResponseDto();
-        dto.name = rc.name;
-        dto.summary = rc.summary;
-        dto.category = rc.category;
-        dto.imageUrl = rc.imageUrl;
-        return dto;
+      return recommendClubs.map((club) => {
+        return new GetRecommendClubResponseDto(club);
       });
     }
 
@@ -213,12 +172,7 @@ export class ClubService {
         clubsPerCategory,
       );
       const recommendClubs = clubs.map((club) => {
-        const dto = new GetRecommendClubResponseDto();
-        dto.name = club.name;
-        dto.summary = club.summary;
-        dto.category = club.category;
-        dto.imageUrl = club.imageUrl;
-        return dto;
+        return new GetRecommendClubResponseDto(club);
       });
       recommendClubList.push(...recommendClubs);
 
@@ -232,12 +186,7 @@ export class ClubService {
       const additionalClubs = randomClubs
         .filter((club) => !existingClubNames.has(club.name))
         .map((club) => {
-          const dto = new GetRecommendClubResponseDto();
-          dto.name = club.name;
-          dto.summary = club.summary;
-          dto.category = club.category;
-          dto.imageUrl = club.imageUrl;
-          return dto;
+          return new GetRecommendClubResponseDto(club);
         });
       recommendClubList.push(...additionalClubs);
     }
