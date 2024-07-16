@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SetProfileRequestDto {
   @IsOptional()
@@ -21,13 +21,15 @@ export class SetProfileRequestDto {
   @IsString()
   @ApiProperty({ description: '전공' })
   major: string;
+}
 
-  @IsOptional()
+export class SetExchangeDayReqeustDto {
+  @IsNotEmpty()
   @IsDate()
   @ApiProperty({ description: '교환학생 시작 날짜', example: 'yyyy-mm-dd' })
   startDay: Date;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsDate()
   @ApiProperty({ description: '교환학생 끝 날짜', example: 'yyyy-mm-dd' })
   endDay: Date;

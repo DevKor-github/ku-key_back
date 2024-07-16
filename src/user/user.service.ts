@@ -11,7 +11,10 @@ import * as argon2 from 'argon2';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { SetResponseDto } from './dto/set-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
-import { SetProfileRequestDto } from './dto/set-profile-request.dto';
+import {
+  SetExchangeDayReqeustDto,
+  SetProfileRequestDto,
+} from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
@@ -78,6 +81,21 @@ export class UserService {
     const isSet = await this.userRepository.setProfile(id, profileDto);
     if (!isSet) {
       throw new InternalServerErrorException('Profile setting failed!');
+    }
+
+    return new SetResponseDto(true);
+  }
+
+  async setExchangeDay(
+    id: number,
+    requestDto: SetExchangeDayReqeustDto,
+  ): Promise<SetResponseDto> {
+    if (requestDto.startDay > requestDto.endDay) {
+      throw new BadRequestException('StartDay should be earlier than EndDay!');
+    }
+    const isSet = await this.userRepository.setExchangeDay(id, requestDto);
+    if (!isSet) {
+      throw new InternalServerErrorException('Exchange Day setting failed!');
     }
 
     return new SetResponseDto(true);
