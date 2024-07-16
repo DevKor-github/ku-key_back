@@ -77,6 +77,7 @@ export class CommentService {
       if (!updateResult.affected) {
         throw new InternalServerErrorException('Comment Create Failed!');
       }
+
       let anonymousNumber: number;
       const myAnonymousNumber = await queryRunner.manager.findOne(
         CommentAnonymousNumberEntity,
@@ -86,15 +87,6 @@ export class CommentService {
         anonymousNumber = myAnonymousNumber.anonymousNumber;
       } else {
         if (post.userId === user.id) {
-          const newAnonymousNumber = queryRunner.manager.create(
-            CommentAnonymousNumberEntity,
-            {
-              userId: user.id,
-              postId: postId,
-              anonymousNumber: 0,
-            },
-          );
-          await queryRunner.manager.save(newAnonymousNumber);
           anonymousNumber = 0;
         } else {
           const recentAnonymousNumber = await queryRunner.manager.findOne(
@@ -104,32 +96,22 @@ export class CommentService {
               order: { createdAt: 'DESC' },
             },
           );
-          console.log(recentAnonymousNumber);
           if (!recentAnonymousNumber) {
-            const newAnonymousNumber = queryRunner.manager.create(
-              CommentAnonymousNumberEntity,
-              {
-                userId: user.id,
-                postId: postId,
-                anonymousNumber: 1,
-              },
-            );
-            await queryRunner.manager.save(newAnonymousNumber);
             anonymousNumber = 1;
           } else {
-            const newAnonymousNumber = queryRunner.manager.create(
-              CommentAnonymousNumberEntity,
-              {
-                userId: user.id,
-                postId: postId,
-                anonymousNumber: recentAnonymousNumber.anonymousNumber + 1,
-              },
-            );
-            await queryRunner.manager.save(newAnonymousNumber);
             anonymousNumber = recentAnonymousNumber.anonymousNumber + 1;
           }
         }
       }
+      const newAnonymousNumber = queryRunner.manager.create(
+        CommentAnonymousNumberEntity,
+        {
+          userId: user.id,
+          postId: postId,
+          anonymousNumber: anonymousNumber,
+        },
+      );
+      await queryRunner.manager.save(newAnonymousNumber);
 
       await queryRunner.commitTransaction();
 
