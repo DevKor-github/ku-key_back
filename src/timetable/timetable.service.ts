@@ -290,6 +290,7 @@ export class TimetableService {
           professorName,
           courseName,
           courseCode,
+          syllabus,
         } = courseEntry.course;
 
         courseEntry.course.courseDetails.forEach((detailEntry) => {
@@ -301,6 +302,7 @@ export class TimetableService {
             professorName,
             courseName,
             courseCode,
+            syllabus,
             day: day as DayType,
             startTime,
             endTime,
