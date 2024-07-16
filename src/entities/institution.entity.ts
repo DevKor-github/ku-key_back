@@ -7,7 +7,10 @@ export class InstitutionEntity extends CommonEntity {
   id: number;
 
   @Column('varchar', { nullable: false })
-  title: string;
+  name: string;
+
+  @Column('varchar', { nullable: false })
+  category: string;
 
   @Column('varchar', { nullable: false })
   imgDir: string;
