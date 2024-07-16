@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { InstitutionService } from './institution.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import {
@@ -6,10 +14,13 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
 } from '@nestjs/swagger';
 import { GetInstitutionResponseDto } from './dto/get-institution-response-dto';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
+import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
+import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
 
 @Controller('institution')
 export class InstitutionController {
@@ -45,5 +56,21 @@ export class InstitutionController {
     @Body() body: CreateInstitutionRequestDto,
   ): Promise<GetInstitutionResponseDto> {
     return await this.institutionService.createInstitution(body);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Patch('/:institutionId')
+  @ApiOperation({
+    summary: '기관 정보 수정',
+    description: '기관 id를 받아 admin page에서 기관 정보를 수정합니다.',
+  })
+  @ApiParam({ name: 'institutionId', description: '기관 id' })
+  @ApiBody({ type: UpdateInstitutionRequestDto })
+  @ApiOkResponse()
+  async updateInstitution(
+    @Param('institutionId') institutionId: number,
+    @Body() body: UpdateInstitutionRequestDto,
+  ): Promise<UpdateInstitutionResponseDto> {
+    return await this.institutionService.updateInstitution(institutionId, body);
   }
 }

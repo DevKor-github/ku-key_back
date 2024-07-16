@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { GetInstitutionResponseDto } from './dto/get-institution-response-dto';
 import { InstitutionRepository } from './institution.repository';
 import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
+import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
+import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
 
 @Injectable()
 export class InstitutionService {
@@ -25,5 +27,19 @@ export class InstitutionService {
       linkUrl,
     );
     return new GetInstitutionResponseDto(institution);
+  }
+
+  async updateInstitution(
+    institutionId: number,
+    requestDto: UpdateInstitutionRequestDto,
+  ): Promise<UpdateInstitutionResponseDto> {
+    const isUpdated = await this.institutionRepository.updateInstitution(
+      institutionId,
+      requestDto,
+    );
+    if (!isUpdated) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+    return new UpdateInstitutionResponseDto(true);
   }
 }
