@@ -170,6 +170,10 @@ export class PostService {
       throw new BadRequestException("Other user's post!");
     }
 
+    if (post.boardId == 2 && post.commentCount > 0) {
+      throw new BadRequestException('Cannot update answered post!');
+    }
+
     if (requestDto.imageUpdate) {
       for (const image of images) {
         if (!this.fileService.imagefilter(image)) {
@@ -242,6 +246,10 @@ export class PostService {
     }
     if (post.userId !== user.id) {
       throw new BadRequestException("Other user's post!");
+    }
+
+    if (post.boardId == 2 && post.commentCount > 0) {
+      throw new BadRequestException('Cannot delete answered post!');
     }
 
     for (const image of post.postImages) {
