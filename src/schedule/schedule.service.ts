@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -48,6 +49,14 @@ export class ScheduleService {
         );
       if (!timetable) {
         throw new NotFoundException('Timetable not found');
+      }
+
+      if (
+        createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
+      ) {
+        throw new BadRequestException(
+          'Start time must be earlier than end time',
+        );
       }
 
       // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
@@ -102,6 +111,13 @@ export class ScheduleService {
         updateScheduleRequestDto.startTime &&
         updateScheduleRequestDto.endTime
       ) {
+        if (
+          updateScheduleRequestDto.startTime >= updateScheduleRequestDto.endTime
+        ) {
+          throw new BadRequestException(
+            'Start time must be earlier than end time',
+          );
+        }
         // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
         const isConflict = await this.checkTimeConflict(
           updateScheduleRequestDto,
