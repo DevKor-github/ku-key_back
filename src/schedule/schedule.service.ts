@@ -8,17 +8,18 @@ import {
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { ScheduleRepository } from './schedule.repository';
 import { TimetableService } from 'src/timetable/timetable.service';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    private readonly scheduleRepository: ScheduleRepository,
+    @InjectRepository(ScheduleEntity)
+    private readonly scheduleRepository: Repository<ScheduleEntity>,
     @Inject(forwardRef(() => TimetableService))
     private readonly timetableService: TimetableService,
     private readonly dataSource: DataSource,

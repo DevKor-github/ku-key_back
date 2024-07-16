@@ -6,12 +6,10 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
-import { TimetableRepository } from './timetable.repository';
-import { TimetableCourseRepository } from './timetable-course.repository';
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
 import { DayType } from './dto/get-courseinfo-timetable.dto';
@@ -22,12 +20,16 @@ import { CreateTimetableCourseResponseDto } from './dto/create-timetable-course-
 import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
 import { ColorType } from './dto/update-timetable-color.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 
 @Injectable()
 export class TimetableService {
   constructor(
-    private readonly timetableRepository: TimetableRepository,
-    private readonly timetableCourseRepository: TimetableCourseRepository,
+    @InjectRepository(TimetableEntity)
+    private readonly timetableRepository: Repository<TimetableEntity>,
+    @InjectRepository(TimetableCourseEntity)
+    private readonly timetableCourseRepository: Repository<TimetableCourseEntity>,
     private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => ScheduleService))
