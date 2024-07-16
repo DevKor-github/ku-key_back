@@ -185,17 +185,9 @@ export class ScheduleService {
     );
 
     for (const existingInfo of existingScheduleInfo) {
-      // 변경하고자 하는 일정이 기존의 일정 시간대 내에서 변경하는 경우 (ex : 토요일 10:30~12:00 -> 토요일 11:00 ~ 12:00)
-      if (
-        scheduleId === Number(existingInfo.id) &&
-        String(schedule.day) === existingInfo.day &&
-        this.timeToNumber(schedule.startTime) >=
-          this.timeToNumber(existingInfo.startTime) &&
-        this.timeToNumber(schedule.endTime) <=
-          this.timeToNumber(existingInfo.endTime)
-      ) {
-        return false;
-      }
+      // 예외 발생 케이스 처리
+      if (scheduleId === Number(existingInfo.id)) continue;
+
       if (
         existingInfo.day === schedule.day &&
         this.isConflictingTime(
