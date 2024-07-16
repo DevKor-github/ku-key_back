@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { InstitutionEntity } from 'src/entities/institution.entity';
 
 export class GetInstitutionResponseDto {
+  @ApiProperty({ description: '기관 ID' })
+  id: number;
+
   @ApiProperty({ description: '기관명' })
   name: string;
 
@@ -15,6 +18,7 @@ export class GetInstitutionResponseDto {
   linkUrl: string;
 
   constructor(institution: InstitutionEntity) {
+    this.id = institution.id;
     this.name = institution.name;
     this.category = institution.category;
     this.imgDir = institution.imgDir;

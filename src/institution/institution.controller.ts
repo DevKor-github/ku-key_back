@@ -1,8 +1,15 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { InstitutionService } from './institution.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { GetInstitutionResponseDto } from './dto/get-institution-response-dto';
+import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
+import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
 
 @Controller('institution')
 export class InstitutionController {
@@ -21,5 +28,22 @@ export class InstitutionController {
   })
   async getInstitutionList(): Promise<GetInstitutionResponseDto[]> {
     return await this.institutionService.getInstitutionList();
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Post()
+  @ApiOperation({
+    summary: '기관 추가',
+    description: 'admin page에서 기관 정보를 추가합니다.',
+  })
+  @ApiBody({ type: CreateInstitutionRequestDto })
+  @ApiCreatedResponse({
+    description: '기관 생성 성공',
+    type: GetInstitutionResponseDto,
+  })
+  async createInstitution(
+    @Body() body: CreateInstitutionRequestDto,
+  ): Promise<GetInstitutionResponseDto> {
+    return await this.institutionService.createInstitution(body);
   }
 }
