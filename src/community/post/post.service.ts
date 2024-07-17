@@ -92,6 +92,7 @@ export class PostService {
       if (!isViewsIncreased) {
         console.log('Views Increase Failed!');
       }
+      post.views += 1;
     }
 
     const postResponse = new GetPostResponseDto(post, user.id);
