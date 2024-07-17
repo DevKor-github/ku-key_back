@@ -104,16 +104,16 @@ export class CommentService {
             anonymousNumber = recentAnonymousNumber.anonymousNumber + 1;
           }
         }
+        const newAnonymousNumber = queryRunner.manager.create(
+          CommentAnonymousNumberEntity,
+          {
+            userId: user.id,
+            postId: postId,
+            anonymousNumber: anonymousNumber,
+          },
+        );
+        await queryRunner.manager.save(newAnonymousNumber);
       }
-      const newAnonymousNumber = queryRunner.manager.create(
-        CommentAnonymousNumberEntity,
-        {
-          userId: user.id,
-          postId: postId,
-          anonymousNumber: anonymousNumber,
-        },
-      );
-      await queryRunner.manager.save(newAnonymousNumber);
 
       await queryRunner.commitTransaction();
 
