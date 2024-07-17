@@ -120,7 +120,7 @@ export class CommentController {
     return await this.commentService.deleteComment(user, commentId);
   }
 
-  @Post(':commentId/like')
+  @Post('/:commentId/like')
   @ApiOperation({
     summary: '댓글 좋아요',
     description: '댓글을 좋아요 합니다. 이미 눌렀다면 취소합니다.',

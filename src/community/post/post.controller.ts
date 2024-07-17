@@ -269,7 +269,7 @@ export class PostController {
     return await this.postService.deletePost(user, postId);
   }
 
-  @Post(':postId/scrap')
+  @Post('/:postId/scrap')
   @ApiOperation({
     summary: '게시글 스크랩',
     description:
@@ -291,7 +291,7 @@ export class PostController {
     return await this.postService.scrapPost(user, postId);
   }
 
-  @Post(':postId/reaction')
+  @Post('/:postId/reaction')
   @ApiOperation({
     summary: '게시글 반응',
     description:
