@@ -5,7 +5,7 @@ import {
 } from './get-post-list-with-board.dto';
 import { ApiProperty, PickType } from '@nestjs/swagger';
 
-class PostPreviewWithBoardName extends PostPreview {
+export class PostPreviewWithBoardName extends PostPreview {
   constructor(postEntity: PostEntity) {
     super(postEntity);
     this.boardName = postEntity.board.name;

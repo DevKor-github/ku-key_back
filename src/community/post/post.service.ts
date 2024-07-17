@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { BoardService } from '../board/board.service';
-import { GetPostListWithBoardResponseDto } from './dto/get-post-list-with-board.dto';
+import {
+  GetPostListWithBoardResponseDto,
+  PostPreview,
+} from './dto/get-post-list-with-board.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
 import { FileService } from 'src/common/file.service';
@@ -18,7 +21,10 @@ import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
-import { GetPostListResponseDto } from './dto/get-post-list.dto';
+import {
+  GetPostListResponseDto,
+  PostPreviewWithBoardName,
+} from './dto/get-post-list.dto';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 import {
   ReactPostRequestDto,
@@ -62,12 +68,7 @@ export class PostService {
           pageNumber,
         );
     const postList = new GetPostListWithBoardResponseDto(board, posts);
-    postList.posts.map((postPreview) => {
-      const imgDir = postPreview.thumbnailDir;
-      if (imgDir) {
-        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-      }
-    });
+    this.makeThumbnailDirUrlInPostList(postList);
 
     return postList;
   }
@@ -94,9 +95,7 @@ export class PostService {
     }
 
     const postResponse = new GetPostResponseDto(post, user.id);
-    postResponse.imageDirs.map((image) => {
-      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
-    });
+    this.makeImgDirUrlInPost(postResponse);
 
     return postResponse;
   }
@@ -158,9 +157,7 @@ export class PostService {
       await this.postRepository.getPostByPostIdWithDeletedComment(newPostId);
 
     const postResponse = new GetPostResponseDto(createdPost, user.id);
-    postResponse.imageDirs.map((image) => {
-      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
-    });
+    this.makeImgDirUrlInPost(postResponse);
 
     return postResponse;
   }
@@ -238,9 +235,7 @@ export class PostService {
     const updatedPost =
       await this.postRepository.getPostByPostIdWithDeletedComment(postId);
     const postResponse = new GetPostResponseDto(updatedPost, user.id);
-    postResponse.imageDirs.map((image) => {
-      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
-    });
+    this.makeImgDirUrlInPost(postResponse);
 
     return postResponse;
   }
@@ -350,12 +345,7 @@ export class PostService {
       pageNumber,
     );
     const postList = new GetPostListResponseDto(posts);
-    postList.posts.map((postPreview) => {
-      const imgDir = postPreview.thumbnailDir;
-      if (imgDir) {
-        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-      }
-    });
+    this.makeThumbnailDirUrlInPostList(postList);
 
     return postList;
   }
@@ -373,12 +363,7 @@ export class PostService {
         )
       : await this.postRepository.getAllPosts(pageSize, pageNumber);
     const postList = new GetPostListResponseDto(posts);
-    postList.posts.map((postPreview) => {
-      const imgDir = postPreview.thumbnailDir;
-      if (imgDir) {
-        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-      }
-    });
+    this.makeThumbnailDirUrlInPostList(postList);
 
     return postList;
   }
@@ -389,12 +374,7 @@ export class PostService {
   ): Promise<GetPostListResponseDto> {
     const posts = await this.postRepository.getHotPosts(pageSize, pageNumber);
     const postList = new GetPostListResponseDto(posts);
-    postList.posts.map((postPreview) => {
-      const imgDir = postPreview.thumbnailDir;
-      if (imgDir) {
-        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-      }
-    });
+    this.makeThumbnailDirUrlInPostList(postList);
 
     return postList;
   }
@@ -413,12 +393,7 @@ export class PostService {
       pageNumber,
     );
     const postList = new GetPostListResponseDto(posts);
-    postList.posts.map((postPreview) => {
-      const imgDir = postPreview.thumbnailDir;
-      if (imgDir) {
-        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-      }
-    });
+    this.makeThumbnailDirUrlInPostList(postList);
 
     return postList;
   }
@@ -525,5 +500,24 @@ export class PostService {
 
   async isExistingPostId(postId: number): Promise<PostEntity> {
     return await this.postRepository.isExistingPostId(postId);
+  }
+
+  makeThumbnailDirUrlInPostList(
+    postList: GetPostListResponseDto | GetPostListWithBoardResponseDto,
+  ): void {
+    postList.posts.map(
+      (postPreview: PostPreviewWithBoardName | PostPreview) => {
+        const imgDir = postPreview.thumbnailDir;
+        if (imgDir) {
+          postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+        }
+      },
+    );
+  }
+
+  makeImgDirUrlInPost(post: GetPostResponseDto): void {
+    post.imageDirs.map((image) => {
+      image.imgDir = this.fileService.makeUrlByFileDir(image.imgDir);
+    });
   }
 }
