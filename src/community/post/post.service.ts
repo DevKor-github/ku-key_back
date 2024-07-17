@@ -330,7 +330,7 @@ export class PostService {
       }
       await queryRunner.commitTransaction();
 
-      return new ScrapPostResponseDto(!scrap);
+      return new ScrapPostResponseDto(scrap ? false : true);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
