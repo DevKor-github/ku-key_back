@@ -204,6 +204,7 @@ export class PostRepository extends Repository<PostEntity> {
         'comments.commentLikes',
         'postScraps',
         'postReactions',
+        'commentAnonymousNumbers',
       ],
     });
     const deleteResult = await this.softRemove(post);
