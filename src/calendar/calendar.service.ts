@@ -37,14 +37,10 @@ export class CalendarService {
       const currentDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayEvents = eventByDates.get(currentDate) || [];
 
-      const dayCalendarData = new GetCalendarDataResponseDto();
-      dayCalendarData.date = new Date(currentDate);
-      dayCalendarData.event = dayEvents.map((event) => ({
-        id: event.id,
-        title: event.title,
-        description: event.description,
-      }));
-
+      const dayCalendarData = new GetCalendarDataResponseDto(
+        new Date(currentDate),
+        dayEvents,
+      );
       monthCalendarData.push(dayCalendarData);
     }
 
@@ -61,12 +57,7 @@ export class CalendarService {
       description,
     );
 
-    return {
-      id: calendarData.id,
-      date: calendarData.date,
-      title: calendarData.title,
-      description: calendarData.description,
-    };
+    return new CreateCalendarDataResponseDto(calendarData);
   }
 
   async updateCalendarData(

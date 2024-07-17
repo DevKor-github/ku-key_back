@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CalendarEntity } from 'src/entities/calendar.entity';
 
 export class CreateCalendarDataResponseDto {
   @ApiProperty({ description: '행사/일정 id' })
@@ -12,4 +13,11 @@ export class CreateCalendarDataResponseDto {
 
   @ApiProperty({ description: '행사/일정 설명' })
   description: string;
+
+  constructor(calendar: CalendarEntity) {
+    this.id = calendar.id;
+    this.date = calendar.date;
+    this.title = calendar.title;
+    this.description = calendar.description;
+  }
 }
