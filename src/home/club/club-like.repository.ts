@@ -15,13 +15,14 @@ export class ClubLikeRepository extends Repository<ClubLikeEntity> {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    // 일주일 간 찜 개수가 가장 많은 동아리 4개 반환
+    // 일주일 간 좋아요 개수가 가장 많은 동아리 4개 반환, 좋아요 개수가 같은 경우 랜덤 선택
     const topClubLikes = await this.createQueryBuilder('club_like')
       .select('club_like.clubId')
       .addSelect('COUNT(club_like.id)', 'likeCount')
       .where('club_like.createdAt >= :oneWeekAgo', { oneWeekAgo })
       .groupBy('club_like.clubId')
       .orderBy('likeCount', 'DESC')
+      .addOrderBy('RAND()')
       .limit(4)
       .getRawMany();
 

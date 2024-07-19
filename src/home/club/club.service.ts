@@ -126,12 +126,9 @@ export class ClubService {
     const hotClubIds = topLikedClubsInfo.map((info) => info.clubId);
     const hotClubs = await this.clubRepository.findClubsByIdOrder(hotClubIds);
 
-    // hotClubs의 개수가 4개 미만인 경우, 전체 찜 개수 기준으로 높은 것부터 선택하여 부족한 수를 채움
+    // hotClubs의 개수가 4개 미만인 경우, 전체 좋아요 개수 기준으로 높은 것부터 선택(좋아요 개수 같은 경우 랜덤 선택)하여 부족한 수를 채움
     const additionalClubsNeeded = 4 - hotClubs.length;
-    const allClubs = await this.clubRepository.find({
-      take: 4,
-      order: { allLikes: 'DESC' },
-    });
+    const allClubs = await this.clubRepository.findClubsByAllLikesAndRandom();
 
     // 전체 찜 개수 기준으로 가져온 동아리 중 hotClubs내에 이미 포함된 경우 제거
     const existingClubIds = new Set(hotClubs.map((hc) => hc.id));
