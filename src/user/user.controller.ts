@@ -86,6 +86,13 @@ export class UserController {
     return await this.userService.getProfile(id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('point')
+  async changePoint(@User() user: AuthorizedUserDto): Promise<number> {
+    const id = user.id;
+    return await this.userService.changePoint(id, -100, '포인트 획득');
+  }
+
   @ApiOperation({
     summary: '포인트 내역 조회',
     description: '포인트 획득/사용 내역을 조회 합니다',
