@@ -1,16 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PointHistoryEntity } from 'src/entities/point-history.entity';
 
 export class GetPointHistoryResponseDto {
-  constructor(
-    date: Date,
-    history: string,
-    changePoint: number,
-    resultPoint: number,
-  ) {
-    this.date = date;
-    this.history = history;
-    this.changePoint = changePoint;
-    this.resultPoint = resultPoint;
+  constructor(pointHistoryEntity: PointHistoryEntity) {
+    this.date = pointHistoryEntity.createdAt;
+    this.history = pointHistoryEntity.history;
+    this.changePoint = pointHistoryEntity.changePoint;
+    this.resultPoint = pointHistoryEntity.resultPoint;
   }
 
   @ApiProperty({ description: '일시' })

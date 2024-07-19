@@ -213,14 +213,6 @@ export class UserService {
       order: { createdAt: 'DESC' },
     });
 
-    return histories.map(
-      (history) =>
-        new GetPointHistoryResponseDto(
-          history.createdAt,
-          history.history,
-          history.changePoint,
-          history.resultPoint,
-        ),
-    );
+    return histories.map((history) => new GetPointHistoryResponseDto(history));
   }
 }
