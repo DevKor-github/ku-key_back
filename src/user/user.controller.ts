@@ -92,7 +92,7 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: '포인트 내역 성공',
+    description: '포인트 내역 조회 성공',
     type: [GetPointHistoryResponseDto],
   })
   @UseGuards(JwtAuthGuard)
