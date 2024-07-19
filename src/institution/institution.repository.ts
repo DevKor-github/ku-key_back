@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InstitutionEntity } from 'src/entities/institution.entity';
 import { DataSource, Repository } from 'typeorm';
 import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
@@ -23,10 +23,12 @@ export class InstitutionRepository extends Repository<InstitutionEntity> {
     institutionId: number,
     requestDto: UpdateInstitutionRequestDto,
   ): Promise<boolean> {
-    if (!(await this.findOne({ where: { id: institutionId } }))) {
-      throw new NotFoundException('기관 정보를 찾을 수 없습니다');
-    }
     const updated = await this.update({ id: institutionId }, requestDto);
     return updated.affected ? true : false;
+  }
+
+  async deleteInstitution(institutitonId: number): Promise<boolean> {
+    const deleted = await this.softDelete({ id: institutitonId });
+    return deleted.affected ? true : false;
   }
 }

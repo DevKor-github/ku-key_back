@@ -38,6 +38,13 @@ export class InstitutionService {
     institutionId: number,
     requestDto: UpdateInstitutionRequestDto,
   ): Promise<UpdateInstitutionResponseDto> {
+    const institution = await this.institutionRepository.findOne({
+      where: { id: institutionId },
+    });
+    if (!institution) {
+      throw new NotFoundException('기관 정보를 찾을 수 없습니다');
+    }
+
     const isUpdated = await this.institutionRepository.updateInstitution(
       institutionId,
       requestDto,
@@ -54,19 +61,17 @@ export class InstitutionService {
     const institution = await this.institutionRepository.findOne({
       where: { id: institutionId },
     });
-
     if (!institution) {
       throw new NotFoundException('기관 정보를 찾을 수 없습니다.');
     }
 
-    const deleted = await this.institutionRepository.softDelete(institutionId);
-
-    if (!deleted.affected) {
+    const idDeleted =
+      await this.institutionRepository.deleteInstitution(institutionId);
+    if (!idDeleted) {
       throw new InternalServerErrorException(
         '기관 정보를 삭제하는데 실패했습니다.',
       );
     }
-
     return new DeleteInstitutionResponseDto(true);
   }
 }
