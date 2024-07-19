@@ -14,6 +14,7 @@ import { CommentEntity } from './comment.entity';
 import { CourseReviewEntity } from './course-review.entity';
 import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 import { ClubLikeEntity } from './club-like.entity';
+import { PointHistoryEntity } from './point-history.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -99,4 +100,11 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.user)
   clubLikes: ClubLikeEntity[];
+
+  @OneToMany(
+    () => PointHistoryEntity,
+    (pointHistoryEntity) => pointHistoryEntity.user,
+    { cascade: true },
+  )
+  pointHistories: PointHistoryEntity[];
 }
