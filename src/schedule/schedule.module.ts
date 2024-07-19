@@ -4,9 +4,7 @@ import { ScheduleService } from './schedule.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { AuthModule } from 'src/auth/auth.module';
-import { ScheduleRepository } from './schedule.repository';
 import { TimetableModule } from 'src/timetable/timetable.module';
-import { TimetableCourseRepository } from 'src/timetable/timetable-course.repository';
 
 @Module({
   imports: [
@@ -15,7 +13,7 @@ import { TimetableCourseRepository } from 'src/timetable/timetable-course.reposi
     forwardRef(() => TimetableModule),
   ],
   controllers: [ScheduleController],
-  providers: [ScheduleService, ScheduleRepository, TimetableCourseRepository],
+  providers: [ScheduleService],
   exports: [ScheduleService],
 })
 export class ScheduleModule {}

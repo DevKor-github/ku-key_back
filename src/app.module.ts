@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { ClubModule } from './home/club/club.module';
 import { CommonModule } from './common/common.module';
 import { CourseReviewModule } from './course-review/course-review.module';
 import { BoardModule } from './community/board/board.module';
@@ -57,6 +58,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
     BoardModule,
     PostModule,
     CommentModule,
+    ClubModule,
     NoticeModule,
   ],
   controllers: [AppController],
