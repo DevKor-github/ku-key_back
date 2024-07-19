@@ -6,12 +6,10 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
-import { TimetableRepository } from './timetable.repository';
-import { TimetableCourseRepository } from './timetable-course.repository';
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
 import { DayType } from './dto/get-courseinfo-timetable.dto';
@@ -22,12 +20,16 @@ import { CreateTimetableCourseResponseDto } from './dto/create-timetable-course-
 import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto';
 import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
 import { ColorType } from './dto/update-timetable-color.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 
 @Injectable()
 export class TimetableService {
   constructor(
-    private readonly timetableRepository: TimetableRepository,
-    private readonly timetableCourseRepository: TimetableCourseRepository,
+    @InjectRepository(TimetableEntity)
+    private readonly timetableRepository: Repository<TimetableEntity>,
+    @InjectRepository(TimetableCourseEntity)
+    private readonly timetableCourseRepository: Repository<TimetableCourseEntity>,
     private readonly courseService: CourseService,
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => ScheduleService))
@@ -40,51 +42,46 @@ export class TimetableService {
     courseId: number,
     user: AuthorizedUserDto,
   ): Promise<CreateTimetableCourseResponseDto> {
-    try {
-      const timetable = await this.timetableRepository.findOne({
-        where: { id: timetableId, userId: user.id },
-      });
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      const course =
-        await this.courseService.getCourseWithCourseDetails(courseId);
-
-      if (!course) {
-        throw new NotFoundException('Course not found');
-      }
-
-      // TimetableCourse 테이블에 이미 동일한 레코드가 존재하는지 확인
-      const existingTimetableCourse =
-        await this.timetableCourseRepository.findOne({
-          where: { timetableId, courseId },
-        });
-      if (existingTimetableCourse) {
-        throw new ConflictException('Already exists in Timetable');
-      }
-
-      // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
-      const isConflict = await this.checkTimeConflict(timetableId, courseId);
-
-      if (isConflict) {
-        throw new ConflictException(
-          'Course conflicts with existing courses and schedules',
-        );
-      }
-
-      const timetableCourse = this.timetableCourseRepository.create({
-        timetableId,
-        courseId,
-        timetable,
-        course,
-      });
-
-      return await this.timetableCourseRepository.save(timetableCourse);
-    } catch (error) {
-      console.error('Failed to create TimetableCourse:', error);
-      throw error;
+    const timetable = await this.timetableRepository.findOne({
+      where: { id: timetableId, userId: user.id },
+    });
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    const course =
+      await this.courseService.getCourseWithCourseDetails(courseId);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    // TimetableCourse 테이블에 이미 동일한 레코드가 존재하는지 확인
+    const existingTimetableCourse =
+      await this.timetableCourseRepository.findOne({
+        where: { timetableId, courseId },
+      });
+    if (existingTimetableCourse) {
+      throw new ConflictException('Already exists in Timetable');
+    }
+
+    // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
+    const isConflict = await this.checkTimeConflict(timetableId, courseId);
+
+    if (isConflict) {
+      throw new ConflictException(
+        'Course conflicts with existing courses and schedules',
+      );
+    }
+
+    const timetableCourse = this.timetableCourseRepository.create({
+      timetableId,
+      courseId,
+      timetable,
+      course,
+    });
+
+    return await this.timetableCourseRepository.save(timetableCourse);
   }
 
   async checkTimeConflict(
@@ -261,92 +258,84 @@ export class TimetableService {
     timetableId: number,
     userId: number,
   ): Promise<GetTimetableByTimetableIdDto> {
-    try {
-      const timetable = await this.timetableRepository.findOne({
-        where: { id: timetableId, userId },
-        relations: [
-          'timetableCourses',
-          'timetableCourses.course',
-          'timetableCourses.course.courseDetails',
-        ],
-      });
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
+    const timetable = await this.timetableRepository.findOne({
+      where: { id: timetableId, userId },
+      relations: [
+        'timetableCourses',
+        'timetableCourses.course',
+        'timetableCourses.course.courseDetails',
+      ],
+    });
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
+    }
 
-      const schedules =
-        await this.scheduleService.getScheduleByTimetableId(timetableId);
+    const schedules =
+      await this.scheduleService.getScheduleByTimetableId(timetableId);
 
-      // 코스 정보와 스케줄 정보를 같은 깊이의 객체로 분리하여 반환
-      const getTimetableByTimetableIdResponse: GetTimetableByTimetableIdDto = {
-        courses: [],
-        schedules: [],
-        color: timetable.color,
-        timetableName: timetable.timetableName,
-      };
-      timetable.timetableCourses.forEach((courseEntry) => {
-        const {
-          id: courseId,
+    // 코스 정보와 스케줄 정보를 같은 깊이의 객체로 분리하여 반환
+    const getTimetableByTimetableIdResponse: GetTimetableByTimetableIdDto = {
+      courses: [],
+      schedules: [],
+      color: timetable.color,
+      timetableName: timetable.timetableName,
+    };
+    timetable.timetableCourses.forEach((courseEntry) => {
+      const {
+        id: courseId,
+        professorName,
+        courseName,
+        courseCode,
+        syllabus,
+      } = courseEntry.course;
+
+      courseEntry.course.courseDetails.forEach((detailEntry) => {
+        const { day, startTime, endTime, classroom } = detailEntry;
+
+        // 강의 정보 객체
+        getTimetableByTimetableIdResponse.courses.push({
+          courseId,
           professorName,
           courseName,
           courseCode,
-        } = courseEntry.course;
-
-        courseEntry.course.courseDetails.forEach((detailEntry) => {
-          const { day, startTime, endTime, classroom } = detailEntry;
-
-          // 강의 정보 객체
-          getTimetableByTimetableIdResponse.courses.push({
-            courseId,
-            professorName,
-            courseName,
-            courseCode,
-            day: day as DayType,
-            startTime,
-            endTime,
-            classroom,
-          });
+          syllabus,
+          day: day as DayType,
+          startTime,
+          endTime,
+          classroom,
         });
       });
+    });
 
-      // 스케줄 정보 객체
-      schedules.forEach((schedule) => {
-        getTimetableByTimetableIdResponse.schedules.push({
-          scheduleId: schedule.id,
-          scheduleTitle: schedule.title,
-          scheduleDay: schedule.day as DayType,
-          scheduleStartTime: schedule.startTime,
-          scheduleEndTime: schedule.endTime,
-          location: schedule.location,
-        });
+    // 스케줄 정보 객체
+    schedules.forEach((schedule) => {
+      getTimetableByTimetableIdResponse.schedules.push({
+        scheduleId: schedule.id,
+        scheduleTitle: schedule.title,
+        scheduleDay: schedule.day as DayType,
+        scheduleStartTime: schedule.startTime,
+        scheduleEndTime: schedule.endTime,
+        location: schedule.location,
       });
+    });
 
-      return getTimetableByTimetableIdResponse;
-    } catch (error) {
-      console.error('Failed to get Timetable: ', error);
-      throw error;
-    }
+    return getTimetableByTimetableIdResponse;
   }
 
   async getTimetableByUserId(
     userId: number,
   ): Promise<GetTimetableByUserIdResponseDto[]> {
-    try {
-      const userTimetable = await this.timetableRepository.find({
-        where: { userId },
-      });
-      if (!userTimetable) throw new NotFoundException('Timetable not found');
-      return userTimetable.map((table) => ({
-        timetableId: table.id,
-        semester: table.semester,
-        year: table.year,
-        mainTimetable: table.mainTimetable,
-        timetableName: table.timetableName,
-      }));
-    } catch (error) {
-      console.error('Failed to get Timetable: ', error);
-      throw error;
-    }
+    const userTimetable = await this.timetableRepository.find({
+      where: { userId },
+    });
+    if (!userTimetable) throw new NotFoundException('Timetable not found');
+    return userTimetable.map((table) => ({
+      timetableId: table.id,
+      semester: table.semester,
+      year: table.year,
+      mainTimetable: table.mainTimetable,
+      timetableName: table.timetableName,
+    }));
   }
 
   // 친구 시간표 조회
@@ -380,33 +369,28 @@ export class TimetableService {
     courseId: number,
     user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
-    try {
-      // 해당 유저가 만든 시간표인지 확인
-      const timetable = await this.timetableRepository.findOne({
-        where: { id: timetableId, userId: user.id },
-      });
+    // 해당 유저가 만든 시간표인지 확인
+    const timetable = await this.timetableRepository.findOne({
+      where: { id: timetableId, userId: user.id },
+    });
 
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      const timetableCourse = await this.timetableCourseRepository.findOne({
-        where: { timetableId, courseId },
-      });
-      if (!timetableCourse) {
-        throw new NotFoundException('There is no course in this timetable!');
-      }
-
-      await this.timetableCourseRepository.softDelete({
-        timetableId,
-        courseId,
-      });
-
-      return { deleted: true };
-    } catch (error) {
-      console.error('Failed to delete TimetableCourse: ', error);
-      throw error;
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    const timetableCourse = await this.timetableCourseRepository.findOne({
+      where: { timetableId, courseId },
+    });
+    if (!timetableCourse) {
+      throw new NotFoundException('There is no course in this timetable!');
+    }
+
+    await this.timetableCourseRepository.softDelete({
+      timetableId,
+      courseId,
+    });
+
+    return { deleted: true };
   }
 
   async deleteTimetable(
@@ -462,24 +446,19 @@ export class TimetableService {
     timetableDto: TimetableDto,
     user: AuthorizedUserDto,
   ): Promise<CommonTimetableResponseDto> {
-    try {
-      const mainTimetable = await this.timetableRepository.findOne({
-        where: {
-          userId: user.id,
-          mainTimetable: true,
-          year: timetableDto.year,
-          semester: timetableDto.semester,
-        },
-      });
+    const mainTimetable = await this.timetableRepository.findOne({
+      where: {
+        userId: user.id,
+        mainTimetable: true,
+        year: timetableDto.year,
+        semester: timetableDto.semester,
+      },
+    });
 
-      if (!mainTimetable) {
-        throw new NotFoundException('MainTimetable not found');
-      }
-      return mainTimetable;
-    } catch (error) {
-      console.error('Failed to get MainTimetable: ', error);
-      throw error;
+    if (!mainTimetable) {
+      throw new NotFoundException('MainTimetable not found');
     }
+    return mainTimetable;
   }
 
   // 시간표 색상 변경
@@ -488,23 +467,18 @@ export class TimetableService {
     user: AuthorizedUserDto,
     timetableColor: ColorType,
   ): Promise<CommonTimetableResponseDto> {
-    try {
-      const timetable = await this.timetableRepository.findOne({
-        where: {
-          id: timetableId,
-          userId: user.id,
-        },
-      });
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      timetable.color = timetableColor;
-      return await this.timetableRepository.save(timetable);
-    } catch (error) {
-      console.error('Failed to update Timetable color: ', error);
-      throw error;
+    const timetable = await this.timetableRepository.findOne({
+      where: {
+        id: timetableId,
+        userId: user.id,
+      },
+    });
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    timetable.color = timetableColor;
+    return await this.timetableRepository.save(timetable);
   }
 
   // 시간표 이름 변경
@@ -513,23 +487,18 @@ export class TimetableService {
     user: AuthorizedUserDto,
     timetableName: string,
   ): Promise<CommonTimetableResponseDto> {
-    try {
-      const timetable = await this.timetableRepository.findOne({
-        where: {
-          id: timetableId,
-          userId: user.id,
-        },
-      });
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      timetable.timetableName = timetableName;
-      return await this.timetableRepository.save(timetable);
-    } catch (error) {
-      console.error('Failed to update Timetable name: ', error);
-      throw error;
+    const timetable = await this.timetableRepository.findOne({
+      where: {
+        id: timetableId,
+        userId: user.id,
+      },
+    });
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    timetable.timetableName = timetableName;
+    return await this.timetableRepository.save(timetable);
   }
 
   // 기존의 대표시간표의 mainTimetable column을 false로 변경하고, 새로운 시간표의 mainTimetable column을 true로 변경
