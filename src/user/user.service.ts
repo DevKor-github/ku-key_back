@@ -97,7 +97,7 @@ export class UserService {
     id: number,
     requestDto: SetExchangeDayReqeustDto,
   ): Promise<SetResponseDto> {
-    if (requestDto.startDay > requestDto.endDay) {
+    if (requestDto.startDay >= requestDto.endDay) {
       throw new BadRequestException('StartDay should be earlier than EndDay!');
     }
     const isSet = await this.userRepository.setExchangeDay(id, requestDto);
