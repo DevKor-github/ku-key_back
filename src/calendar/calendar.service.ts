@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
 import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
@@ -22,11 +26,12 @@ export class CalendarService {
     month: number,
   ): Promise<GetCalendarDataResponseDto[]> {
     const monthDays = this.getDaysInMonth(year, month);
+    // 시작 - 끝 날짜 생성, month = 7로 받았을 경우 '07'로 입력해주기 위해 padStart 사용
     const startDate = new Date(`${year}-${String(month).padStart(2, '0')}-01`);
     const endDate = new Date(
       `${year}-${String(month).padStart(2, '0')}-${String(monthDays).padStart(2, '0')}`,
     );
-
+    // 시작 - 끝 날짜에 대한 이벤트들을 찾아서 각 날짜별로 묶어줌
     const monthEvents = await this.calendarRepository.find({
       where: { date: Between(startDate, endDate) },
     });
@@ -35,6 +40,7 @@ export class CalendarService {
 
     for (let day = 1; day <= monthDays; day++) {
       const currentDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      // 이벤트가 있으면 배열 형태로, 없다면 빈 배열
       const dayEvents = eventByDates.get(currentDate) || [];
 
       const dayCalendarData = new GetCalendarDataResponseDto(
@@ -57,6 +63,10 @@ export class CalendarService {
       description,
     );
 
+    if (!calendarData) {
+      throw new InternalServerErrorException('행사/일정 생성에 실패했습니다.');
+    }
+
     return new CreateCalendarDataResponseDto(calendarData);
   }
 
@@ -64,6 +74,14 @@ export class CalendarService {
     calendarId: number,
     requestDto: UpdateCalendarDataRequestDto,
   ): Promise<UpdateCalendarDataResponseDto> {
+    const calendarData = await this.calendarRepository.findOne({
+      where: { id: calendarId },
+    });
+
+    if (!calendarData) {
+      throw new NotFoundException('행사/일정 정보가 없습니다.');
+    }
+
     const isUpdated = await this.calendarRepository.updateCalendarData(
       calendarId,
       requestDto,
@@ -79,6 +97,14 @@ export class CalendarService {
   async deleteCalendarData(
     calendarId: number,
   ): Promise<DeleteCalendarDataResponseDto> {
+    const calendarData = await this.calendarRepository.findOne({
+      where: { id: calendarId },
+    });
+
+    if (!calendarData) {
+      throw new NotFoundException('행사/일정 정보가 없습니다.');
+    }
+
     const isDeleted =
       await this.calendarRepository.deleteCalendarData(calendarId);
 
