@@ -61,7 +61,7 @@ export class CalendarController {
   @Post()
   @ApiOperation({
     summary: '특정 날짜 행사/일정 생성',
-    description: '특정 날짜의 행사/일정을 생성합니다.',
+    description: 'admin page에서 특정 날짜의 행사/일정을 생성합니다.',
   })
   @ApiBody({ type: CreateCalendarDataRequestDto })
   @ApiCreatedResponse({
@@ -78,7 +78,8 @@ export class CalendarController {
   @Patch('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 수정',
-    description: '행사/일정 id를 받아 해당하는 행사/일정을 수정합니다.',
+    description:
+      '행사/일정 id를 받아 admin page에서 해당하는 행사/일정을 수정합니다.',
   })
   @ApiParam({ name: 'calendarId', description: '행사/일정 id' })
   @ApiBody({ type: UpdateCalendarDataRequestDto })
@@ -97,7 +98,8 @@ export class CalendarController {
   @Delete('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 삭제',
-    description: '행사/일정 id를 받아 해당하는 행사/일정을 삭제합니다.',
+    description:
+      '행사/일정 id를 받아 admin page에서 해당하는 행사/일정을 삭제합니다.',
   })
   @ApiParam({ name: 'calendarId', description: '행사/일정 id' })
   @ApiOkResponse({
