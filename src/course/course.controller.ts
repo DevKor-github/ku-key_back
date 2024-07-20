@@ -68,7 +68,7 @@ export class CourseController {
     type: 'string',
   })
   @ApiQuery({
-    name: 'cursor ID',
+    name: 'cursorId',
     required: false,
     type: 'number',
   })
@@ -101,7 +101,7 @@ export class CourseController {
     type: 'string',
   })
   @ApiQuery({
-    name: 'cursor ID',
+    name: 'cursorId',
     required: false,
     type: 'number',
   })
@@ -137,7 +137,7 @@ export class CourseController {
     type: 'string',
   })
   @ApiQuery({
-    name: 'cursor ID',
+    name: 'cursorId',
     required: false,
     type: 'number',
   })
@@ -170,7 +170,7 @@ export class CourseController {
     type: 'string',
   })
   @ApiQuery({
-    name: 'cursor ID',
+    name: 'cursorId',
     required: false,
     type: 'number',
   })
