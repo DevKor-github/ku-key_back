@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
@@ -23,28 +27,11 @@ export class CourseService {
       relations: ['courseDetails'],
     });
 
-    const courseInformations = {
-      id: course.id,
-      professorName: course.professorName,
-      category: course.category,
-      college: course.college,
-      courseName: course.courseName,
-      courseCode: course.courseCode,
-      credit: course.credit,
-      major: course.major,
-      hasExchangeSeat: course.hasExchangeSeat,
-      year: course.year,
-      semester: course.semester,
-      syllabus: course.syllabus,
-      totalRate: course.totalRate,
-      details: course.courseDetails.map((detail) => ({
-        day: detail.day,
-        startTime: detail.startTime,
-        endTime: detail.endTime,
-        classroom: detail.classroom,
-      })),
-    };
-    return new CommonCourseResponseDto(courseInformations);
+    if (!course) {
+      throw new NotFoundException('Course not found!');
+    }
+
+    return new CommonCourseResponseDto(course);
   }
 
   async getCourseWithCourseDetails(courseId: number): Promise<CourseEntity> {
@@ -341,30 +328,9 @@ export class CourseService {
   async mappingCourseDetailsToCourses(
     courses: CourseEntity[],
   ): Promise<PaginatedCoursesDto> {
-    const courseInformations = courses.map((course) => ({
-      id: course.id,
-      professorName: course.professorName,
-      category: course.category,
-      college: course.college,
-      courseName: course.courseName,
-      courseCode: course.courseCode,
-      credit: course.credit,
-      major: course.major,
-      hasExchangeSeat: course.hasExchangeSeat,
-      year: course.year,
-      semester: course.semester,
-      syllabus: course.syllabus,
-      totalRate: course.totalRate,
-      details: course.courseDetails.map((detail) => ({
-        day: detail.day,
-        startTime: detail.startTime,
-        endTime: detail.endTime,
-        classroom: detail.classroom,
-      })),
-    }));
-    const response = courseInformations.map(
+    const courseInformations = courses.map(
       (course) => new CommonCourseResponseDto(course),
     );
-    return new PaginatedCoursesDto(response);
+    return new PaginatedCoursesDto(courseInformations);
   }
 }
