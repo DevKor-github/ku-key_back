@@ -1,9 +1,16 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class AuthorizedUserDto {
-  constructor(id: number, username: string) {
+  constructor(id: number, username: string, keepingLogin?: boolean) {
     this.id = id;
     this.username = username;
+    this.keepingLogin = keepingLogin;
   }
 
   @IsNotEmpty()
@@ -13,4 +20,8 @@ export class AuthorizedUserDto {
   @IsNotEmpty()
   @IsString()
   username: string;
+
+  @IsOptional()
+  @IsBoolean()
+  keepingLogin?: boolean;
 }

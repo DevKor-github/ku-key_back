@@ -8,9 +8,13 @@ import {
 import { CommonEntity } from './common.entity';
 import { KuVerificationEntity } from './ku-verification.entity';
 import { FriendshipEntity } from './friendship.entity';
-import { TimeTableEntity } from './timetable.entity';
+import { TimetableEntity } from './timetable.entity';
 import { PostEntity } from './post.entity';
 import { CommentEntity } from './comment.entity';
+import { CourseReviewEntity } from './course-review.entity';
+import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
+import { ClubLikeEntity } from './club-like.entity';
+import { PointHistoryEntity } from './point-history.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -26,23 +30,20 @@ export class UserEntity extends CommonEntity {
   @Column('varchar')
   password: string;
 
-  @Column('varchar', { nullable: true })
-  homeUniversity: string | null;
+  @Column('varchar', { nullable: false })
+  homeUniversity: string;
 
-  @Column('varchar', { nullable: true })
-  language: string | null;
+  @Column('varchar', { nullable: false })
+  country: string;
 
-  @Column('varchar', { nullable: true })
-  country: string | null;
-
-  @Column('varchar', { nullable: true })
-  major: string | null;
+  @Column('varchar', { nullable: false })
+  major: string;
 
   @Column('boolean', { default: false })
   isVerified: boolean;
 
-  @Column('varchar', { nullable: true })
-  name: string | null;
+  @Column('varchar', { nullable: false })
+  name: string;
 
   @Column('timestamp', { nullable: true })
   startDay: Date | null;
@@ -53,8 +54,14 @@ export class UserEntity extends CommonEntity {
   @Column('int', { default: 0 })
   point: number;
 
+  @Column('varchar', { default: '기본 이미지 링크' })
+  profileImageDir: string;
+
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
+
+  @Column('boolean', { default: false })
+  isViewable: boolean;
 
   @OneToOne(
     () => KuVerificationEntity,
@@ -69,12 +76,35 @@ export class UserEntity extends CommonEntity {
   @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
   receivedFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => TimeTableEntity, (timeTableEntity) => timeTableEntity.user)
-  timeTables: TimeTableEntity[];
+  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user)
+  timetables: TimetableEntity[];
 
   @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
   posts: PostEntity[];
 
   @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
   comments: CommentEntity[];
+
+  @OneToMany(
+    () => CourseReviewEntity,
+    (courseReviewEntity) => courseReviewEntity.user,
+  )
+  courseReviews: CourseReviewEntity[];
+
+  @OneToMany(
+    () => CourseReviewRecommendEntity,
+    (courseReviewRecommendEntity) => courseReviewRecommendEntity.user,
+    { cascade: true },
+  )
+  courseReviewRecommends: CourseReviewRecommendEntity[];
+
+  @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.user)
+  clubLikes: ClubLikeEntity[];
+
+  @OneToMany(
+    () => PointHistoryEntity,
+    (pointHistoryEntity) => pointHistoryEntity.user,
+    { cascade: true },
+  )
+  pointHistories: PointHistoryEntity[];
 }

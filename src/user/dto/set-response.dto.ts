@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SetProfileResponseDto {
+export class SetResponseDto {
   constructor(set: boolean) {
     this.set = set;
   }
 
-  @ApiProperty({ description: '프로필 설정 성공 여부' })
+  @ApiProperty({ description: '설정 성공 여부' })
   set: boolean;
 }

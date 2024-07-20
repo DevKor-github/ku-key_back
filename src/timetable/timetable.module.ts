@@ -1,23 +1,22 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { TimeTableController } from './timetable.controller';
-import { TimeTableService } from './timetable.service';
+import { TimetableController } from './timetable.controller';
+import { TimetableService } from './timetable.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TimeTableEntity } from 'src/entities/timetable.entity';
-import { TimeTableRepository } from './timetable.repository';
-import { TimeTableCourseRepository } from './timetable-course.repository';
+import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ScheduleModule } from 'src/schedule/schedule.module';
 import { CourseModule } from 'src/course/course.module';
+import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TimeTableEntity]),
+    TypeOrmModule.forFeature([TimetableEntity, TimetableCourseEntity]),
     AuthModule,
     CourseModule,
     forwardRef(() => ScheduleModule),
   ],
-  controllers: [TimeTableController],
-  providers: [TimeTableService, TimeTableRepository, TimeTableCourseRepository],
-  exports: [TimeTableService],
+  controllers: [TimetableController],
+  providers: [TimetableService],
+  exports: [TimetableService],
 })
-export class TimeTableModule {}
+export class TimetableModule {}

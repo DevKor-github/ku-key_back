@@ -8,17 +8,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
-import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
-import { RejectFriendshipResponseDto } from './dto/reject-friendship-response.dto';
 import { SearchUserResponseDto } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
-import { TimeTableService } from 'src/timetable/timetable.service';
-import { GetFriendTimeTableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimeTableByTimeTableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { TimetableService } from 'src/timetable/timetable.service';
+import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
+import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
+import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class FriendshipService {
@@ -26,7 +26,8 @@ export class FriendshipService {
     @InjectRepository(FriendshipRepository)
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
-    private readonly timeTableService: TimeTableService,
+    private readonly timetableService: TimetableService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getFriendList(
@@ -66,7 +67,7 @@ export class FriendshipService {
         name: friend.name,
         username: friend.username,
         major: friend.major,
-        language: friend.language,
+        country: friend.country,
       };
     });
 
@@ -112,7 +113,7 @@ export class FriendshipService {
     userInfo.name = user.name;
     userInfo.username = user.username;
     userInfo.major = user.major;
-    userInfo.language = user.language;
+    userInfo.country = user.country;
 
     return userInfo;
   }
@@ -135,33 +136,57 @@ export class FriendshipService {
       );
     }
 
-    const checkFriendship =
-      await this.friendshipRepository.findFriendshipBetweenUsers(
-        fromUserId,
-        toUserId,
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const checkFriendship = await queryRunner.manager.findOne(
+        FriendshipEntity,
+        {
+          where: [
+            { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
+            { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
+          ],
+        },
       );
 
-    if (checkFriendship) {
-      if (!checkFriendship.areWeFriend) {
-        throw new BadRequestException('이미 친구 요청을 보냈거나 받았습니다.');
-      } else {
-        throw new BadRequestException('이미 친구인 유저입니다.');
+      if (checkFriendship) {
+        if (!checkFriendship.areWeFriend) {
+          throw new BadRequestException(
+            '이미 친구 요청을 보냈거나 받았습니다.',
+          );
+        } else {
+          throw new BadRequestException('이미 친구인 유저입니다.');
+        }
       }
-    } else {
-      const friendship = await this.friendshipRepository.createFriendship(
-        fromUserId,
-        toUserId,
+
+      const friendship = queryRunner.manager.create(FriendshipEntity, {
+        fromUser: { id: fromUserId },
+        toUser: { id: toUserId },
+        areWeFriend: false,
+      });
+
+      const savedFriendship = await queryRunner.manager.save(
+        FriendshipEntity,
+        friendship,
       );
 
-      if (!friendship) {
+      if (!savedFriendship) {
         throw new BadRequestException('친구 요청 보내기에 실패했습니다.');
       } else {
+        await queryRunner.commitTransaction();
         return new SendFriendshipResponseDto(true);
       }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
-  async getWaitingFriendList(
+  async getReceivedWaitingFriendList(
     userId: number,
   ): Promise<GetWaitingFriendResponseDto[]> {
     const friendshipRequests =
@@ -179,7 +204,32 @@ export class FriendshipService {
         name: waitingFriend.name,
         username: waitingFriend.username,
         major: waitingFriend.major,
-        language: waitingFriend.language,
+        country: waitingFriend.country,
+      };
+    });
+
+    return waitingFriendList;
+  }
+
+  async getSentWaitingFriendList(
+    userId: number,
+  ): Promise<GetWaitingFriendResponseDto[]> {
+    const friendshipRequests =
+      await this.friendshipRepository.findSentFriendshipsByUserId(userId);
+
+    if (friendshipRequests.length === 0) {
+      return [];
+    }
+
+    const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
+      const waitingFriend = friendshipRequest.toUser;
+      return {
+        friendshipId: friendshipRequest.id,
+        userId: waitingFriend.id,
+        name: waitingFriend.name,
+        username: waitingFriend.username,
+        major: waitingFriend.major,
+        country: waitingFriend.country,
       };
     });
 
@@ -190,63 +240,146 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['toUser'],
+      });
+
+      if (!friendship) {
+        throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.toUser.id !== userId) {
+        throw new BadRequestException(
+          '나에게 온 친구 요청만 수락할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException('이미 수락한 요청입니다.');
+      }
+      const updatedResult = await queryRunner.manager.update(
+        FriendshipEntity,
+        { id: friendshipId },
+        { areWeFriend: true },
       );
 
-    if (friendship.toUser.id !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 수락할 수 있습니다.',
-      );
-    }
-
-    if (friendship.areWeFriend) {
-      throw new BadRequestException('이미 수락한 요청입니다.');
-    }
-
-    const isUpdated = await this.friendshipRepository.updateFriendship(
-      friendshipId,
-      true,
-    );
-
-    if (!isUpdated) {
-      throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
-    } else {
-      return new UpdateFriendshipResponseDto(true);
+      if (updatedResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 수락에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new UpdateFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
   async rejectFriendshipRequest(
     userId: number,
     friendshipId: number,
-  ): Promise<RejectFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
+  ): Promise<DeleteFriendshipResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['toUser'],
+      });
+
+      if (!friendship) {
+        throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.toUser.id !== userId) {
+        throw new BadRequestException(
+          '나에게 온 친구 요청만 거절할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException(
+          '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
+        );
+      }
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
         friendshipId,
       );
-
-    if (!friendship) {
-      throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
+  }
 
-    if (friendship.toUser.id !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 거절할 수 있습니다.',
+  async cancelFriendshipRequest(
+    userId: number,
+    friendshipId: number,
+  ): Promise<DeleteFriendshipResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser'],
+      });
+
+      if (!friendship) {
+        throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
+      }
+
+      if (friendship.fromUser.id !== userId) {
+        throw new BadRequestException(
+          '내가 보낸 친구 요청만 취소할 수 있습니다.',
+        );
+      }
+
+      if (friendship.areWeFriend) {
+        throw new BadRequestException(
+          '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
+        );
+      }
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
+        friendshipId,
       );
-    }
-
-    if (friendship.areWeFriend) {
-      throw new BadRequestException(
-        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
-      );
-    }
-    const isDeleted =
-      await this.friendshipRepository.deleteFriendship(friendshipId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
-    } else {
-      return new RejectFriendshipResponseDto(true);
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -254,58 +387,84 @@ export class FriendshipService {
     userId: number,
     friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const friendship =
-      await this.friendshipRepository.findFriendshipByFriendshipId(
-        friendshipId,
-      );
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!friendship) {
-      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
-    }
-
-    if (friendship.toUser.id !== userId && friendship.fromUser.id !== userId) {
-      throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
-    }
-
-    if (!friendship.areWeFriend) {
-      throw new BadRequestException('이미 친구인 경우에만 삭제할 수 있습니다.');
-    }
-
-    const isDeleted =
-      await this.friendshipRepository.deleteFriendship(friendshipId);
-    if (!isDeleted) {
-      throw new InternalServerErrorException('친구 삭제에 실패했습니다.');
-    } else {
-      return new DeleteFriendshipResponseDto(true);
-    }
-  }
-
-  async getFriendTimeTable(
-    userId: number,
-    getFriendTimeTableRequestDto: GetFriendTimeTableRequestDto,
-  ): Promise<GetTimeTableByTimeTableIdDto> {
     try {
-      // 친구인지 아닌지 체크
-      const checkFriendship =
-        await this.friendshipRepository.findFriendshipBetweenUsers(
-          userId,
-          getFriendTimeTableRequestDto.friendId,
-        );
+      const friendship = await queryRunner.manager.findOne(FriendshipEntity, {
+        where: { id: friendshipId },
+        relations: ['fromUser', 'toUser'],
+      });
 
-      if (!checkFriendship || !checkFriendship.areWeFriend) {
+      if (!friendship) {
         throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
       }
 
-      const friendTimeTable = await this.timeTableService.getFriendTimeTable(
-        getFriendTimeTableRequestDto,
+      if (
+        friendship.toUser.id !== userId &&
+        friendship.fromUser.id !== userId
+      ) {
+        throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
+      }
+
+      if (!friendship.areWeFriend) {
+        throw new BadRequestException(
+          '이미 친구인 경우에만 삭제할 수 있습니다.',
+        );
+      }
+      const deleteResult = await queryRunner.manager.softDelete(
+        FriendshipEntity,
+        friendshipId,
+      );
+      if (deleteResult.affected === 0) {
+        throw new InternalServerErrorException(
+          '친구 요청 거절에 실패했습니다.',
+        );
+      } else {
+        await queryRunner.commitTransaction();
+        return new DeleteFriendshipResponseDto(true);
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getFriendTimetable(
+    userId: number,
+    getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
+  ): Promise<GetTimetableByTimetableIdDto> {
+    // username으로 친구정보 가져오기
+    const friend = await this.userService.findUserByUsername(
+      getFriendTimetableRequestDto.username,
+    );
+
+    if (!friend) {
+      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+    }
+    // 친구인지 아닌지 체크
+    const checkFriendship =
+      await this.friendshipRepository.findFriendshipBetweenUsers(
+        userId,
+        friend.id,
       );
 
-      if (!friendTimeTable) {
-        throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
-      }
-      return friendTimeTable;
-    } catch (error) {
-      throw error;
+    if (!checkFriendship || !checkFriendship.areWeFriend) {
+      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
     }
+
+    const friendTimetable = await this.timetableService.getFriendTimetable(
+      friend.id,
+      getFriendTimetableRequestDto.semester,
+      getFriendTimetableRequestDto.year,
+    );
+
+    if (!friendTimetable) {
+      throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
+    }
+    return friendTimetable;
   }
 }

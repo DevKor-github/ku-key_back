@@ -12,9 +12,9 @@ const ColorType = {
 
 export type ColorType = (typeof ColorType)[keyof typeof ColorType];
 
-export class UpdateTimeTableColorDto {
+export class UpdateTimetableColorDto {
   @ApiProperty({ description: '시간표 색상' })
   @IsEnum(ColorType)
   @IsNotEmpty()
-  tableColor: ColorType;
+  timetableColor: ColorType;
 }

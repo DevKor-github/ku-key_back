@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -8,27 +9,28 @@ import {
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { ScheduleRepository } from './schedule.repository';
-import { TimeTableService } from 'src/timetable/timetable.service';
+import { TimetableService } from 'src/timetable/timetable.service';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    private readonly scheduleRepository: ScheduleRepository,
-    @Inject(forwardRef(() => TimeTableService))
-    private readonly timeTableService: TimeTableService,
+    @InjectRepository(ScheduleEntity)
+    private readonly scheduleRepository: Repository<ScheduleEntity>,
+    @Inject(forwardRef(() => TimetableService))
+    private readonly timetableService: TimetableService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async getScheduleByTimeTableId(
-    timeTableId: number,
+  async getScheduleByTimetableId(
+    timetableId: number,
   ): Promise<ScheduleEntity[]> {
     try {
-      return await this.scheduleRepository.find({ where: { timeTableId } });
+      return await this.scheduleRepository.find({ where: { timetableId } });
     } catch (error) {
       console.error('Fail to get schedule by timetable id', error);
       throw error;
@@ -40,13 +42,21 @@ export class ScheduleService {
     user: AuthorizedUserDto,
   ): Promise<ScheduleEntity> {
     try {
-      const timeTable =
-        await this.timeTableService.getSimpleTimeTableByTimeTableId(
-          createScheduleRequestDto.timeTableId,
+      const timetable =
+        await this.timetableService.getSimpleTimetableByTimetableId(
+          createScheduleRequestDto.timetableId,
           user.id,
         );
-      if (!timeTable) {
-        throw new NotFoundException('TimeTable not found');
+      if (!timetable) {
+        throw new NotFoundException('Timetable not found');
+      }
+
+      if (
+        createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
+      ) {
+        throw new BadRequestException(
+          'Start time must be earlier than end time',
+        );
       }
 
       // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
@@ -79,8 +89,8 @@ export class ScheduleService {
     await queryRunner.startTransaction();
     try {
       const schedule = await queryRunner.manager.findOne(ScheduleEntity, {
-        where: { id: scheduleId, timeTable: { userId: user.id } },
-        relations: ['timeTable'],
+        where: { id: scheduleId, timetable: { userId: user.id } },
+        relations: ['timetable'],
       });
 
       if (!schedule) {
@@ -88,7 +98,7 @@ export class ScheduleService {
       }
 
       if (
-        Number(schedule.timeTableId) !== updateScheduleRequestDto.timeTableId
+        Number(schedule.timetableId) !== updateScheduleRequestDto.timetableId
       ) {
         throw new NotFoundException(
           '변경하고자 하는 일정이 해당 시간표에 존재하지 않습니다!',
@@ -101,6 +111,13 @@ export class ScheduleService {
         updateScheduleRequestDto.startTime &&
         updateScheduleRequestDto.endTime
       ) {
+        if (
+          updateScheduleRequestDto.startTime >= updateScheduleRequestDto.endTime
+        ) {
+          throw new BadRequestException(
+            'Start time must be earlier than end time',
+          );
+        }
         // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
         const isConflict = await this.checkTimeConflict(
           updateScheduleRequestDto,
@@ -139,8 +156,8 @@ export class ScheduleService {
   ): Promise<DeleteScheduleResponseDto> {
     try {
       const schedule = await this.scheduleRepository.findOne({
-        where: { id: scheduleId, timeTable: { userId: user.id } },
-        relations: ['timeTable'],
+        where: { id: scheduleId, timetable: { userId: user.id } },
+        relations: ['timetable'],
       });
 
       if (!schedule) {
@@ -160,8 +177,8 @@ export class ScheduleService {
     scheduleId?: number,
   ): Promise<boolean> {
     // 강의시간과 안 겹치는지 확인
-    const existingCourseInfo = await this.getTableCourseInfo(
-      schedule.timeTableId,
+    const existingCourseInfo = await this.getTimetableCourseInfo(
+      schedule.timetableId,
     ); //요일, 시작시간, 끝나는 시간 받아옴
 
     for (const existingInfo of existingCourseInfo) {
@@ -179,22 +196,14 @@ export class ScheduleService {
     }
 
     // 스케줄 시간과 겹치는지 안겹치는지 확인
-    const existingScheduleInfo = await this.getTableScheduleInfo(
-      schedule.timeTableId,
+    const existingScheduleInfo = await this.getTimetableScheduleInfo(
+      schedule.timetableId,
     );
 
     for (const existingInfo of existingScheduleInfo) {
-      // 변경하고자 하는 일정이 기존의 일정 시간대 내에서 변경하는 경우 (ex : 토요일 10:30~12:00 -> 토요일 11:00 ~ 12:00)
-      if (
-        scheduleId === Number(existingInfo.id) &&
-        String(schedule.day) === existingInfo.day &&
-        this.timeToNumber(schedule.startTime) >=
-          this.timeToNumber(existingInfo.startTime) &&
-        this.timeToNumber(schedule.endTime) <=
-          this.timeToNumber(existingInfo.endTime)
-      ) {
-        return false;
-      }
+      // 예외 발생 케이스 처리
+      if (scheduleId === Number(existingInfo.id)) continue;
+
       if (
         existingInfo.day === schedule.day &&
         this.isConflictingTime(
@@ -211,11 +220,11 @@ export class ScheduleService {
     return false; // 겹치는 시간 없음
   }
 
-  async getTableCourseInfo(
-    timeTableId: number,
+  async getTimetableCourseInfo(
+    timetableId: number,
   ): Promise<{ day: string; startTime: string; endTime: string }[]> {
     const daysAndTimes =
-      await this.timeTableService.getDaysAndTime(timeTableId);
+      await this.timetableService.getDaysAndTime(timetableId);
 
     const result = daysAndTimes.map((obj) => ({
       day: obj.day,
@@ -226,13 +235,13 @@ export class ScheduleService {
     return result;
   }
 
-  async getTableScheduleInfo(
-    timeTableId: number,
+  async getTimetableScheduleInfo(
+    timetableId: number,
   ): Promise<
     { id: number; day: string; startTime: string; endTime: string }[]
   > {
     const schedules = await this.scheduleRepository.find({
-      where: { timeTableId },
+      where: { timetableId },
       select: ['id', 'day', 'startTime', 'endTime'],
     });
 

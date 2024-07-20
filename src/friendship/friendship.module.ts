@@ -5,13 +5,13 @@ import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { UserModule } from 'src/user/user.module';
-import { TimeTableModule } from 'src/timetable/timetable.module';
+import { TimetableModule } from 'src/timetable/timetable.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([FriendshipEntity]),
     UserModule,
-    TimeTableModule,
+    TimetableModule,
   ],
   controllers: [FriendshipController],
   providers: [FriendshipService, FriendshipRepository],

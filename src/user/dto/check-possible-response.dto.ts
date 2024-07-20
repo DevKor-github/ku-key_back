@@ -5,6 +5,6 @@ export class checkPossibleResponseDto {
     this.possible = possible;
   }
 
-  @ApiProperty({ description: '학번 사용 가능 여부' })
+  @ApiProperty({ description: '사용 가능 여부' })
   possible: boolean;
 }
