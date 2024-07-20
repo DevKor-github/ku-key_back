@@ -1,3 +1,3 @@
-import { CreateInstitutionRequestDto } from './create-insitution-request-dto';
+import { CreateInstitutionRequestDto } from './create-institution-request-dto';
 
 export class UpdateInstitutionRequestDto extends CreateInstitutionRequestDto {}

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { InstitutionEntity } from 'src/entities/institution.entity';
 
-export class GetInstitutionResponseDto {
+export class InstitutionResponseDto {
   @ApiProperty({ description: '기관 ID' })
   id: number;
 
