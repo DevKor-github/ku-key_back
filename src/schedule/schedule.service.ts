@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -8,17 +9,18 @@ import {
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { ScheduleRepository } from './schedule.repository';
 import { TimetableService } from 'src/timetable/timetable.service';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    private readonly scheduleRepository: ScheduleRepository,
+    @InjectRepository(ScheduleEntity)
+    private readonly scheduleRepository: Repository<ScheduleEntity>,
     @Inject(forwardRef(() => TimetableService))
     private readonly timetableService: TimetableService,
     private readonly dataSource: DataSource,
@@ -47,6 +49,14 @@ export class ScheduleService {
         );
       if (!timetable) {
         throw new NotFoundException('Timetable not found');
+      }
+
+      if (
+        createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
+      ) {
+        throw new BadRequestException(
+          'Start time must be earlier than end time',
+        );
       }
 
       // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
@@ -101,6 +111,13 @@ export class ScheduleService {
         updateScheduleRequestDto.startTime &&
         updateScheduleRequestDto.endTime
       ) {
+        if (
+          updateScheduleRequestDto.startTime >= updateScheduleRequestDto.endTime
+        ) {
+          throw new BadRequestException(
+            'Start time must be earlier than end time',
+          );
+        }
         // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
         const isConflict = await this.checkTimeConflict(
           updateScheduleRequestDto,
@@ -184,17 +201,9 @@ export class ScheduleService {
     );
 
     for (const existingInfo of existingScheduleInfo) {
-      // 변경하고자 하는 일정이 기존의 일정 시간대 내에서 변경하는 경우 (ex : 토요일 10:30~12:00 -> 토요일 11:00 ~ 12:00)
-      if (
-        scheduleId === Number(existingInfo.id) &&
-        String(schedule.day) === existingInfo.day &&
-        this.timeToNumber(schedule.startTime) >=
-          this.timeToNumber(existingInfo.startTime) &&
-        this.timeToNumber(schedule.endTime) <=
-          this.timeToNumber(existingInfo.endTime)
-      ) {
-        return false;
-      }
+      // 예외 발생 케이스 처리
+      if (scheduleId === Number(existingInfo.id)) continue;
+
       if (
         existingInfo.day === schedule.day &&
         this.isConflictingTime(

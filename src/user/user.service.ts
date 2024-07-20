@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  NotImplementedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -9,16 +9,26 @@ import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash, compare } from 'bcrypt';
 import * as argon2 from 'argon2';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
-import { SetProfileResponseDto } from './dto/set-profile-response.dto';
+import { SetResponseDto } from './dto/set-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
-import { SetProfileRequestDto } from './dto/set-profile-request.dto';
+import {
+  SetExchangeDayReqeustDto,
+  SetProfileRequestDto,
+} from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
+import { PointHistoryEntity } from 'src/entities/point-history.entity';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
+    private readonly dataSource: DataSource,
+    @InjectRepository(PointHistoryEntity)
+    private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
@@ -47,7 +57,7 @@ export class UserService {
   async deleteUser(userId: number): Promise<void> {
     const isDeleted = await this.userRepository.deleteUser(userId);
     if (!isDeleted) {
-      throw new NotImplementedException('remove user failed!');
+      throw new InternalServerErrorException('remove user failed!');
     }
   }
 
@@ -74,13 +84,28 @@ export class UserService {
   async setProfile(
     id: number,
     profileDto: SetProfileRequestDto,
-  ): Promise<SetProfileResponseDto> {
+  ): Promise<SetResponseDto> {
     const isSet = await this.userRepository.setProfile(id, profileDto);
     if (!isSet) {
-      throw new NotImplementedException('Profile setting failed!');
+      throw new InternalServerErrorException('Profile setting failed!');
     }
 
-    return new SetProfileResponseDto(true);
+    return new SetResponseDto(true);
+  }
+
+  async setExchangeDay(
+    id: number,
+    requestDto: SetExchangeDayReqeustDto,
+  ): Promise<SetResponseDto> {
+    if (requestDto.startDay >= requestDto.endDay) {
+      throw new BadRequestException('StartDay should be earlier than EndDay!');
+    }
+    const isSet = await this.userRepository.setExchangeDay(id, requestDto);
+    if (!isSet) {
+      throw new InternalServerErrorException('Exchange Day setting failed!');
+    }
+
+    return new SetResponseDto(true);
   }
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
@@ -138,5 +163,56 @@ export class UserService {
     }
     const hashedPassword = await hash(newPassword, 10);
     return await this.userRepository.updatePassword(userId, hashedPassword);
+  }
+
+  async changePoint(
+    userId: number,
+    changePoint: number,
+    history: string,
+  ): Promise<number> {
+    const user = await this.userRepository.findUserById(userId);
+    if (!user) {
+      throw new BadRequestException('Wrong userId!');
+    }
+    const originPoint = user.point;
+    if (originPoint + changePoint < 0) {
+      throw new BadRequestException("Don't have enough point!");
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      user.point = originPoint + changePoint;
+      await queryRunner.manager.save(user);
+
+      const newHistory = queryRunner.manager.create(PointHistoryEntity, {
+        userId: userId,
+        history: history,
+        changePoint: changePoint,
+        resultPoint: user.point,
+      });
+      await queryRunner.manager.save(newHistory);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+
+    return user.point;
+  }
+
+  async getPointHistory(
+    user: AuthorizedUserDto,
+  ): Promise<GetPointHistoryResponseDto[]> {
+    const histories = await this.pointHistoryRepository.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+    });
+
+    return histories.map((history) => new GetPointHistoryResponseDto(history));
   }
 }
