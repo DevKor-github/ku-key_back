@@ -15,6 +15,10 @@ import { CourseReviewEntity } from './course-review.entity';
 import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 import { ClubLikeEntity } from './club-like.entity';
 import { PointHistoryEntity } from './point-history.entity';
+import { PostScrapEntity } from './post-scrap.entity';
+import { PostReactionEntity } from './post-reaction.entity';
+import { CommentLikeEntity } from './comment-like.entity';
+import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -107,4 +111,25 @@ export class UserEntity extends CommonEntity {
     { cascade: true },
   )
   pointHistories: PointHistoryEntity[];
+
+  @OneToMany(() => PostScrapEntity, (postScrapEntity) => postScrapEntity.user)
+  postScraps: PostScrapEntity[];
+
+  @OneToMany(
+    () => PostReactionEntity,
+    (postReactionEntity) => postReactionEntity.user,
+  )
+  postReaction: PostReactionEntity[];
+
+  @OneToMany(
+    () => CommentLikeEntity,
+    (commentLikeEntity) => commentLikeEntity.user,
+  )
+  commentLikes: CommentLikeEntity[];
+
+  @OneToMany(
+    () => CommentAnonymousNumberEntity,
+    (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.user,
+  )
+  commentAnonymousNumbers: CommentAnonymousNumberEntity[];
 }
