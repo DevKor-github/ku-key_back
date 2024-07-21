@@ -14,6 +14,7 @@ import { CommentEntity } from './comment.entity';
 import { CourseReviewEntity } from './course-review.entity';
 import { CourseReviewRecommendEntity } from './course-review-recommend.entity';
 import { ClubLikeEntity } from './club-like.entity';
+import { PointHistoryEntity } from './point-history.entity';
 import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
@@ -103,6 +104,13 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.user)
   clubLikes: ClubLikeEntity[];
+
+  @OneToMany(
+    () => PointHistoryEntity,
+    (pointHistoryEntity) => pointHistoryEntity.user,
+    { cascade: true },
+  )
+  pointHistories: PointHistoryEntity[];
 
   @OneToMany(() => PostScrapEntity, (postScrapEntity) => postScrapEntity.user)
   postScraps: PostScrapEntity[];

@@ -2,7 +2,10 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { Injectable } from '@nestjs/common';
-import { SetProfileRequestDto } from './dto/set-profile-request.dto';
+import {
+  SetExchangeDayReqeustDto,
+  SetProfileRequestDto,
+} from './dto/set-profile-request.dto';
 
 @Injectable()
 export class UserRepository extends Repository<UserEntity> {
@@ -63,6 +66,15 @@ export class UserRepository extends Repository<UserEntity> {
     profileDto: SetProfileRequestDto,
   ): Promise<boolean> {
     const updateResult = await this.update({ id: id }, profileDto);
+
+    return updateResult.affected ? true : false;
+  }
+
+  async setExchangeDay(
+    id: number,
+    requestDto: SetExchangeDayReqeustDto,
+  ): Promise<boolean> {
+    const updateResult = await this.update({ id: id }, requestDto);
 
     return updateResult.affected ? true : false;
   }
