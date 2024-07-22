@@ -88,7 +88,6 @@ export class ClubController {
     return await this.clubService.toggleLikeClub(userId, clubId);
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Get('hot')
   @ApiOperation({
     summary: 'Hot Club 목록 조회',
