@@ -2,7 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CommentEntity } from 'src/entities/comment.entity';
 
 export class GetCommentResponseDto {
-  constructor(commentEntity: CommentEntity, userId: number) {
+  constructor(
+    commentEntity: CommentEntity,
+    userId: number,
+    anonymousNumber: number,
+  ) {
     this.id = commentEntity.id;
     this.isDeleted = commentEntity.deletedAt ? true : false;
     this.createdAt = commentEntity.createdAt;
@@ -11,7 +15,9 @@ export class GetCommentResponseDto {
       this.isMyComment = commentEntity.userId === userId;
       this.content = commentEntity.content;
       this.username = commentEntity.isAnonymous
-        ? null
+        ? anonymousNumber === 0
+          ? 'Author'
+          : `Anonymous ${anonymousNumber}`
         : commentEntity.user.username.substring(
             0,
             Math.floor(commentEntity.user.username.length / 2),
@@ -20,6 +26,7 @@ export class GetCommentResponseDto {
             commentEntity.user.username.length -
               Math.floor(commentEntity.user.username.length / 2),
           );
+      this.likeCount = commentEntity.likeCount;
     }
   }
   @ApiProperty({ description: '댓글 고유 ID' })
@@ -42,4 +49,7 @@ export class GetCommentResponseDto {
 
   @ApiProperty({ description: '댓글을 작성한 사용자(익명이면 null)' })
   username?: string | null;
+
+  @ApiProperty({ description: '좋아요 수' })
+  likeCount?: number;
 }

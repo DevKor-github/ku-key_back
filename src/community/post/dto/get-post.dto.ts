@@ -5,8 +5,12 @@ import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostEntity } from 'src/entities/post.entity';
 
 class Comment extends GetCommentResponseDto {
-  constructor(commentEntity: CommentEntity, userId: number) {
-    super(commentEntity, userId);
+  constructor(
+    commentEntity: CommentEntity,
+    userId: number,
+    anonymousNumber: number,
+  ) {
+    super(commentEntity, userId, anonymousNumber);
     if (!commentEntity.parentCommentId) {
       this.reply = [];
     }
@@ -29,6 +33,23 @@ class Image {
   imgDir: string;
 }
 
+export class ReactionCount {
+  @ApiProperty({ description: '좋아요' })
+  good: number;
+
+  @ApiProperty({ description: '슬퍼요' })
+  sad: number;
+
+  @ApiProperty({ description: '놀라워요' })
+  amazing: number;
+
+  @ApiProperty({ description: '화나요' })
+  angry: number;
+
+  @ApiProperty({ description: '웃겨요' })
+  funny: number;
+}
+
 export class GetPostResponseDto {
   constructor(postEntity: PostEntity, userId: number) {
     this.id = postEntity.id;
@@ -47,20 +68,32 @@ export class GetPostResponseDto {
           postEntity.user.username.length -
             Math.floor(postEntity.user.username.length / 2),
         );
+    this.views = postEntity.views;
+    this.scrapCount = postEntity.scrapCount;
+    this.reaction = new ReactionCount();
+    this.reaction.good = postEntity.goodReactionCount;
+    this.reaction.sad = postEntity.sadReactionCount;
+    this.reaction.amazing = postEntity.amazingReactionCount;
+    this.reaction.angry = postEntity.angryReactionCount;
+    this.reaction.funny = postEntity.funnyReactionCount;
 
     this.comments = [];
     postEntity.comments
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map((comment) => {
+        const anonymousNumber = postEntity.commentAnonymousNumbers.filter(
+          (commentAnonymousNumber) =>
+            commentAnonymousNumber.userId === comment.userId,
+        )[0].anonymousNumber;
         if (!comment.parentCommentId) {
-          this.comments.push(new Comment(comment, userId));
+          this.comments.push(new Comment(comment, userId, anonymousNumber));
         } else {
           this.comments
             .find(
               (existingComment) =>
                 existingComment.id === comment.parentCommentId,
             )
-            .reply.push(new Comment(comment, userId));
+            .reply.push(new Comment(comment, userId, anonymousNumber));
         }
       });
 
@@ -88,6 +121,15 @@ export class GetPostResponseDto {
 
   @ApiProperty({ description: '게시글을 생성한 사용자(익명이면 null)' })
   username: string | null;
+
+  @ApiProperty({ description: '조회수' })
+  views: number;
+
+  @ApiProperty({ description: '스크랩 수' })
+  scrapCount: number;
+
+  @ApiProperty({ description: '반응' })
+  reaction: ReactionCount;
 
   @ApiProperty({ description: '댓글', type: [Comment] })
   comments: Comment[];
