@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 
 @Injectable()
 export class ClubService {
@@ -18,7 +19,7 @@ export class ClubService {
   ) {}
 
   async getClubList(
-    userId: number,
+    user: AuthorizedUserDto | null,
     clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
@@ -38,16 +39,16 @@ export class ClubService {
       return [];
     }
 
-    // 현재 접속 중인 유저의 각 동아리에 대한 찜 여부 함께 반환
+    // 현재 접속 중인 유저의 각 동아리에 대한 찜 여부 함께 반환. 유저 존재하지 않을 시 false
     let clubList = clubs.map((club) => {
-      const isLiked = club.clubLikes.some(
-        (clubLike) => clubLike.user.id === userId,
+      const isLiked = club.clubLikes.some((clubLike) =>
+        user ? clubLike.user.id === user.id : false,
       );
       return new GetClubResponseDto(club, isLiked);
     });
 
-    // 내가 좋아요를 누른 동아리만 보기
-    if (wishList) {
+    // 내가 좋아요를 누른 동아리만 보기 (유저 존재한다면)
+    if (user && wishList) {
       clubList = clubList.filter((club) => club.isLiked === true);
     }
 
@@ -145,8 +146,16 @@ export class ClubService {
   }
 
   async getRecommendClubList(
-    userId: number,
+    user: AuthorizedUserDto | null,
   ): Promise<GetRecommendClubResponseDto[]> {
+    // 비로그인 or 미인증 유저의 경우 랜덤으로 반환
+    if (!user) {
+      const randomClubs = await this.clubRepository.findClubsByRandom();
+      return randomClubs.map((club) => {
+        return new GetRecommendClubResponseDto(club);
+      });
+    }
+    const userId = user.id;
     const likedClubCategories =
       await this.clubLikeRepository.findLikedClubCategories(userId);
 
