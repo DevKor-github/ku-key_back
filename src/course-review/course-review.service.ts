@@ -59,30 +59,61 @@ export class CourseReviewService {
       );
     }
 
-    const courseReview = this.courseReviewRepository.create({
-      ...createCourseReviewRequestDto,
-      userId: user.id,
-    });
-    await this.courseReviewRepository.save(courseReview);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const courseReview = queryRunner.manager.create(CourseReviewEntity, {
+        ...createCourseReviewRequestDto,
+        userId: user.id,
+      });
+      await queryRunner.manager.save(courseReview);
 
-    return {
-      id: courseReview.id,
-      reviewer: user.username,
-      createdAt: courseReview.createdAt,
-      rate: courseReview.rate,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      recommendCount: courseReview.recommendCount,
-      textReview: courseReview.textReview,
-      professorName: courseReview.professorName,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      courseCode: courseReview.courseCode,
-      userId: courseReview.userId,
-    };
+      // 해당 강의에 대한 모든 강의평 조회
+      const courseReviews = await queryRunner.manager.find(CourseReviewEntity, {
+        where: {
+          courseCode: createCourseReviewRequestDto.courseCode,
+          professorName: createCourseReviewRequestDto.professorName,
+        },
+      });
+
+      // 강의평 점수들의 평균 계산
+      const totalRate =
+        courseReviews.reduce((sum, review) => sum + review.rate, 0) /
+        courseReviews.length;
+
+      const courses =
+        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+          createCourseReviewRequestDto.courseCode,
+          createCourseReviewRequestDto.professorName,
+        );
+      const courseIds = courses.map((course) => course.id);
+      await this.courseService.updateCourseTotalRate(courseIds, totalRate);
+      await queryRunner.commitTransaction();
+      return {
+        id: courseReview.id,
+        reviewer: user.username,
+        createdAt: courseReview.createdAt,
+        rate: courseReview.rate,
+        classLevel: courseReview.classLevel,
+        teamProject: courseReview.teamProject,
+        amountLearned: courseReview.amountLearned,
+        teachingSkills: courseReview.teachingSkills,
+        attendance: courseReview.attendance,
+        recommendCount: courseReview.recommendCount,
+        textReview: courseReview.textReview,
+        professorName: courseReview.professorName,
+        year: courseReview.year,
+        semester: courseReview.semester,
+        courseCode: courseReview.courseCode,
+        userId: courseReview.userId,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getCourseReviewSummary(

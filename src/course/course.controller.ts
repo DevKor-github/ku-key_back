@@ -13,26 +13,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
+import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 
 @ApiTags('course')
 @Controller('course')
 export class CourseController {
   constructor(private courseService: CourseService) {}
-
-  @Get()
-  @ApiOperation({
-    summary: '모든 강의 조회',
-    description: '등록된 모든 강의를 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '모든 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
-  })
-  async getAllCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getAllCourses();
-  }
 
   // 학수번호 검색
   @UseGuards(JwtAuthGuard)
@@ -47,15 +33,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '학수번호로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchCourseCode(
     @Query() searchCourseCodeDto: SearchCourseCodeDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
 
@@ -77,16 +67,20 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 과목명으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchMajorCourseName(
     @Query('major') major: string,
     @Query() searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchMajorCourseName(
       major,
       searchCourseNameDto,
@@ -106,15 +100,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 과목명으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchGeneralCourseName(
     @Query() searchCourseNameDto: SearchCourseNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchGeneralCourseName(
       searchCourseNameDto,
     );
@@ -138,16 +136,20 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 과목 담당 교수님 성함으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchMajorProfessorName(
     @Query('major') major: string,
     @Query() searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchMajorProfessorName(
       major,
       searchProfessorNameDto,
@@ -167,15 +169,19 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 담당 교수님 성함으로 강의 검색 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async searchGeneralProfessorName(
     @Query() searchProfessorNameDto: SearchProfessorNameDto,
-  ): Promise<CommonCourseResponseDto[]> {
+  ): Promise<PaginatedCoursesDto> {
     return await this.courseService.searchGeneralProfessorName(
       searchProfessorNameDto,
     );
@@ -189,14 +195,20 @@ export class CourseController {
     summary: '교양 강의 조회',
     description: '모든 교양 강의를 조회합니다.',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '교양 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
-  async getGeneralCourses(): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getGeneralCourses();
+  async getGeneralCourses(
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getGeneralCourses(cursorId);
   }
 
   // 전공 리스트 (학부별)
@@ -212,16 +224,21 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '전공 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async getMajorCourses(
     @Query('major') major: string,
-  ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getMajorCourses(major);
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getMajorCourses(major, cursorId);
   }
 
   // 학문의 기초 리스트
@@ -237,16 +254,24 @@ export class CourseController {
     required: true,
     type: 'string',
   })
+  @ApiQuery({
+    name: 'cursorId',
+    required: false,
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: '학문의 기초 강의 조회 성공 시',
-    type: CommonCourseResponseDto,
-    isArray: true,
+    type: PaginatedCoursesDto,
   })
   async getAcademicFoundationCourses(
     @Query('college') college: string,
-  ): Promise<CommonCourseResponseDto[]> {
-    return await this.courseService.getAcademicFoundationCourses(college);
+    @Query('cursorId') cursorId?: number,
+  ): Promise<PaginatedCoursesDto> {
+    return await this.courseService.getAcademicFoundationCourses(
+      college,
+      cursorId,
+    );
   }
 
   @Get('/:courseId')
