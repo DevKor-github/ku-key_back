@@ -13,6 +13,7 @@ import { KuVerificationRepository } from './ku-verification.repository';
 import { AdminStrategy } from './strategies/admin.strategy';
 import { UserModule } from 'src/user/user.module';
 import { CommonModule } from 'src/common/common.module';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CommonModule } from 'src/common/common.module';
     RefreshStrategy,
     VerifyStrategy,
     AdminStrategy,
+    OptionalJwtAuthGuard,
   ],
 })
 export class AuthModule {}
