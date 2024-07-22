@@ -19,6 +19,7 @@ import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
+import { ReportEntity } from './report.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -132,4 +133,7 @@ export class UserEntity extends CommonEntity {
     (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.user,
   )
   commentAnonymousNumbers: CommentAnonymousNumberEntity[];
+
+  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.user)
+  reports: ReportEntity[];
 }

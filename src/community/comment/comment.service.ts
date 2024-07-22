@@ -311,4 +311,8 @@ export class CommentService {
       await queryRunner.release();
     }
   }
+
+  async getComment(commentId: number): Promise<CommentEntity> {
+    return await this.commentRepository.getCommentByCommentId(commentId);
+  }
 }
