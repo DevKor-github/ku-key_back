@@ -17,6 +17,7 @@ import { CourseReviewModule } from './course-review/course-review.module';
 import { BoardModule } from './community/board/board.module';
 import { PostModule } from './community/post/post.module';
 import { CommentModule } from './community/comment/comment.module';
+import { NoticeModule } from './notice/notice.module';
 import { CalendarModule } from './home/calendar/calendar.module';
 import { InstitutionModule } from './home/institution/institution.module';
 
@@ -60,6 +61,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
     PostModule,
     CommentModule,
     ClubModule,
+    NoticeModule,
     CalendarModule,
     InstitutionModule,
   ],

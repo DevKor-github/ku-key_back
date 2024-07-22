@@ -9,6 +9,7 @@ import {
 import { CommonEntity } from './common.entity';
 import { PostEntity } from './post.entity';
 import { UserEntity } from './user.entity';
+import { CommentLikeEntity } from './comment-like.entity';
 
 @Entity('comment')
 export class CommentEntity extends CommonEntity {
@@ -29,6 +30,9 @@ export class CommentEntity extends CommonEntity {
 
   @Column('boolean', { nullable: false })
   isAnonymous: boolean;
+
+  @Column('int', { nullable: false, default: 0 })
+  likeCount: number;
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.comments, {
@@ -52,6 +56,16 @@ export class CommentEntity extends CommonEntity {
   )
   parentComment: CommentEntity;
 
-  @OneToMany(() => CommentEntity, (commentEntity) => commentEntity.user)
+  @OneToMany(
+    () => CommentEntity,
+    (commentEntity) => commentEntity.parentComment,
+  )
   replyComments: CommentEntity[];
+
+  @OneToMany(
+    () => CommentLikeEntity,
+    (commentLikeEntity) => commentLikeEntity.comment,
+    { cascade: true },
+  )
+  commentLikes: CommentLikeEntity[];
 }
