@@ -106,8 +106,6 @@ export class PostEntity extends CommonEntity {
   )
   commentAnonymousNumbers: CommentAnonymousNumberEntity[];
 
-  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.post, {
-    cascade: true,
-  })
+  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.post)
   reports: ReportEntity[];
 }

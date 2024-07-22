@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { ReportEntity } from 'src/entities/report.entity';
 
@@ -25,7 +25,7 @@ export class ReportRepository extends Repository<ReportEntity> {
     return await this.save(report);
   }
 
-  async getReports(): Promise<ReportEntity[]> {
+  async getReportList(): Promise<ReportEntity[]> {
     const reports = await this.find({
       order: {
         createdAt: 'DESC',
@@ -33,5 +33,22 @@ export class ReportRepository extends Repository<ReportEntity> {
     });
 
     return reports;
+  }
+
+  async getReport(reportId: number): Promise<ReportEntity> {
+    const report = await this.findOne({
+      where: { id: reportId },
+    });
+
+    if (!report) {
+      throw new BadRequestException('Wrong ReportId!');
+    }
+
+    return await this.findOne({
+      where: { id: reportId },
+      relations: !report.commentId
+        ? ['post.postImages', 'post.user']
+        : ['comment.user'],
+    });
   }
 }
