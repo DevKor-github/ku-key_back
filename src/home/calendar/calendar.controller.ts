@@ -20,7 +20,6 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
 import { GetCalendarDataQueryDto } from './dto/get-calendar-data-query-dto';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
@@ -36,7 +35,6 @@ import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-respon
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: '연도, 월별 행사/일정 조회',

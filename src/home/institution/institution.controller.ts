@@ -9,7 +9,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { InstitutionService } from './institution.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -28,7 +27,6 @@ import { InstitutionResponseDto } from './dto/institution-response-dto';
 export class InstitutionController {
   constructor(private readonly institutionService: InstitutionService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: '기관 목록 조회',
