@@ -15,6 +15,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateInstitutionRequestDto } from './dto/create-institution-request-dto';
@@ -24,6 +25,7 @@ import { DeleteInstitutionResponseDto } from './dto/delete-institution-response-
 import { InstitutionResponseDto } from './dto/institution-response-dto';
 
 @Controller('institution')
+@ApiTags('institution')
 export class InstitutionController {
   constructor(private readonly institutionService: InstitutionService) {}
 

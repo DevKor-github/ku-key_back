@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import {
-  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -31,7 +30,6 @@ import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-respon
 
 @Controller('calendar')
 @ApiTags('calendar')
-@ApiBearerAuth('accessToken')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
@@ -44,6 +42,7 @@ export class CalendarController {
   @ApiQuery({ name: 'month', required: true, description: '월' })
   @ApiOkResponse({
     description: '특정 연도, 월별 행사/일정 데이터 반환',
+    isArray: true,
     type: GetCalendarDataResponseDto,
   })
   async getCalendarData(
