@@ -36,8 +36,8 @@ export class ReportService {
     const report = await this.reportRepository.getReport(reportId);
     const response = new GetReportResponseDto(report);
     if (response.reportedPost) {
-      response.reportedPost.imgDirs.map((imgDir) =>
-        this.fileService.makeUrlByFileDir(imgDir),
+      response.reportedPost.imgDirs = response.reportedPost.imgDirs.map(
+        (imgDir) => this.fileService.makeUrlByFileDir(imgDir),
       );
     }
 
