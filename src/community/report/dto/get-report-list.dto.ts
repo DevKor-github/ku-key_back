@@ -6,6 +6,7 @@ export class GetReportListResponseDto {
     this.id = reportEntity.id;
     this.createdAt = reportEntity.createdAt;
     this.reason = reportEntity.reason;
+    this.isPost = reportEntity.commentId ? false : true;
   }
   @ApiProperty({ description: '신고 고유 ID' })
   id: number;
@@ -15,4 +16,7 @@ export class GetReportListResponseDto {
 
   @ApiProperty({ description: '신고 사유' })
   reason: string;
+
+  @ApiProperty({ description: '게시글 신고인지 여부(false 이면 댓글 신고)' })
+  isPost: boolean;
 }
