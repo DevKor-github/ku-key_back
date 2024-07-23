@@ -60,7 +60,6 @@ export class ClubController {
     @User() user: AuthorizedUserDto | null,
     @Query() clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
-    console.log(user);
     return await this.clubService.getClubList(user, clubSearchQueryDto);
   }
 
