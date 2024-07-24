@@ -25,6 +25,20 @@ export class ReportRepository extends Repository<ReportEntity> {
     return await this.save(report);
   }
 
+  async checkAlreadyReport(
+    reporterId: number,
+    postId: number,
+    commentId?: number,
+  ): Promise<boolean> {
+    const report = await this.findOne({
+      where: commentId
+        ? { reporterId: reporterId, commentId: commentId }
+        : { reporterId: reporterId, postId: postId, commentId: IsNull() },
+    });
+
+    return report ? true : false;
+  }
+
   async getReportList(): Promise<ReportEntity[]> {
     const reports = await this.find({
       order: {

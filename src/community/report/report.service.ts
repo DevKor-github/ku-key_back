@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ReportRepository } from './report.repository';
 import { CreateReportResponseDto } from './dto/create-report.dto';
 import { GetReportListResponseDto } from './dto/get-report-list.dto';
@@ -18,6 +18,15 @@ export class ReportService {
     postId: number,
     commentId?: number,
   ): Promise<CreateReportResponseDto> {
+    if (
+      await this.reportRepository.checkAlreadyReport(
+        reporterId,
+        postId,
+        commentId,
+      )
+    ) {
+      throw new BadRequestException('Already Reported!');
+    }
     await this.reportRepository.createReport(
       reporterId,
       reason,
