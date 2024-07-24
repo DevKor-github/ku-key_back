@@ -347,6 +347,9 @@ export class PostController {
     @Param('postId') postId: number,
     @Body() body: CreateReportRequestDto,
   ): Promise<CreateReportResponseDto> {
+    if (!(await this.postService.isExistingPostId(postId))) {
+      throw new BadRequestException('Wrong PostId!');
+    }
     return await this.reportService.createReport(user.id, body.reason, postId);
   }
 }

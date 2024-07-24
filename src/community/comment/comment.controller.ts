@@ -172,6 +172,9 @@ export class CommentController {
     @Body() body: CreateReportRequestDto,
   ): Promise<CreateReportResponseDto> {
     const comment = await this.commentService.getComment(commentId);
+    if (!comment) {
+      throw new BadRequestException('Wrong CommentId!');
+    }
     return await this.reportService.createReport(
       user.id,
       body.reason,
