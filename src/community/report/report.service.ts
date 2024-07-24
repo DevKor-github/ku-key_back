@@ -34,7 +34,10 @@ export class ReportService {
 
   async getReport(reportId: number): Promise<GetReportResponseDto> {
     const report = await this.reportRepository.getReport(reportId);
-    const response = new GetReportResponseDto(report);
+    const count = report.commentId
+      ? await this.reportRepository.getCommentReportCount(report.commentId)
+      : await this.reportRepository.getPostReportCount(report.postId);
+    const response = new GetReportResponseDto(report, count);
     if (response.reportedPost) {
       response.reportedPost.imgDirs = response.reportedPost.imgDirs.map(
         (imgDir) => this.fileService.makeUrlByFileDir(imgDir),

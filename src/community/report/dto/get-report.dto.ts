@@ -49,7 +49,7 @@ class ReportedComment {
 }
 
 export class GetReportResponseDto {
-  constructor(reportEntity: ReportEntity) {
+  constructor(reportEntity: ReportEntity, count: number) {
     if (!reportEntity.commentId) {
       this.reportedPost = new ReportedPost(reportEntity.post);
       this.reportedUser = new ReportedUser(reportEntity.post.user);
@@ -57,12 +57,16 @@ export class GetReportResponseDto {
       this.reportedComment = new ReportedComment(reportEntity.comment);
       this.reportedUser = new ReportedUser(reportEntity.comment.user);
     }
+    this.reportCount = count;
   }
   @ApiProperty({ description: '신고된 게시글' })
   reportedPost?: ReportedPost;
 
   @ApiProperty({ description: '신고된 댓글' })
   reportedComment?: ReportedComment;
+
+  @ApiProperty({ description: '해당 글에 접수된 신고 횟수' })
+  reportCount: number;
 
   @ApiProperty({ description: '신고된 사용자' })
   reportedUser: ReportedUser;

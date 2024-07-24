@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { ReportEntity } from 'src/entities/report.entity';
 
 @Injectable()
@@ -49,6 +49,23 @@ export class ReportRepository extends Repository<ReportEntity> {
       relations: !report.commentId
         ? ['post.postImages', 'post.user']
         : ['comment.user'],
+    });
+  }
+
+  async getPostReportCount(postId: number): Promise<number> {
+    return await this.count({
+      where: {
+        postId: postId,
+        commentId: IsNull(),
+      },
+    });
+  }
+
+  async getCommentReportCount(commentId: number): Promise<number> {
+    return await this.count({
+      where: {
+        commentId: commentId,
+      },
     });
   }
 }
