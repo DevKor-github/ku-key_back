@@ -45,13 +45,21 @@ import {
   ReactPostRequestDto,
   ReactPostResponseDto,
 } from './dto/react-post.dto';
+import {
+  CreateReportRequestDto,
+  CreateReportResponseDto,
+} from '../report/dto/create-report.dto';
+import { ReportService } from '../report/report.service';
 
 @Controller('post')
 @ApiTags('post')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly reportService: ReportService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -315,5 +323,33 @@ export class PostController {
     @Body() body: ReactPostRequestDto,
   ): Promise<ReactPostResponseDto> {
     return await this.postService.reactPost(user, postId, body);
+  }
+
+  @Post('/:postId/report')
+  @ApiOperation({
+    summary: '게시글 신고',
+    description: '게시글을 신고합니다',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiBody({
+    type: CreateReportRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 신고 성공',
+    type: CreateReportResponseDto,
+  })
+  async reportPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+    @Body() body: CreateReportRequestDto,
+  ): Promise<CreateReportResponseDto> {
+    if (!(await this.postService.isExistingPostId(postId))) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+    return await this.reportService.createReport(user.id, body.reason, postId);
   }
 }

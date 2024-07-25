@@ -10,6 +10,7 @@ import { CommonEntity } from './common.entity';
 import { PostEntity } from './post.entity';
 import { UserEntity } from './user.entity';
 import { CommentLikeEntity } from './comment-like.entity';
+import { ReportEntity } from './report.entity';
 
 @Entity('comment')
 export class CommentEntity extends CommonEntity {
@@ -68,4 +69,7 @@ export class CommentEntity extends CommonEntity {
     { cascade: true },
   )
   commentLikes: CommentLikeEntity[];
+
+  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.comment)
+  reports: ReportEntity[];
 }

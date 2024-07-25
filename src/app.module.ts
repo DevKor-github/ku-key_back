@@ -18,6 +18,9 @@ import { BoardModule } from './community/board/board.module';
 import { PostModule } from './community/post/post.module';
 import { CommentModule } from './community/comment/comment.module';
 import { NoticeModule } from './notice/notice.module';
+import { CalendarModule } from './home/calendar/calendar.module';
+import { InstitutionModule } from './home/institution/institution.module';
+import { ReportModule } from './community/report/report.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -60,6 +63,9 @@ console.log(`.env.${process.env.NODE_ENV}`);
     CommentModule,
     ClubModule,
     NoticeModule,
+    CalendarModule,
+    InstitutionModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
