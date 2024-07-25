@@ -12,15 +12,13 @@ export class PaginatedCoursesDto {
   data: CommonCourseResponseDto[];
 
   constructor(commonCourseResponseDto: CommonCourseResponseDto[]) {
-    const hasNextPage = commonCourseResponseDto.length === 5;
-    const nextCursorId = hasNextPage
-      ? commonCourseResponseDto[3].id
-      : null;
+    const hasNextPage = commonCourseResponseDto.length === 21;
+    const nextCursorId = hasNextPage ? commonCourseResponseDto[19].id : null;
 
     this.hasNextPage = hasNextPage;
     this.nextCursorId = nextCursorId;
     this.data = hasNextPage
-      ? commonCourseResponseDto.slice(0, 4)
+      ? commonCourseResponseDto.slice(0, 20)
       : commonCourseResponseDto;
   }
 }
