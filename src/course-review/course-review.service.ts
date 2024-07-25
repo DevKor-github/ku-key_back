@@ -169,24 +169,10 @@ export class CourseReviewService {
       where: { userId: user.id },
     });
 
-    return courseReviews.map((courseReview) => ({
-      id: courseReview.id,
-      reviewer: user.username,
-      createdAt: courseReview.createdAt,
-      rate: courseReview.rate,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      recommendCount: courseReview.recommendCount,
-      textReview: courseReview.textReview,
-      professorName: courseReview.professorName,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      courseCode: courseReview.courseCode,
-      userId: courseReview.userId,
-    }));
+    return courseReviews.map(
+      (courseReview) =>
+        new CourseReviewResponseDto(courseReview, user.username),
+    );
   }
 
   async getCourseReviews(
