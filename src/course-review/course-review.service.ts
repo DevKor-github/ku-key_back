@@ -62,6 +62,7 @@ export class CourseReviewService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
       const courseReview = queryRunner.manager.create(CourseReviewEntity, {
         ...createCourseReviewRequestDto,
@@ -90,24 +91,7 @@ export class CourseReviewService {
       const courseIds = courses.map((course) => course.id);
       await this.courseService.updateCourseTotalRate(courseIds, totalRate);
       await queryRunner.commitTransaction();
-      return {
-        id: courseReview.id,
-        reviewer: user.username,
-        createdAt: courseReview.createdAt,
-        rate: courseReview.rate,
-        classLevel: courseReview.classLevel,
-        teamProject: courseReview.teamProject,
-        amountLearned: courseReview.amountLearned,
-        teachingSkills: courseReview.teachingSkills,
-        attendance: courseReview.attendance,
-        recommendCount: courseReview.recommendCount,
-        textReview: courseReview.textReview,
-        professorName: courseReview.professorName,
-        year: courseReview.year,
-        semester: courseReview.semester,
-        courseCode: courseReview.courseCode,
-        userId: courseReview.userId,
-      };
+      return new CourseReviewResponseDto(courseReview, user.username);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
