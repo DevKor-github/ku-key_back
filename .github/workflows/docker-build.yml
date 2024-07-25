@@ -56,6 +56,8 @@ jobs:
           echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env.prod
           echo "DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}" >> .env.prod
           echo "PORT=${{ secrets.PORT }}" >> .env.prod
+          echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.prod
+          echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.prod
 
           cat .env.prod
 
