@@ -19,8 +19,14 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
-import { GetCalendarDataQueryDto } from './dto/get-calendar-data-query-dto';
+import {
+  GetDailyCalendarDataResponseDto,
+  GetMonthlyCalendarDataResponseDto,
+} from './dto/get-calendar-data-response-dto';
+import {
+  GetMonthlyCalendarDataQueryDto,
+  GetYearlyCalendarDataQueryDto,
+} from './dto/get-calendar-data-query-dto';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
@@ -36,22 +42,41 @@ export class CalendarController {
   @Get()
   @ApiOperation({
     summary: '연도, 월별 행사/일정 조회',
-    description: '연도, 월 정보를 받아 그 날짜의 행사/일정을 조회합니다.',
+    description:
+      '연도, 월 정보를 받아 그 달의 행사/일정을 조회합니다. 행사/일정 존재여부에 상관없이 그 달의 모든 날짜를 반환합니다.',
   })
   @ApiQuery({ name: 'year', required: true, description: '연도' })
   @ApiQuery({ name: 'month', required: true, description: '월' })
   @ApiOkResponse({
     description: '특정 연도, 월별 행사/일정 데이터 반환',
     isArray: true,
-    type: GetCalendarDataResponseDto,
+    type: GetDailyCalendarDataResponseDto,
   })
-  async getCalendarData(
-    @Query() queryDto: GetCalendarDataQueryDto,
-  ): Promise<GetCalendarDataResponseDto[]> {
-    return await this.calendarService.getCalendarData(
+  async getMonthlyCalendarData(
+    @Query() queryDto: GetMonthlyCalendarDataQueryDto,
+  ): Promise<GetDailyCalendarDataResponseDto[]> {
+    return await this.calendarService.getMonthlyCalendarData(
       queryDto.year,
       queryDto.month,
     );
+  }
+
+  @Get('yearly')
+  @ApiOperation({
+    summary: '연도별 행사/일정 전체 조회',
+    description:
+      '연도별 행사/일정 전체를 조회합니다. 행사/일정이 존재하는 날짜의 경우에만 가져옵니다.',
+  })
+  @ApiQuery({ name: 'year', required: true, description: '연도' })
+  @ApiOkResponse({
+    description: '특정 연도별 행사/일정 데이터 반환',
+    isArray: true,
+    type: GetMonthlyCalendarDataResponseDto,
+  })
+  async getYearlyCalendarData(
+    @Query() queryDto: GetYearlyCalendarDataQueryDto,
+  ): Promise<GetMonthlyCalendarDataResponseDto[]> {
+    return await this.calendarService.getYearlyCalendarData(queryDto.year);
   }
 
   @UseGuards(AdminAuthGuard)

@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
-import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
+import {
+  GetDailyCalendarDataResponseDto,
+  GetMonthlyCalendarDataResponseDto,
+} from './dto/get-calendar-data-response-dto';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
@@ -21,10 +24,10 @@ export class CalendarService {
     private readonly calendarRepository: CalendarRepository,
   ) {}
 
-  async getCalendarData(
+  async getMonthlyCalendarData(
     year: number,
     month: number,
-  ): Promise<GetCalendarDataResponseDto[]> {
+  ): Promise<GetDailyCalendarDataResponseDto[]> {
     const monthDays = this.getDaysInMonth(year, month);
     // 시작 - 끝 날짜 생성, month = 7로 받았을 경우 '07'로 입력해주기 위해 padStart 사용
     const startDate = new Date(`${year}-${String(month).padStart(2, '0')}-01`);
@@ -36,14 +39,14 @@ export class CalendarService {
       where: { date: Between(startDate, endDate) },
     });
     const eventByDates = this.groupEventsByDate(monthEvents);
-    const monthCalendarData: GetCalendarDataResponseDto[] = [];
+    const monthCalendarData: GetDailyCalendarDataResponseDto[] = [];
 
     for (let day = 1; day <= monthDays; day++) {
       const currentDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       // 이벤트가 있으면 배열 형태로, 없다면 빈 배열
       const dayEvents = eventByDates.get(currentDate) || [];
 
-      const dayCalendarData = new GetCalendarDataResponseDto(
+      const dayCalendarData = new GetDailyCalendarDataResponseDto(
         new Date(currentDate),
         dayEvents,
       );
@@ -51,6 +54,20 @@ export class CalendarService {
     }
 
     return monthCalendarData;
+  }
+
+  async getYearlyCalendarData(year: number) {
+    const allCalendarData: GetMonthlyCalendarDataResponseDto[] = [];
+    for (let month = 1; month <= 12; month++) {
+      const monthCalendarData = await this.getMonthlyCalendarData(year, month);
+      const filteredData = monthCalendarData.filter(
+        (dayCalendarData) => dayCalendarData.eventCount !== 0,
+      );
+      allCalendarData.push(
+        new GetMonthlyCalendarDataResponseDto(month, filteredData),
+      );
+    }
+    return allCalendarData;
   }
 
   async createCalendarData(
