@@ -36,7 +36,6 @@ export class TimetableService {
     private readonly scheduleService: ScheduleService,
   ) {}
 
-  // 시간표에 강의 추가 -> 강의랑 개인 스케쥴 둘 다 확인 필요
   async createTimetableCourse(
     timetableId: number,
     courseId: number,
@@ -426,8 +425,13 @@ export class TimetableService {
         );
 
         if (nextMainTimetable) {
-          nextMainTimetable.mainTimetable = true;
-          await queryRunner.manager.save(nextMainTimetable);
+          await queryRunner.manager.update(
+            TimetableEntity,
+            nextMainTimetable.id,
+            {
+              mainTimetable: true,
+            },
+          );
         }
       }
       await queryRunner.manager.softRemove(timetable);
@@ -477,8 +481,11 @@ export class TimetableService {
       throw new NotFoundException('Timetable not found');
     }
 
+    await this.timetableRepository.update(timetableId, {
+      color: timetableColor,
+    });
     timetable.color = timetableColor;
-    return await this.timetableRepository.save(timetable);
+    return timetable;
   }
 
   // 시간표 이름 변경
@@ -497,8 +504,9 @@ export class TimetableService {
       throw new NotFoundException('Timetable not found');
     }
 
+    await this.timetableRepository.update(timetableId, { timetableName });
     timetable.timetableName = timetableName;
-    return await this.timetableRepository.save(timetable);
+    return timetable;
   }
 
   // 기존의 대표시간표의 mainTimetable column을 false로 변경하고, 새로운 시간표의 mainTimetable column을 true로 변경
@@ -539,12 +547,15 @@ export class TimetableService {
         throw new ConflictException('Already main Timetable');
       }
 
-      oldMainTimetable.mainTimetable = false;
-      newMainTimetable.mainTimetable = true;
-      await queryRunner.manager.save(oldMainTimetable);
-      await queryRunner.manager.save(newMainTimetable);
-      await queryRunner.commitTransaction();
+      await queryRunner.manager.update(TimetableEntity, oldMainTimetable.id, {
+        mainTimetable: false,
+      });
 
+      await queryRunner.manager.update(TimetableEntity, newMainTimetable.id, {
+        mainTimetable: true,
+      });
+      await queryRunner.commitTransaction();
+      newMainTimetable.mainTimetable = true;
       return newMainTimetable;
     } catch (error) {
       await queryRunner.rollbackTransaction();
