@@ -88,6 +88,7 @@ export class AuthService {
       username: user.username,
     };
     return this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
       expiresIn: '5m',
     });
   }
@@ -97,6 +98,7 @@ export class AuthService {
     return this.jwtService.sign(
       { id, keepingLogin },
       {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
       },
     );
