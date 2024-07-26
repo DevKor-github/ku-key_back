@@ -83,14 +83,14 @@ export class CourseService {
           id: MoreThan(searchCourseCodeDto.cursorId),
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
@@ -118,7 +118,7 @@ export class CourseService {
         .andWhere('course.major = :major', { major })
         .andWhere('course.category = :category', { category: 'Major' })
         .orderBy('course.id', 'ASC')
-        .limit(5);
+        .limit(21);
 
       if (searchCourseNameDto.cursorId) {
         queryBuilder.andWhere('course.id > :cursorId', {
@@ -152,7 +152,7 @@ export class CourseService {
           id: MoreThan(searchProfessorNameDto.cursorId),
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
@@ -163,7 +163,7 @@ export class CourseService {
           category: 'Major',
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
@@ -190,7 +190,7 @@ export class CourseService {
           category: 'General Studies',
         })
         .orderBy('course.id', 'ASC')
-        .limit(5);
+        .limit(21);
 
       if (searchCourseNameDto.cursorId) {
         queryBuilder.andWhere('course.id > :cursorId', {
@@ -219,7 +219,7 @@ export class CourseService {
           id: MoreThan(searchProfessorNameDto.cursorId),
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
@@ -229,7 +229,7 @@ export class CourseService {
           category: 'General Studies',
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
@@ -244,14 +244,14 @@ export class CourseService {
       courses = await this.courseRepository.find({
         where: { category: 'General Studies', id: MoreThan(cursorId) },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'General Studies' },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
@@ -270,14 +270,14 @@ export class CourseService {
       courses = await this.courseRepository.find({
         where: { category: 'Major', major: major, id: MoreThan(cursorId) },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'Major', major: major },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
@@ -300,14 +300,14 @@ export class CourseService {
           id: MoreThan(cursorId),
         },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
         where: { category: 'Academic Foundations', college: college },
         order: { id: 'ASC' },
-        take: 5,
+        take: 21,
         relations: ['courseDetails'],
       });
     }
