@@ -263,8 +263,9 @@ export class AuthService {
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
     const request = await this.kuVerificationRepository.findRequestById(id);
+    const userId = request.user.id;
+    const user = await this.userService.findUserById(userId);
     if (verify) {
-      const userId = request.user.id;
       const isVerified = await this.userService.verifyUser(userId, verify);
       if (!isVerified) {
         throw new NotImplementedException('reqeust allow failed!');
@@ -283,6 +284,9 @@ export class AuthService {
     } else {
       await this.deleteRequest(request.id);
     }
+
+    await this.emailService.sendVerifyCompleteEmail(user.email, verify);
+
     return new VerifyScreenshotResponseDto(true);
   }
 
