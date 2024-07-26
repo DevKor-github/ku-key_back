@@ -9,7 +9,10 @@ import { CreateCourseReviewRequestDto } from './dto/create-course-review-request
 import { CourseReviewResponseDto } from './dto/course-review-response.dto';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { UserService } from 'src/user/user.service';
-import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
+import {
+  GetCourseReviewsResponseDto,
+  ReviewDto,
+} from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
 import { DataSource, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
@@ -227,22 +230,13 @@ export class CourseReviewService {
       (recommend) => recommend.courseReviewId,
     );
 
-    const reviews = courseReviews.map((courseReview) => ({
-      id: courseReview.id,
-      rate: courseReview.rate,
-      createdAt: courseReview.createdAt,
-      reviewer: courseReview.user.username,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      myRecommend: recommendedReviewIds.includes(courseReview.id), // id가 추천한 리뷰 ID 중 하나인지 확인
-      recommendCount: courseReview.recommendCount,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      text: courseReview.textReview,
-    }));
+    const reviews = courseReviews.map(
+      (courseReview) =>
+        new ReviewDto(
+          courseReview,
+          recommendedReviewIds.includes(courseReview.id),
+        ),
+    );
 
     return {
       totalRate: parseFloat(totalRate.toFixed(1)), // 소수점 이하 첫째자리까지 나타내기
