@@ -12,6 +12,8 @@ import { PostScrapRepository } from './post-scrap.repository';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { ReportModule } from '../report/report.module';
+import { UserModule } from 'src/user/user.module';
+import { NoticeModule } from 'src/notice/notice.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ReportModule } from '../report/report.module';
     BoardModule,
     CommonModule,
     ReportModule,
+    UserModule,
+    NoticeModule,
   ],
   controllers: [PostController],
   providers: [
