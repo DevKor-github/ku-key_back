@@ -293,7 +293,7 @@ export class AuthService {
   async deleteRequest(requestId: number): Promise<void> {
     const request =
       await this.kuVerificationRepository.findRequestById(requestId);
-    await this.userService.deleteUser(request.user.id);
+    await this.userService.hardDeleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
   }
 

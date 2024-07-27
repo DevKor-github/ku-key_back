@@ -75,13 +75,19 @@ export class UserEntity extends CommonEntity {
   )
   kuVerification: KuVerificationEntity;
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser, {
+    cascade: true,
+  })
   sentFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser, {
+    cascade: true,
+  })
   receivedFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user)
+  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user, {
+    cascade: true,
+  })
   timetables: TimetableEntity[];
 
   @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
@@ -99,7 +105,6 @@ export class UserEntity extends CommonEntity {
   @OneToMany(
     () => CourseReviewRecommendEntity,
     (courseReviewRecommendEntity) => courseReviewRecommendEntity.user,
-    { cascade: true },
   )
   courseReviewRecommends: CourseReviewRecommendEntity[];
 
@@ -131,6 +136,7 @@ export class UserEntity extends CommonEntity {
   @OneToMany(
     () => CommentAnonymousNumberEntity,
     (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.user,
+    { cascade: true },
   )
   commentAnonymousNumbers: CommentAnonymousNumberEntity[];
 
