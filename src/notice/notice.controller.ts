@@ -1,10 +1,16 @@
-import { Controller, Param, Sse, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { NoticeService } from './notice.service';
 import { Observable } from 'rxjs';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetNoticeResponseDto } from './dto/get-notice.dto';
 
 @Controller('notice')
 @ApiTags('notice')
@@ -30,5 +36,22 @@ export class NoticeController {
   @Sse('/sse/:userId')
   sseWithParam(@Param('userId') userId: number): Observable<any> {
     return this.noticeService.sendClientConnection(userId);
+  }
+
+  @ApiOperation({
+    summary: '알림 조회',
+    description: '받았던 알림들을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '알림 조회 성공',
+    type: [GetNoticeResponseDto],
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getNotices(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetNoticeResponseDto[]> {
+    return await this.noticeService.getNotices(user);
   }
 }
