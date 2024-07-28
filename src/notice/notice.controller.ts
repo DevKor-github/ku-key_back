@@ -6,8 +6,8 @@ import { Observable } from 'rxjs';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 
-@Controller('sse')
-@ApiTags('sse')
+@Controller('notice')
+@ApiTags('notice')
 @ApiBearerAuth('accessToken')
 export class NoticeController {
   constructor(private readonly noticeService: NoticeService) {}
@@ -17,7 +17,7 @@ export class NoticeController {
     summary: '알림 연결',
     description: 'SSE를 통해 서버에서 넘겨주는 알림을 연결합니다.',
   })
-  @Sse()
+  @Sse('/sse')
   sse(@User() user: AuthorizedUserDto): Observable<MessageEvent> {
     return this.noticeService.sendClientConnection(user.id);
   }
@@ -27,7 +27,7 @@ export class NoticeController {
     description:
       'SSE를 통해 서버에서 넘겨주는 알림을 연결합니다. (access토큰 만료됨에 따라 연결이 끊길 경우 사용)',
   })
-  @Sse('/:userId')
+  @Sse('/sse/:userId')
   sseWithParam(@Param('userId') userId: number): Observable<any> {
     return this.noticeService.sendClientConnection(userId);
   }
