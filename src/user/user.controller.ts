@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
@@ -17,6 +24,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
+import { DeleteUserResponseDto } from './dto/delete-user.dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
@@ -101,5 +109,22 @@ export class UserController {
     @User() user: AuthorizedUserDto,
   ): Promise<GetPointHistoryResponseDto[]> {
     return await this.userService.getPointHistory(user);
+  }
+
+  @ApiOperation({
+    summary: '회원탈퇴',
+    description: '사용자의 계정을 삭제합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '회원탈퇴 성공',
+    type: DeleteUserResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  async deleteUser(
+    @User() user: AuthorizedUserDto,
+  ): Promise<DeleteUserResponseDto> {
+    return this.userService.softDeleteUser(user.id);
   }
 }

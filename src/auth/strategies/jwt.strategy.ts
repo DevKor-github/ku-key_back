@@ -16,14 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       passReqToCallback: true,
-      secretOrKey: configService.get('JWT_SECRET'),
+      secretOrKey: configService.get('JWT_ACCESS_SECRET'),
     });
   }
 
   async validate(request: Request, payload: any): Promise<AuthorizedUserDto> {
-    if (payload.keepingLogin) {
-      throw new BadRequestException("Don't use RefreshToken as AccessToken!");
-    }
     if (request.url !== '/auth/logout') {
       const isVerified = await this.userService.checkUserVerified(payload.id);
       if (!isVerified) {
