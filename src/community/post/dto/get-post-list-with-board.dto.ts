@@ -35,16 +35,20 @@ export class PostPreview {
     this.title = postEntity.title;
     this.content = postEntity.content.substring(0, 100);
     this.createdAt = postEntity.createdAt;
-    this.username = postEntity.isAnonymous
-      ? null
-      : postEntity.user.username.substring(
-          0,
-          Math.floor(postEntity.user.username.length / 2),
-        ) +
-        '*'.repeat(
-          postEntity.user.username.length -
-            Math.floor(postEntity.user.username.length / 2),
-        );
+    console.log(postEntity);
+    this.username =
+      postEntity.user == null || postEntity.user.deletedAt
+        ? 'Deleted'
+        : postEntity.isAnonymous
+          ? 'Anonymous'
+          : postEntity.user.username.substring(
+              0,
+              Math.floor(postEntity.user.username.length / 2),
+            ) +
+            '*'.repeat(
+              postEntity.user.username.length -
+                Math.floor(postEntity.user.username.length / 2),
+            );
     this.commentCount = postEntity.commentCount;
     this.scrapCount = postEntity.scrapCount;
     this.thumbnailDir =
@@ -69,8 +73,8 @@ export class PostPreview {
   @ApiProperty({ description: '게시글 생성 시간' })
   createdAt: Date;
 
-  @ApiProperty({ description: '게시글을 생성한 사용자(익명이면 null)' })
-  username: string | null;
+  @ApiProperty({ description: '게시글을 생성한 사용자' })
+  username: string;
 
   @ApiProperty({ description: '댓글 수' })
   commentCount: number;
