@@ -5,8 +5,8 @@ on:
     branches: ['develop']
 
 env:
-  DOCKER_IMAGE: ghcr.io/devheun/ku-key
-  DOCKER_CONTAINER: ku-key
+  DOCKER_IMAGE: ghcr.io/devheun/new-kukey
+  DOCKER_CONTAINER: new-kukey
 
 jobs:
   build:
@@ -55,10 +55,13 @@ jobs:
           echo "AWS_BUCKET_REGION=${{ secrets.AWS_BUCKET_REGION }}" >> .env.prod
           echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env.prod
           echo "DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}" >> .env.prod
+          echo "PORT=${{ secrets.PORT }}" >> .env.prod
+          echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.prod
+          echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.prod
 
           cat .env.prod
 
       - name: Run Docker
         run: |
           sudo docker stop ${{ env.DOCKER_CONTAINER }} && sudo docker rm ${{ env.DOCKER_CONTAINER }} && sudo docker rmi ${{ env.DOCKER_IMAGE }}:latest
-          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network bridge -p 3000:3000 --restart always ${{ env.DOCKER_IMAGE }}:latest
+          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network bridge -p ${{ secrets.PORT }}:${{ secrets.PORT }} --restart always ${{ env.DOCKER_IMAGE }}:latest

@@ -16,14 +16,15 @@ import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
+import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-jwt-auth.guard';
 
 @Controller('club')
 @ApiTags('club')
 @ApiBearerAuth('accessToken')
-@UseGuards(JwtAuthGuard)
 export class ClubController {
   constructor(private readonly clubService: ClubService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: '동아리 목록 조회',
@@ -56,13 +57,13 @@ export class ClubController {
     type: GetClubResponseDto,
   })
   async getClubList(
-    @User() user: AuthorizedUserDto,
+    @User() user: AuthorizedUserDto | null,
     @Query() clubSearchQueryDto: ClubSearchQueryDto,
   ): Promise<GetClubResponseDto[]> {
-    const userId = user.id;
-    return await this.clubService.getClubList(userId, clubSearchQueryDto);
+    return await this.clubService.getClubList(user, clubSearchQueryDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/like/:clubId')
   @ApiOperation({
     summary: '동아리 좋아요 등록/해제',
@@ -101,6 +102,7 @@ export class ClubController {
     return await this.clubService.getHotClubList();
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('recommend')
   @ApiOperation({
     summary: 'Recommend Club 목록 조회',
@@ -112,8 +114,7 @@ export class ClubController {
     isArray: true,
     type: GetRecommendClubResponseDto,
   })
-  async getRecommendClubList(@User() user: AuthorizedUserDto) {
-    const userId = user.id;
-    return await this.clubService.getRecommendClubList(userId);
+  async getRecommendClubList(@User() user: AuthorizedUserDto | null) {
+    return await this.clubService.getRecommendClubList(user);
   }
 }

@@ -18,12 +18,32 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.save(user);
   }
 
-  async deleteUser(id: number): Promise<boolean> {
+  async hardDeleteUser(id: number): Promise<boolean> {
     const deleteResult = await this.delete({
       id: id,
     });
 
     return deleteResult.affected ? true : false;
+  }
+
+  async softDeleteUser(id: number): Promise<boolean> {
+    const user = await this.findOne({
+      where: {
+        id: id,
+      },
+      relations: [
+        'kuVerification',
+        'sentFriendRequests',
+        'receivedFriendRequests',
+        'timetables.timetableCourses',
+        'timetables.schedules',
+        'pointHistories',
+        'commentAnonymousNumbers',
+      ],
+    });
+    const deleteResult = await this.softRemove(user);
+
+    return deleteResult.deletedAt ? true : false;
   }
 
   async findUserByEmail(email: string): Promise<UserEntity> {

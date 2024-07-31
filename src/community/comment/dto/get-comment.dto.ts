@@ -14,18 +14,22 @@ export class GetCommentResponseDto {
       this.updatedAt = commentEntity.updatedAt;
       this.isMyComment = commentEntity.userId === userId;
       this.content = commentEntity.content;
-      this.username = commentEntity.isAnonymous
-        ? anonymousNumber === 0
-          ? 'Author'
-          : `Anonymous ${anonymousNumber}`
-        : commentEntity.user.username.substring(
-            0,
-            Math.floor(commentEntity.user.username.length / 2),
-          ) +
-          '*'.repeat(
-            commentEntity.user.username.length -
-              Math.floor(commentEntity.user.username.length / 2),
-          );
+      this.username =
+        commentEntity.user == null || commentEntity.user.deletedAt
+          ? 'Deleted'
+          : commentEntity.isAnonymous
+            ? anonymousNumber === 0
+              ? 'Author'
+              : `Anonymous ${anonymousNumber}`
+            : commentEntity.user.username.substring(
+                0,
+                Math.floor(commentEntity.user.username.length / 2),
+              ) +
+              '*'.repeat(
+                commentEntity.user.username.length -
+                  Math.floor(commentEntity.user.username.length / 2),
+              );
+
       this.likeCount = commentEntity.likeCount;
     }
   }
@@ -47,7 +51,7 @@ export class GetCommentResponseDto {
   @ApiProperty({ description: '댓글 내용' })
   content?: string;
 
-  @ApiProperty({ description: '댓글을 작성한 사용자(익명이면 null)' })
+  @ApiProperty({ description: '댓글을 작성한 사용자' })
   username?: string | null;
 
   @ApiProperty({ description: '좋아요 수' })
