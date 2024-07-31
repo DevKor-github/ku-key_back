@@ -58,16 +58,19 @@ export class GetPostResponseDto {
     this.content = postEntity.content;
     this.createdAt = postEntity.createdAt;
     this.updatedAt = postEntity.updatedAt;
-    this.username = postEntity.isAnonymous
-      ? null
-      : postEntity.user.username.substring(
-          0,
-          Math.floor(postEntity.user.username.length / 2),
-        ) +
-        '*'.repeat(
-          postEntity.user.username.length -
-            Math.floor(postEntity.user.username.length / 2),
-        );
+    this.username =
+      postEntity.user == null || postEntity.user.deletedAt
+        ? 'Deleted'
+        : postEntity.isAnonymous
+          ? 'Anonymous'
+          : postEntity.user.username.substring(
+              0,
+              Math.floor(postEntity.user.username.length / 2),
+            ) +
+            '*'.repeat(
+              postEntity.user.username.length -
+                Math.floor(postEntity.user.username.length / 2),
+            );
     this.views = postEntity.views;
     this.scrapCount = postEntity.scrapCount;
     this.reaction = new ReactionCount();
@@ -119,8 +122,8 @@ export class GetPostResponseDto {
   @ApiProperty({ description: '게시글 수정 시간' })
   updatedAt: Date;
 
-  @ApiProperty({ description: '게시글을 생성한 사용자(익명이면 null)' })
-  username: string | null;
+  @ApiProperty({ description: '게시글을 생성한 사용자' })
+  username: string;
 
   @ApiProperty({ description: '조회수' })
   views: number;

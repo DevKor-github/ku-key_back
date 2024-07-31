@@ -88,6 +88,7 @@ export class AuthService {
       username: user.username,
     };
     return this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
       expiresIn: '5m',
     });
   }
@@ -97,6 +98,7 @@ export class AuthService {
     return this.jwtService.sign(
       { id, keepingLogin },
       {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
       },
     );
@@ -261,8 +263,9 @@ export class AuthService {
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
     const request = await this.kuVerificationRepository.findRequestById(id);
+    const userId = request.user.id;
+    const user = await this.userService.findUserById(userId);
     if (verify) {
-      const userId = request.user.id;
       const isVerified = await this.userService.verifyUser(userId, verify);
       if (!isVerified) {
         throw new NotImplementedException('reqeust allow failed!');
@@ -281,13 +284,16 @@ export class AuthService {
     } else {
       await this.deleteRequest(request.id);
     }
+
+    await this.emailService.sendVerifyCompleteEmail(user.email, verify);
+
     return new VerifyScreenshotResponseDto(true);
   }
 
   async deleteRequest(requestId: number): Promise<void> {
     const request =
       await this.kuVerificationRepository.findRequestById(requestId);
-    await this.userService.deleteUser(request.user.id);
+    await this.userService.hardDeleteUser(request.user.id);
     await this.fileService.deleteFile(request.imgDir);
   }
 
