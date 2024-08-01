@@ -45,7 +45,8 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env.prod
           echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env.prod
           echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env.prod
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.prod
+          echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.prod
+          echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.prod
           echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env.prod
           echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}" >> .env.prod
           echo "ADMIN_ID=${{ secrets.ADMIN_ID }}" >> .env.prod

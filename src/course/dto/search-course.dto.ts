@@ -9,7 +9,7 @@ export class SearchCourseDto {
 
   @ApiProperty({ description: '강의명' })
   @IsString()
-  @Length(2)
+  @Length(3)
   courseName: string;
 
   @ApiProperty({ description: '교수님 성함' })
