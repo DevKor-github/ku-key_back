@@ -466,7 +466,7 @@ export class PostService {
             10,
             'Hot post selected',
           );
-          this.noticeService.emitNotice(
+          await this.noticeService.emitNotice(
             post.userId,
             'Your Post is selected to Hot Board!',
           );

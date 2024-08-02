@@ -20,6 +20,7 @@ import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
 import { ReportEntity } from './report.entity';
+import { NoticeEntity } from './notice.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -142,4 +143,9 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.user)
   reports: ReportEntity[];
+
+  @OneToMany(() => NoticeEntity, (noticeEntity) => noticeEntity.user, {
+    cascade: true,
+  })
+  notices: NoticeEntity[];
 }
