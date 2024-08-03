@@ -33,6 +33,8 @@ import {
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { UserService } from 'src/user/user.service';
+import { NoticeService } from 'src/notice/notice.service';
 
 @Injectable()
 export class PostService {
@@ -41,6 +43,8 @@ export class PostService {
     private readonly postScrapRepository: PostScrapRepository,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
+    private readonly userService: UserService,
+    private readonly noticeService: NoticeService,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
@@ -404,7 +408,8 @@ export class PostService {
     postId: number,
     requestDto: ReactPostRequestDto,
   ): Promise<ReactPostResponseDto> {
-    if (!(await this.postRepository.isExistingPostId(postId))) {
+    const post = await this.postRepository.isExistingPostId(postId);
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
 
@@ -453,6 +458,18 @@ export class PostService {
           );
         if (!allReactionCountUpdateResult.affected) {
           throw new InternalServerErrorException('React Failed!');
+        }
+
+        if (post.allReactionCount + 1 >= 10) {
+          await this.userService.changePoint(
+            post.userId,
+            10,
+            'Hot post selected',
+          );
+          await this.noticeService.emitNotice(
+            post.userId,
+            'Your Post is selected to Hot Board!',
+          );
         }
       } else {
         if (existingReaction.reaction === requestDto.reaction) {

@@ -24,6 +24,6 @@ COPY --from=build /app/package*.json /app/
 # 프로덕션 의존성만 설치
 RUN npm install --production
 
-EXPOSE 3000
+EXPOSE 3080
 
 ENTRYPOINT ["npm", "run", "start:prod"]

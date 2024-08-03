@@ -9,7 +9,7 @@ import {
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
 import { DayType } from './dto/get-courseinfo-timetable.dto';
@@ -36,7 +36,6 @@ export class TimetableService {
     private readonly scheduleService: ScheduleService,
   ) {}
 
-  // 시간표에 강의 추가 -> 강의랑 개인 스케쥴 둘 다 확인 필요
   async createTimetableCourse(
     timetableId: number,
     courseId: number,
@@ -196,53 +195,38 @@ export class TimetableService {
   }
 
   async createTimetable(
+    transactionManager: EntityManager,
     createTimetableDto: CreateTimetableDto,
     user: AuthorizedUserDto,
   ): Promise<CommonTimetableResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      // 해당 user가 해당 년도, 해당 학기에 몇 개의 시간표를 가지고 있는 지 확인
-      const existingTimetableNumber = await queryRunner.manager.count(
-        TimetableEntity,
-        {
-          where: {
-            userId: user.id,
-            year: createTimetableDto.year,
-            semester: createTimetableDto.semester,
-          },
+    // 해당 user가 해당 년도, 해당 학기에 몇 개의 시간표를 가지고 있는 지 확인
+    const existingTimetableNumber = await transactionManager.count(
+      TimetableEntity,
+      {
+        where: {
+          userId: user.id,
+          year: createTimetableDto.year,
+          semester: createTimetableDto.semester,
         },
-      );
+      },
+    );
 
-      if (existingTimetableNumber >= 3) {
-        throw new ConflictException('Maximum number of Timetables reached');
-      }
-
-      const isFirstTimetable = existingTimetableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
-
-      const newTimetable = queryRunner.manager.create(TimetableEntity, {
-        userId: user.id,
-        timetableName: createTimetableDto.timetableName,
-        semester: createTimetableDto.semester,
-        year: createTimetableDto.year,
-        mainTimetable: isFirstTimetable,
-      });
-
-      await queryRunner.manager.save(newTimetable);
-      await queryRunner.commitTransaction();
-      return newTimetable;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      console.error('Failed to create Timetable:', error);
-      if (error instanceof ConflictException) {
-        throw error;
-      } else {
-        throw new InternalServerErrorException('An internal error occurred');
-      }
-    } finally {
-      await queryRunner.release();
+    if (existingTimetableNumber >= 3) {
+      throw new ConflictException('Maximum number of Timetables reached');
     }
+
+    const isFirstTimetable = existingTimetableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
+
+    const newTimetable = transactionManager.create(TimetableEntity, {
+      userId: user.id,
+      timetableName: createTimetableDto.timetableName,
+      semester: createTimetableDto.semester,
+      year: createTimetableDto.year,
+      mainTimetable: isFirstTimetable,
+    });
+
+    await transactionManager.save(newTimetable);
+    return newTimetable;
   }
 
   async getSimpleTimetableByTimetableId(
@@ -394,52 +378,41 @@ export class TimetableService {
   }
 
   async deleteTimetable(
+    transactionManager: EntityManager,
     timetableId: number,
     user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const timetable = await transactionManager.findOne(TimetableEntity, {
+      where: { id: timetableId, userId: user.id },
+      relations: ['timetableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
+    });
 
-    try {
-      const timetable = await queryRunner.manager.findOne(TimetableEntity, {
-        where: { id: timetableId, userId: user.id },
-        relations: ['timetableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
-      });
-
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      if (timetable.mainTimetable) {
-        const nextMainTimetable = await queryRunner.manager.findOne(
-          TimetableEntity,
-          {
-            where: {
-              userId: user.id,
-              year: timetable.year,
-              semester: timetable.semester,
-              mainTimetable: false,
-            },
-            order: { createdAt: 'ASC' },
-          },
-        );
-
-        if (nextMainTimetable) {
-          nextMainTimetable.mainTimetable = true;
-          await queryRunner.manager.save(nextMainTimetable);
-        }
-      }
-      await queryRunner.manager.softRemove(timetable);
-      await queryRunner.commitTransaction();
-      return { deleted: true };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      console.error('Failed to delete Timetable: ', error);
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    if (timetable.mainTimetable) {
+      const nextMainTimetable = await transactionManager.findOne(
+        TimetableEntity,
+        {
+          where: {
+            userId: user.id,
+            year: timetable.year,
+            semester: timetable.semester,
+            mainTimetable: false,
+          },
+          order: { createdAt: 'ASC' },
+        },
+      );
+
+      if (nextMainTimetable) {
+        await transactionManager.update(TimetableEntity, nextMainTimetable.id, {
+          mainTimetable: true,
+        });
+      }
+    }
+    await transactionManager.softRemove(timetable);
+    return { deleted: true };
   }
 
   async getMainTimetable(
@@ -477,8 +450,11 @@ export class TimetableService {
       throw new NotFoundException('Timetable not found');
     }
 
+    await this.timetableRepository.update(timetableId, {
+      color: timetableColor,
+    });
     timetable.color = timetableColor;
-    return await this.timetableRepository.save(timetable);
+    return timetable;
   }
 
   // 시간표 이름 변경
@@ -497,60 +473,49 @@ export class TimetableService {
       throw new NotFoundException('Timetable not found');
     }
 
+    await this.timetableRepository.update(timetableId, { timetableName });
     timetable.timetableName = timetableName;
-    return await this.timetableRepository.save(timetable);
+    return timetable;
   }
 
   // 기존의 대표시간표의 mainTimetable column을 false로 변경하고, 새로운 시간표의 mainTimetable column을 true로 변경
   async updateMainTimetable(
+    transactionManager: EntityManager,
     timetableId: number,
     user: AuthorizedUserDto,
     timetableDto: TimetableDto,
   ): Promise<CommonTimetableResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const oldMainTimetable = await queryRunner.manager.findOne(
-        TimetableEntity,
-        {
-          where: {
-            userId: user.id,
-            year: timetableDto.year,
-            semester: timetableDto.semester,
-            mainTimetable: true,
-          },
-        },
-      );
-      const newMainTimetable = await queryRunner.manager.findOne(
-        TimetableEntity,
-        {
-          where: {
-            id: timetableId,
-            userId: user.id,
-            year: timetableDto.year,
-            semester: timetableDto.semester,
-          },
-        },
-      );
-      if (!newMainTimetable || !oldMainTimetable) {
-        throw new NotFoundException('Timetable not found');
-      } else if (oldMainTimetable.id === newMainTimetable.id) {
-        throw new ConflictException('Already main Timetable');
-      }
-
-      oldMainTimetable.mainTimetable = false;
-      newMainTimetable.mainTimetable = true;
-      await queryRunner.manager.save(oldMainTimetable);
-      await queryRunner.manager.save(newMainTimetable);
-      await queryRunner.commitTransaction();
-
-      return newMainTimetable;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+    const oldMainTimetable = await transactionManager.findOne(TimetableEntity, {
+      where: {
+        userId: user.id,
+        year: timetableDto.year,
+        semester: timetableDto.semester,
+        mainTimetable: true,
+      },
+    });
+    const newMainTimetable = await transactionManager.findOne(TimetableEntity, {
+      where: {
+        id: timetableId,
+        userId: user.id,
+        year: timetableDto.year,
+        semester: timetableDto.semester,
+      },
+    });
+    if (!newMainTimetable || !oldMainTimetable) {
+      throw new NotFoundException('Timetable not found');
+    } else if (oldMainTimetable.id === newMainTimetable.id) {
+      throw new ConflictException('Already main Timetable');
     }
+
+    await transactionManager.update(TimetableEntity, oldMainTimetable.id, {
+      mainTimetable: false,
+    });
+
+    await transactionManager.update(TimetableEntity, newMainTimetable.id, {
+      mainTimetable: true,
+    });
+
+    newMainTimetable.mainTimetable = true;
+    return newMainTimetable;
   }
 }

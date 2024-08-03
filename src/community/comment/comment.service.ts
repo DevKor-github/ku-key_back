@@ -122,7 +122,7 @@ export class CommentService {
       );
 
       if (post.userId !== user.id) {
-        this.noticeService.emitNotice(
+        await this.noticeService.emitNotice(
           post.userId,
           'New comment was posted on your post!',
         );
@@ -132,7 +132,7 @@ export class CommentService {
         createdComment.parentCommentId &&
         createdComment.parentComment.userId !== user.id
       ) {
-        this.noticeService.emitNotice(
+        await this.noticeService.emitNotice(
           createdComment.parentComment.userId,
           'New reply was posted on your comment!',
         );
@@ -310,5 +310,9 @@ export class CommentService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getComment(commentId: number): Promise<CommentEntity> {
+    return await this.commentRepository.getCommentByCommentId(commentId);
   }
 }

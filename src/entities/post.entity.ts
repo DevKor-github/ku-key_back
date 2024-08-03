@@ -14,6 +14,7 @@ import { CommentEntity } from './comment.entity';
 import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
+import { ReportEntity } from './report.entity';
 
 @Entity('post')
 export class PostEntity extends CommonEntity {
@@ -104,4 +105,7 @@ export class PostEntity extends CommonEntity {
     },
   )
   commentAnonymousNumbers: CommentAnonymousNumberEntity[];
+
+  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.post)
+  reports: ReportEntity[];
 }

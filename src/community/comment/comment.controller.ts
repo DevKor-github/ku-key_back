@@ -27,13 +27,21 @@ import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
 import { LikeCommentResponseDto } from './dto/like-comment.dto';
+import {
+  CreateReportRequestDto,
+  CreateReportResponseDto,
+} from '../report/dto/create-report.dto';
+import { ReportService } from '../report/report.service';
 
 @Controller('comment')
 @ApiTags('comment')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(
+    private readonly commentService: CommentService,
+    private readonly reportService: ReportService,
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -139,5 +147,39 @@ export class CommentController {
     @Param('commentId') commentId: number,
   ): Promise<LikeCommentResponseDto> {
     return await this.commentService.likeComment(user, commentId);
+  }
+
+  @Post('/:commentId/report')
+  @ApiOperation({
+    summary: '댓글 신고',
+    description: '댓글을 신고합니다',
+  })
+  @ApiParam({
+    name: 'commentId',
+    description: '댓글의 고유 ID',
+  })
+  @ApiBody({
+    type: CreateReportRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '댓글 신고 성공',
+    type: CreateReportResponseDto,
+  })
+  async reportPost(
+    @User() user: AuthorizedUserDto,
+    @Param('commentId') commentId: number,
+    @Body() body: CreateReportRequestDto,
+  ): Promise<CreateReportResponseDto> {
+    const comment = await this.commentService.getComment(commentId);
+    if (!comment) {
+      throw new BadRequestException('Wrong CommentId!');
+    }
+    return await this.reportService.createReport(
+      user.id,
+      body.reason,
+      comment.postId,
+      commentId,
+    );
   }
 }

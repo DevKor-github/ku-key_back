@@ -19,6 +19,8 @@ import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
+import { ReportEntity } from './report.entity';
+import { NoticeEntity } from './notice.entity';
 import { Role } from 'src/enums/role.enum';
 
 @Entity('user')
@@ -78,13 +80,19 @@ export class UserEntity extends CommonEntity {
   )
   kuVerification: KuVerificationEntity;
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser, {
+    cascade: true,
+  })
   sentFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser)
+  @OneToMany(() => FriendshipEntity, (friendship) => friendship.toUser, {
+    cascade: true,
+  })
   receivedFriendRequests: FriendshipEntity[];
 
-  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user)
+  @OneToMany(() => TimetableEntity, (timetableEntity) => timetableEntity.user, {
+    cascade: true,
+  })
   timetables: TimetableEntity[];
 
   @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
@@ -102,7 +110,6 @@ export class UserEntity extends CommonEntity {
   @OneToMany(
     () => CourseReviewRecommendEntity,
     (courseReviewRecommendEntity) => courseReviewRecommendEntity.user,
-    { cascade: true },
   )
   courseReviewRecommends: CourseReviewRecommendEntity[];
 
@@ -134,6 +141,15 @@ export class UserEntity extends CommonEntity {
   @OneToMany(
     () => CommentAnonymousNumberEntity,
     (commentAnonymousNumberEntity) => commentAnonymousNumberEntity.user,
+    { cascade: true },
   )
   commentAnonymousNumbers: CommentAnonymousNumberEntity[];
+
+  @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.user)
+  reports: ReportEntity[];
+
+  @OneToMany(() => NoticeEntity, (noticeEntity) => noticeEntity.user, {
+    cascade: true,
+  })
+  notices: NoticeEntity[];
 }
