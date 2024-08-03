@@ -28,12 +28,15 @@ export class CalendarService {
     year: number,
     month: number,
   ): Promise<GetDailyCalendarDataResponseDto[]> {
-    const monthDays = this.getDaysInMonth(year, month);
-    // 시작 - 끝 날짜 생성, month = 7로 받았을 경우 '07'로 입력해주기 위해 padStart 사용
-    const startDate = new Date(`${year}-${String(month).padStart(2, '0')}-01`);
-    const endDate = new Date(
-      `${year}-${String(month).padStart(2, '0')}-${String(monthDays).padStart(2, '0')}`,
+    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1)).getDay(); // 현재 월 시작 요일
+    const lastDayOfMonth = new Date(Date.UTC(year, month, 0)).getDay(); // 현재 월 끝 요일
+
+    const daysFromPrevMonth = firstDayOfMonth; // 저번 달에서 가져올 개수
+    const daysFromNextMonth = 13 - lastDayOfMonth; // 다음 달에서 가져올 개수
+    const startDate = new Date(
+      Date.UTC(year, month - 1, -daysFromPrevMonth + 1),
     );
+    const endDate = new Date(Date.UTC(year, month, daysFromNextMonth));
     // 시작 - 끝 날짜에 대한 이벤트들을 찾아서 각 날짜별로 묶어줌
     const monthEvents = await this.calendarRepository.find({
       where: { date: Between(startDate, endDate) },
@@ -41,13 +44,16 @@ export class CalendarService {
     const eventByDates = this.groupEventsByDate(monthEvents);
     const monthCalendarData: GetDailyCalendarDataResponseDto[] = [];
 
-    for (let day = 1; day <= monthDays; day++) {
-      const currentDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(
+        startDate.getTime() + i * 24 * 60 * 60 * 1000,
+      );
+      const formattedDate = this.formatDate(currentDate);
       // 이벤트가 있으면 배열 형태로, 없다면 빈 배열
-      const dayEvents = eventByDates.get(currentDate) || [];
+      const dayEvents = eventByDates.get(formattedDate) || [];
 
       const dayCalendarData = new GetDailyCalendarDataResponseDto(
-        new Date(currentDate),
+        currentDate,
         dayEvents,
       );
       monthCalendarData.push(dayCalendarData);
@@ -132,39 +138,6 @@ export class CalendarService {
     return new DeleteCalendarDataResponseDto(true);
   }
 
-  // 월-날짜 매핑 함수
-  private getDaysInMonth(year: number, month: number): number {
-    const monthDays = {
-      1: 31,
-      2: 28,
-      3: 31,
-      4: 30,
-      5: 31,
-      6: 30,
-      7: 31,
-      8: 31,
-      9: 30,
-      10: 31,
-      11: 30,
-      12: 31,
-    };
-
-    if (month < 1 || month > 12) {
-      throw new Error('Invalid month');
-    }
-
-    if (month === 2 && this.isLeapYear(year)) {
-      return 29;
-    }
-
-    return monthDays[month];
-  }
-
-  // 윤년인지 계산하는 함수
-  private isLeapYear(year: number): boolean {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  }
-
   // 날짜별 이벤트를 묶어주는 함수
   private groupEventsByDate(
     events: CalendarEntity[],
@@ -179,5 +152,9 @@ export class CalendarService {
     }
 
     return eventMap;
+  }
+
+  private formatDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 }
