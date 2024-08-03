@@ -67,7 +67,9 @@ export class CalendarService {
     for (let month = 1; month <= 12; month++) {
       const monthCalendarData = await this.getMonthlyCalendarData(year, month);
       const filteredData = monthCalendarData.filter(
-        (dayCalendarData) => dayCalendarData.eventCount !== 0,
+        (dayCalendarData) =>
+          dayCalendarData.date.getMonth() === month - 1 &&
+          dayCalendarData.eventCount !== 0,
       );
       allCalendarData.push(
         new GetMonthlyCalendarDataResponseDto(month, filteredData),
