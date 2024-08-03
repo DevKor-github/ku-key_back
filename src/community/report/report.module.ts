@@ -5,12 +5,12 @@ import { ReportService } from './report.service';
 import { ReportRepository } from './report.repository';
 import { ReportController } from './report.controller';
 import { CommonModule } from 'src/common/common.module';
-import { UserRepository } from 'src/user/user.repository';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReportEntity]), CommonModule],
+  imports: [TypeOrmModule.forFeature([ReportEntity]), CommonModule, UserModule],
   controllers: [ReportController],
-  providers: [ReportService, ReportRepository, UserRepository],
+  providers: [ReportService, ReportRepository],
   exports: [ReportService],
 })
 export class ReportModule {}

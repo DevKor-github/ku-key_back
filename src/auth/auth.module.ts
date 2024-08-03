@@ -11,7 +11,6 @@ import { KuVerificationRepository } from './ku-verification.repository';
 import { UserModule } from 'src/user/user.module';
 import { CommonModule } from 'src/common/common.module';
 import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
-import { UserRepository } from 'src/user/user.repository';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { UserRepository } from 'src/user/user.repository';
     JwtStrategy,
     RefreshStrategy,
     OptionalJwtAuthGuard,
-    UserRepository,
   ],
 })
 export class AuthModule {}
