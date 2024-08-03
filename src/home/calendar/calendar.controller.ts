@@ -27,12 +27,15 @@ import {
   GetMonthlyCalendarDataQueryDto,
   GetYearlyCalendarDataQueryDto,
 } from './dto/get-calendar-data-query-dto';
-import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -79,7 +82,8 @@ export class CalendarController {
     return await this.calendarService.getYearlyCalendarData(queryDto.year);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Post()
   @ApiOperation({
     summary: '특정 날짜 행사/일정 생성',
@@ -96,7 +100,8 @@ export class CalendarController {
     return await this.calendarService.createCalendarData(body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Patch('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 수정',
@@ -116,7 +121,8 @@ export class CalendarController {
     return await this.calendarService.updateCalendarData(calendarId, body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Delete('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 삭제',

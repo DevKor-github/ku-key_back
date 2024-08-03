@@ -17,12 +17,15 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { CreateInstitutionRequestDto } from './dto/create-institution-request-dto';
 import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
 import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
 import { DeleteInstitutionResponseDto } from './dto/delete-institution-response-dto';
 import { InstitutionResponseDto } from './dto/institution-response-dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
 @Controller('institution')
 @ApiTags('institution')
@@ -43,7 +46,8 @@ export class InstitutionController {
     return await this.institutionService.getInstitutionList();
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Post()
   @ApiOperation({
     summary: '기관 추가',
@@ -60,7 +64,8 @@ export class InstitutionController {
     return await this.institutionService.createInstitution(body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Patch('/:institutionId')
   @ApiOperation({
     summary: '기관 정보 수정',
@@ -79,7 +84,8 @@ export class InstitutionController {
     return await this.institutionService.updateInstitution(institutionId, body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Delete('/:institutionId')
   @ApiOperation({
     summary: '기관 정보 삭제',
