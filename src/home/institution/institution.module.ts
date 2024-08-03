@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InstitutionEntity } from 'src/entities/institution.entity';
 import { InstitutionRepository } from './institution.repository';
 import { UserRepository } from 'src/user/user.repository';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([InstitutionEntity])],
+  imports: [TypeOrmModule.forFeature([InstitutionEntity]), CommonModule],
   providers: [InstitutionService, InstitutionRepository, UserRepository],
   controllers: [InstitutionController],
 })
