@@ -19,6 +19,7 @@ import { PostScrapEntity } from './post-scrap.entity';
 import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
+import { Role } from 'src/enums/role.enum';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -66,6 +67,9 @@ export class UserEntity extends CommonEntity {
 
   @Column('boolean', { default: false })
   isViewable: boolean;
+
+  @Column('varchar', { default: Role.user })
+  role: Role;
 
   @OneToOne(
     () => KuVerificationEntity,
