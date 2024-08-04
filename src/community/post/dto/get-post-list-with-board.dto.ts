@@ -2,16 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   MinLength,
 } from 'class-validator';
 import { BoardEntity } from 'src/entities/board.entity';
 import { PostEntity } from 'src/entities/post.entity';
-import { ReactionCount } from './get-post.dto';
-import { CommunityUser } from './community-user.dto';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { PostPreview } from './post-preview.dto';
 
 class BoardInfo {
   constructor(boardEntity: BoardEntity) {
@@ -30,83 +31,30 @@ class BoardInfo {
   description: string;
 }
 
-export class PostPreview {
-  constructor(postEntity: PostEntity) {
-    this.id = postEntity.id;
-    this.title = postEntity.title;
-    this.content = postEntity.content.substring(0, 100);
-    this.createdAt = postEntity.createdAt;
-    this.user = new CommunityUser(postEntity.user, postEntity.isAnonymous);
-    this.commentCount = postEntity.commentCount;
-    this.scrapCount = postEntity.scrapCount;
-    this.thumbnailDir =
-      postEntity.postImages.length > 0 ? postEntity.postImages[0].imgDir : null;
-    this.reaction = new ReactionCount();
-    this.reaction.good = postEntity.goodReactionCount;
-    this.reaction.sad = postEntity.sadReactionCount;
-    this.reaction.amazing = postEntity.amazingReactionCount;
-    this.reaction.angry = postEntity.angryReactionCount;
-    this.reaction.funny = postEntity.funnyReactionCount;
-  }
-
-  @ApiProperty({ description: '게시글 고유 ID' })
-  id: number;
-
-  @ApiProperty({ description: '게시글 제목' })
-  title: string;
-
-  @ApiProperty({ description: '게시글 내용(100글자 까지)' })
-  content: string;
-
-  @ApiProperty({ description: '게시글 생성 시간' })
-  createdAt: Date;
-
-  @ApiProperty({ description: '게시글을 생성한 사용자' })
-  user: CommunityUser;
-
-  @ApiProperty({ description: '댓글 수' })
-  commentCount: number;
-
-  @ApiProperty({ description: '스크랩 수' })
-  scrapCount: number;
-
-  @ApiProperty({ description: '사진 미리보기(사진이 없으면 null)' })
-  thumbnailDir: string | null;
-
-  @ApiProperty({ description: '반응' })
-  reaction: ReactionCount;
-}
-
-export class GetPostListWithBoardResponseDto {
+export class GetPostListWithBoardResponseDto extends CursorPageResponseDto<PostPreview> {
   constructor(boardEntity: BoardEntity, postEntities: PostEntity[]) {
+    super();
     this.board = new BoardInfo(boardEntity);
-    this.posts = postEntities.map((postEntity) => new PostPreview(postEntity));
+    this.data = postEntities.map((postEntity) => new PostPreview(postEntity));
   }
 
   @ApiProperty({ description: '게시판 정보' })
   board: BoardInfo;
-
-  @ApiProperty({ description: '게시글 목록', type: [PostPreview] })
-  posts: PostPreview[];
 }
 
-export class GetPostListWithBoardRequestDto {
+export class GetPostListWithBoardRequestDto extends CursorPageOptionsDto {
+  @ApiProperty({
+    description: '게시판 고유 Id, 1: 자유게시판, 2: 질문게시판, 3: 정보게시판',
+  })
   @IsNotEmpty()
-  @IsNumber()
+  @IsInt()
+  @Min(1)
+  @Max(3)
   boardId: number;
 
+  @ApiProperty({ description: '검색어, 없으면 전체 조회' })
   @IsOptional()
   @IsString()
   @MinLength(2)
   keyword?: string;
-
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  pageSize: number;
-
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  pageNumber: number;
 }
