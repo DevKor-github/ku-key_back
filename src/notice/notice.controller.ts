@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Sse, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -11,6 +11,8 @@ import { Observable } from 'rxjs';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetNoticeResponseDto } from './dto/get-notice.dto';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 
 @Controller('notice')
 @ApiTags('notice')
@@ -46,13 +48,14 @@ export class NoticeController {
   @ApiResponse({
     status: 200,
     description: '알림 조회 성공',
-    type: [GetNoticeResponseDto],
+    type: CursorPageResponseDto<GetNoticeResponseDto>,
   })
   @UseGuards(JwtAuthGuard)
   @Get()
   async getNotices(
     @User() user: AuthorizedUserDto,
-  ): Promise<GetNoticeResponseDto[]> {
-    return await this.noticeService.getNotices(user);
+    @Query() pageOption: CursorPageOptionsDto,
+  ): Promise<CursorPageResponseDto<GetNoticeResponseDto>> {
+    return await this.noticeService.getNotices(user, pageOption);
   }
 }
