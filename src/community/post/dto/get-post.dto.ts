@@ -3,6 +3,7 @@ import { GetCommentResponseDto } from 'src/community/comment/dto/get-comment.dto
 import { CommentEntity } from 'src/entities/comment.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostEntity } from 'src/entities/post.entity';
+import { CommunityUser } from './community-user.dto';
 
 class Comment extends GetCommentResponseDto {
   constructor(
@@ -58,19 +59,7 @@ export class GetPostResponseDto {
     this.content = postEntity.content;
     this.createdAt = postEntity.createdAt;
     this.updatedAt = postEntity.updatedAt;
-    this.username =
-      postEntity.user == null || postEntity.user.deletedAt
-        ? 'Deleted'
-        : postEntity.isAnonymous
-          ? 'Anonymous'
-          : postEntity.user.username.substring(
-              0,
-              Math.floor(postEntity.user.username.length / 2),
-            ) +
-            '*'.repeat(
-              postEntity.user.username.length -
-                Math.floor(postEntity.user.username.length / 2),
-            );
+    this.user = new CommunityUser(postEntity.user, postEntity.isAnonymous);
     this.views = postEntity.views;
     this.scrapCount = postEntity.scrapCount;
     this.reaction = new ReactionCount();
@@ -123,7 +112,7 @@ export class GetPostResponseDto {
   updatedAt: Date;
 
   @ApiProperty({ description: '게시글을 생성한 사용자' })
-  username: string;
+  user: CommunityUser;
 
   @ApiProperty({ description: '조회수' })
   views: number;

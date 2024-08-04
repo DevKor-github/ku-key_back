@@ -11,6 +11,7 @@ import {
 import { BoardEntity } from 'src/entities/board.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { ReactionCount } from './get-post.dto';
+import { CommunityUser } from './community-user.dto';
 
 class BoardInfo {
   constructor(boardEntity: BoardEntity) {
@@ -35,20 +36,7 @@ export class PostPreview {
     this.title = postEntity.title;
     this.content = postEntity.content.substring(0, 100);
     this.createdAt = postEntity.createdAt;
-    console.log(postEntity);
-    this.username =
-      postEntity.user == null || postEntity.user.deletedAt
-        ? 'Deleted'
-        : postEntity.isAnonymous
-          ? 'Anonymous'
-          : postEntity.user.username.substring(
-              0,
-              Math.floor(postEntity.user.username.length / 2),
-            ) +
-            '*'.repeat(
-              postEntity.user.username.length -
-                Math.floor(postEntity.user.username.length / 2),
-            );
+    this.user = new CommunityUser(postEntity.user, postEntity.isAnonymous);
     this.commentCount = postEntity.commentCount;
     this.scrapCount = postEntity.scrapCount;
     this.thumbnailDir =
@@ -74,7 +62,7 @@ export class PostPreview {
   createdAt: Date;
 
   @ApiProperty({ description: '게시글을 생성한 사용자' })
-  username: string;
+  user: CommunityUser;
 
   @ApiProperty({ description: '댓글 수' })
   commentCount: number;
