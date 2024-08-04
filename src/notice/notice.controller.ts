@@ -40,7 +40,8 @@ export class NoticeController {
 
   @ApiOperation({
     summary: '알림 조회',
-    description: '받았던 알림들을 조회합니다.',
+    description:
+      '받았던 알림들을 조회합니다. 커뮤니티 관련 알림일 경우 해당 게시글의 Id를 함께 반환합니다.',
   })
   @ApiResponse({
     status: 200,

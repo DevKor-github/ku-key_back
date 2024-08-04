@@ -5,6 +5,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { NoticeEntity } from 'src/entities/notice.entity';
 import { Repository } from 'typeorm';
 import { GetNoticeResponseDto } from './dto/get-notice.dto';
+import { Notice } from './enum/notice.enum';
 
 interface user {
   userId: number;
@@ -21,11 +22,19 @@ export class NoticeService {
 
   private observer = this.users$.asObservable();
 
-  async emitNotice(userId: number, message: string) {
+  async emitNotice(
+    userId: number,
+    message: string,
+    type: Notice,
+    handler?: number,
+  ) {
     const notice = this.noticeRepository.create({
       userId: userId,
       content: message,
+      type: type,
     });
+    if (handler) notice.handler = handler;
+
     await this.noticeRepository.save(notice);
     this.users$.next({ userId: userId, message: message });
   }
