@@ -19,6 +19,9 @@ export class NoticeEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   content: string;
 
+  @Column('boolean', { default: true })
+  isNew: boolean;
+
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.notices, {
     onDelete: 'CASCADE',

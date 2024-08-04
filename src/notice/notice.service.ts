@@ -52,7 +52,12 @@ export class NoticeService {
         createdAt: 'DESC',
       },
     });
+    const result: GetNoticeResponseDto[] = notices.map(
+      (notice) => new GetNoticeResponseDto(notice),
+    );
 
-    return notices.map((notice) => new GetNoticeResponseDto(notice));
+    await this.noticeRepository.update({ userId: user.id }, { isNew: false });
+
+    return result;
   }
 }

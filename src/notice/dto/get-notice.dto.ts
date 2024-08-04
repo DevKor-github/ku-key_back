@@ -6,6 +6,7 @@ export class GetNoticeResponseDto {
     this.id = noticeEntity.id;
     this.content = noticeEntity.content;
     this.createdAt = noticeEntity.createdAt;
+    this.isNew = noticeEntity.isNew;
   }
 
   @ApiProperty({ description: '알림 고유 ID' })
@@ -16,4 +17,7 @@ export class GetNoticeResponseDto {
 
   @ApiProperty({ description: '알림 시간' })
   createdAt: Date;
+
+  @ApiProperty({ description: '새로운 알림인지 여부' })
+  isNew: boolean;
 }
