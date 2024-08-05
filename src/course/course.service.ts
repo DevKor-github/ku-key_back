@@ -51,12 +51,12 @@ export class CourseService {
   async searchCourseCodeWithProfessorName(
     courseCode: string,
     professorName: string,
-  ): Promise<boolean> {
+  ): Promise<CourseEntity> {
     const course = await this.courseRepository.findOne({
       where: { courseCode: Like(`${courseCode}%`), professorName },
     });
 
-    return course ? true : false;
+    return course;
   }
 
   async searchCoursesByCourseCodeAndProfessorName(

@@ -126,6 +126,7 @@ export class CourseReviewService {
         amountLearned: 0,
         teachingSkills: 0,
         attendance: 0,
+        courseName: course.courseName,
       };
     }
     const reviewCount = courseReviews.length;
@@ -155,6 +156,7 @@ export class CourseReviewService {
       amountLearned: parseFloat(totalAmountLearned.toFixed(0)),
       teachingSkills: parseFloat(totalTeachingSkills.toFixed(0)),
       attendance: parseFloat(totalAttendance.toFixed(0)),
+      courseName: course.courseName,
     };
   }
 
