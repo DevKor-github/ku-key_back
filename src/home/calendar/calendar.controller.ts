@@ -19,14 +19,23 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
-import { GetCalendarDataQueryDto } from './dto/get-calendar-data-query-dto';
-import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
+import {
+  GetDailyCalendarDataResponseDto,
+  GetMonthlyCalendarDataResponseDto,
+} from './dto/get-calendar-data-response-dto';
+import {
+  GetMonthlyCalendarDataQueryDto,
+  GetYearlyCalendarDataQueryDto,
+} from './dto/get-calendar-data-query-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -36,25 +45,45 @@ export class CalendarController {
   @Get()
   @ApiOperation({
     summary: '연도, 월별 행사/일정 조회',
-    description: '연도, 월 정보를 받아 그 날짜의 행사/일정을 조회합니다.',
+    description:
+      '연도, 월 정보를 받아 그 달의 행사/일정을 조회합니다. 행사/일정 존재여부에 상관없이 그 달의 모든 날짜를 반환합니다.',
   })
   @ApiQuery({ name: 'year', required: true, description: '연도' })
   @ApiQuery({ name: 'month', required: true, description: '월' })
   @ApiOkResponse({
     description: '특정 연도, 월별 행사/일정 데이터 반환',
     isArray: true,
-    type: GetCalendarDataResponseDto,
+    type: GetDailyCalendarDataResponseDto,
   })
-  async getCalendarData(
-    @Query() queryDto: GetCalendarDataQueryDto,
-  ): Promise<GetCalendarDataResponseDto[]> {
-    return await this.calendarService.getCalendarData(
+  async getMonthlyCalendarData(
+    @Query() queryDto: GetMonthlyCalendarDataQueryDto,
+  ): Promise<GetDailyCalendarDataResponseDto[]> {
+    return await this.calendarService.getMonthlyCalendarData(
       queryDto.year,
       queryDto.month,
     );
   }
 
-  @UseGuards(AdminAuthGuard)
+  @Get('yearly')
+  @ApiOperation({
+    summary: '연도별 행사/일정 전체 조회',
+    description:
+      '연도별 행사/일정 전체를 조회합니다. 행사/일정이 존재하는 날짜의 경우에만 가져옵니다.',
+  })
+  @ApiQuery({ name: 'year', required: true, description: '연도' })
+  @ApiOkResponse({
+    description: '특정 연도별 행사/일정 데이터 반환',
+    isArray: true,
+    type: GetMonthlyCalendarDataResponseDto,
+  })
+  async getYearlyCalendarData(
+    @Query() queryDto: GetYearlyCalendarDataQueryDto,
+  ): Promise<GetMonthlyCalendarDataResponseDto[]> {
+    return await this.calendarService.getYearlyCalendarData(queryDto.year);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Post()
   @ApiOperation({
     summary: '특정 날짜 행사/일정 생성',
@@ -71,7 +100,8 @@ export class CalendarController {
     return await this.calendarService.createCalendarData(body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Patch('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 수정',
@@ -91,7 +121,8 @@ export class CalendarController {
     return await this.calendarService.updateCalendarData(calendarId, body);
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Delete('/:calendarId')
   @ApiOperation({
     summary: '특정 행사/일정 삭제',

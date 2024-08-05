@@ -18,7 +18,7 @@ class Event {
   }
 }
 
-export class GetCalendarDataResponseDto {
+export class GetDailyCalendarDataResponseDto {
   @ApiProperty({ description: '날짜 (AAAA-BB-CC 형식)' })
   date: Date;
 
@@ -34,5 +34,21 @@ export class GetCalendarDataResponseDto {
       return new Event(calendar);
     });
     this.eventCount = this.event.length;
+  }
+}
+
+export class GetMonthlyCalendarDataResponseDto {
+  @ApiProperty({ description: '월' })
+  month: number;
+
+  @ApiProperty({
+    description: '월별 행사/일정',
+    type: [GetDailyCalendarDataResponseDto],
+  })
+  monthEvents: GetDailyCalendarDataResponseDto[];
+
+  constructor(month: number, monthEvents: GetDailyCalendarDataResponseDto[]) {
+    this.month = month;
+    this.monthEvents = monthEvents;
   }
 }
