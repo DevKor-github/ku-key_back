@@ -14,7 +14,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -30,7 +30,6 @@ export class CourseReviewService {
     private readonly courseReviewRecommendRepository: Repository<CourseReviewRecommendEntity>,
     private readonly userService: UserService,
     private readonly courseService: CourseService,
-    private readonly dataSource: DataSource,
   ) {}
 
   async createCourseReview(
@@ -92,7 +91,11 @@ export class CourseReviewService {
         createCourseReviewRequestDto.professorName,
       );
     const courseIds = courses.map((course) => course.id);
-    await this.courseService.updateCourseTotalRate(courseIds, totalRate);
+    await this.courseService.updateCourseTotalRate(
+      courseIds,
+      totalRate,
+      transactionManager,
+    );
     return new CourseReviewResponseDto(courseReview, user.username);
   }
 
