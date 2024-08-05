@@ -7,7 +7,7 @@ import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { Like, MoreThan } from 'typeorm';
+import { EntityManager, Like, MoreThan } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
@@ -51,12 +51,12 @@ export class CourseService {
   async searchCourseCodeWithProfessorName(
     courseCode: string,
     professorName: string,
-  ): Promise<boolean> {
+  ): Promise<CourseEntity> {
     const course = await this.courseRepository.findOne({
       where: { courseCode: Like(`${courseCode}%`), professorName },
     });
 
-    return course ? true : false;
+    return course;
   }
 
   async searchCoursesByCourseCodeAndProfessorName(
@@ -364,9 +364,10 @@ export class CourseService {
   async updateCourseTotalRate(
     courseIds: number[],
     totalRate: number,
+    transactionManager: EntityManager,
   ): Promise<void> {
     for (const id of courseIds) {
-      await this.courseRepository.update(id, {
+      await transactionManager.update(CourseEntity, id, {
         totalRate: parseFloat(totalRate.toFixed(1)),
       });
     }

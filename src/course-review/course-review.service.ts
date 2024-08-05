@@ -14,7 +14,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { DataSource, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -30,10 +30,10 @@ export class CourseReviewService {
     private readonly courseReviewRecommendRepository: Repository<CourseReviewRecommendEntity>,
     private readonly userService: UserService,
     private readonly courseService: CourseService,
-    private readonly dataSource: DataSource,
   ) {}
 
   async createCourseReview(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     createCourseReviewRequestDto: CreateCourseReviewRequestDto,
   ): Promise<CourseReviewResponseDto> {
@@ -48,13 +48,16 @@ export class CourseReviewService {
     }
 
     // 유저가 이미 강의평을 등록했는 지 체크
-    const isAlreadyReviewed = await this.courseReviewRepository.findOne({
-      where: {
-        userId: user.id,
-        courseCode: createCourseReviewRequestDto.courseCode,
-        professorName: createCourseReviewRequestDto.professorName,
+    const isAlreadyReviewed = await transactionManager.findOne(
+      CourseReviewEntity,
+      {
+        where: {
+          userId: user.id,
+          courseCode: createCourseReviewRequestDto.courseCode,
+          professorName: createCourseReviewRequestDto.professorName,
+        },
       },
-    });
+    );
 
     if (isAlreadyReviewed) {
       throw new ConflictException(
@@ -62,45 +65,38 @@ export class CourseReviewService {
       );
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const courseReview = transactionManager.create(CourseReviewEntity, {
+      ...createCourseReviewRequestDto,
+      userId: user.id,
+    });
 
-    try {
-      const courseReview = queryRunner.manager.create(CourseReviewEntity, {
-        ...createCourseReviewRequestDto,
-        userId: user.id,
-      });
-      await queryRunner.manager.save(courseReview);
+    await transactionManager.save(courseReview);
 
-      // 해당 강의에 대한 모든 강의평 조회
-      const courseReviews = await queryRunner.manager.find(CourseReviewEntity, {
-        where: {
-          courseCode: createCourseReviewRequestDto.courseCode,
-          professorName: createCourseReviewRequestDto.professorName,
-        },
-      });
+    // 해당 강의에 대한 모든 강의평 조회
+    const courseReviews = await transactionManager.find(CourseReviewEntity, {
+      where: {
+        courseCode: createCourseReviewRequestDto.courseCode,
+        professorName: createCourseReviewRequestDto.professorName,
+      },
+    });
 
-      // 강의평 점수들의 평균 계산
-      const totalRate =
-        courseReviews.reduce((sum, review) => sum + review.rate, 0) /
-        courseReviews.length;
+    // 강의평 점수들의 평균 계산
+    const totalRate =
+      courseReviews.reduce((sum, review) => sum + review.rate, 0) /
+      courseReviews.length;
 
-      const courses =
-        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
-          createCourseReviewRequestDto.courseCode,
-          createCourseReviewRequestDto.professorName,
-        );
-      const courseIds = courses.map((course) => course.id);
-      await this.courseService.updateCourseTotalRate(courseIds, totalRate);
-      await queryRunner.commitTransaction();
-      return new CourseReviewResponseDto(courseReview, user.username);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    const courses =
+      await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+        createCourseReviewRequestDto.courseCode,
+        createCourseReviewRequestDto.professorName,
+      );
+    const courseIds = courses.map((course) => course.id);
+    await this.courseService.updateCourseTotalRate(
+      courseIds,
+      totalRate,
+      transactionManager,
+    );
+    return new CourseReviewResponseDto(courseReview, user.username);
   }
 
   async getCourseReviewSummary(
@@ -133,6 +129,7 @@ export class CourseReviewService {
         amountLearned: 0,
         teachingSkills: 0,
         attendance: 0,
+        courseName: course.courseName,
       };
     }
     const reviewCount = courseReviews.length;
@@ -162,6 +159,7 @@ export class CourseReviewService {
       amountLearned: parseFloat(totalAmountLearned.toFixed(0)),
       teachingSkills: parseFloat(totalTeachingSkills.toFixed(0)),
       attendance: parseFloat(totalAttendance.toFixed(0)),
+      courseName: course.courseName,
     };
   }
 
@@ -246,75 +244,60 @@ export class CourseReviewService {
   }
 
   async toggleRecommendCourseReview(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     courseReviewId: number,
   ): Promise<CourseReviewResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const courseReview = await transactionManager.findOne(CourseReviewEntity, {
+      where: { id: courseReviewId },
+      relations: ['user'],
+    });
 
-    try {
-      const courseReview = await queryRunner.manager.findOne(
-        CourseReviewEntity,
-        {
-          where: { id: courseReviewId },
-          relations: ['user'],
-        },
-      );
-
-      if (!courseReview) {
-        throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
-      }
-
-      // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
-      const viewableUser = await this.userService.findUserById(user.id);
-      if (!viewableUser.isViewable) {
-        throw new ForbiddenException('열람권을 구매해야 합니다.');
-      }
-
-      if (courseReview.userId === user.id) {
-        throw new ForbiddenException(
-          '본인이 작성한 강의평은 추천할 수 없습니다.',
-        );
-      }
-
-      // 이미 추천했는지 확인
-      const isRecommended = await queryRunner.manager.findOne(
-        CourseReviewRecommendEntity,
-        {
-          where: { userId: user.id, courseReviewId },
-        },
-      );
-
-      // 이미 추천을 했을 때
-      if (isRecommended) {
-        await queryRunner.manager.delete(CourseReviewRecommendEntity, {
-          userId: user.id,
-          courseReviewId,
-        });
-
-        await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
-          recommendCount: () => 'recommendCount - 1',
-        });
-        courseReview.recommendCount -= 1;
-      } else {
-        await queryRunner.manager.save(CourseReviewRecommendEntity, {
-          userId: user.id,
-          courseReviewId,
-        });
-        await queryRunner.manager.update(CourseReviewEntity, courseReviewId, {
-          recommendCount: () => 'recommendCount + 1',
-        });
-        courseReview.recommendCount += 1;
-      }
-      await queryRunner.commitTransaction();
-
-      return new CourseReviewResponseDto(courseReview, user.username);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!courseReview) {
+      throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
     }
+
+    // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
+    const viewableUser = await this.userService.findUserById(user.id);
+    if (!viewableUser.isViewable) {
+      throw new ForbiddenException('열람권을 구매해야 합니다.');
+    }
+
+    if (courseReview.userId === user.id) {
+      throw new ForbiddenException(
+        '본인이 작성한 강의평은 추천할 수 없습니다.',
+      );
+    }
+
+    // 이미 추천했는지 확인
+    const isRecommended = await transactionManager.findOne(
+      CourseReviewRecommendEntity,
+      {
+        where: { userId: user.id, courseReviewId },
+      },
+    );
+
+    // 이미 추천을 했을 때
+    if (isRecommended) {
+      await transactionManager.delete(CourseReviewRecommendEntity, {
+        userId: user.id,
+        courseReviewId,
+      });
+
+      await transactionManager.update(CourseReviewEntity, courseReviewId, {
+        recommendCount: () => 'recommendCount - 1',
+      });
+      courseReview.recommendCount -= 1;
+    } else {
+      await transactionManager.save(CourseReviewRecommendEntity, {
+        userId: user.id,
+        courseReviewId,
+      });
+      await transactionManager.update(CourseReviewEntity, courseReviewId, {
+        recommendCount: () => 'recommendCount + 1',
+      });
+      courseReview.recommendCount += 1;
+    }
+    return new CourseReviewResponseDto(courseReview, user.username);
   }
 }
