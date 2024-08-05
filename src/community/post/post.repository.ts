@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostEntity } from 'src/entities/post.entity';
-import { DataSource, ILike, Repository } from 'typeorm';
+import { DataSource, ILike, In, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -18,7 +18,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user'],
+      relations: ['postImages', 'user'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });
@@ -39,7 +39,60 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'comments', 'user'],
+      relations: ['postImages', 'user'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getAllPosts(
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getAllPostsWithKeyword(
+    keyword: string,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: [
+        { title: ILike(`%${keyword}%`) },
+        { content: ILike(`%${keyword}%`) },
+      ],
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getHotPosts(
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: {
+        allReactionCount: MoreThanOrEqual(10),
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
       take: pageSize,
       skip: (pageNumber - 1) * pageSize,
     });
@@ -76,9 +129,53 @@ export class PostRepository extends Repository<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
       withDeleted: true,
-      relations: ['user', 'postImages', 'comments.user'],
+      relations: [
+        'user',
+        'postImages',
+        'comments.user',
+        'commentAnonymousNumbers',
+      ],
     });
     return post;
+  }
+
+  async getPostsByUserId(
+    userId: number,
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: { userId: userId },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async getScrapPostsByPostIds(
+    postIds: number[],
+    pageSize: number,
+    pageNumber: number,
+  ): Promise<PostEntity[]> {
+    const posts = await this.find({
+      where: { id: In(postIds) },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['postImages', 'user', 'board'],
+      take: pageSize,
+      skip: (pageNumber - 1) * pageSize,
+    });
+    return posts;
+  }
+
+  async increaseViews(postId: number): Promise<boolean> {
+    const result = await this.increment({ id: postId }, 'views', 1);
+    return result.affected ? true : false;
   }
 
   async updatePost(
@@ -102,17 +199,23 @@ export class PostRepository extends Repository<PostEntity> {
   async deletePost(postId: number): Promise<boolean> {
     const post = await this.findOne({
       where: { id: postId },
-      relations: ['postImages', 'comments'],
+      relations: [
+        'postImages',
+        'comments.commentLikes',
+        'postScraps',
+        'postReactions',
+        'commentAnonymousNumbers',
+      ],
     });
     const deleteResult = await this.softRemove(post);
     return deleteResult.deletedAt ? true : false;
   }
 
-  async isExistingPostId(postId: number): Promise<boolean> {
+  async isExistingPostId(postId: number): Promise<PostEntity> {
     const post = await this.findOne({
       where: { id: postId },
     });
 
-    return post ? true : false;
+    return post;
   }
 }

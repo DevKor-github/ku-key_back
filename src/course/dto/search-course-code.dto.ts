@@ -3,4 +3,5 @@ import { SearchCourseDto } from './search-course.dto';
 
 export class SearchCourseCodeDto extends PickType(SearchCourseDto, [
   'courseCode',
+  'cursorId',
 ] as const) {}

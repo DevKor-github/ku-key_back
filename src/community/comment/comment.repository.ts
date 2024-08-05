@@ -17,6 +17,15 @@ export class CommentRepository extends Repository<CommentEntity> {
     return comment;
   }
 
+  async getCommentByCommentIdWithLike(commentId: number) {
+    const comment = await this.findOne({
+      where: { id: commentId },
+      relations: ['user', 'commentLikes'],
+    });
+
+    return comment;
+  }
+
   async createComment(
     userId: number,
     postId: number,
@@ -55,5 +64,10 @@ export class CommentRepository extends Repository<CommentEntity> {
   async deleteComment(commentId: number): Promise<boolean> {
     const deleteResult = await this.softDelete({ id: commentId });
     return deleteResult.affected ? true : false;
+  }
+
+  async isExistingCommentId(commentId: number): Promise<boolean> {
+    const comment = await this.findOne({ where: { id: commentId } });
+    return comment ? true : false;
   }
 }

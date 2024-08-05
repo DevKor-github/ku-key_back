@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableService } from './timetable.service';
@@ -31,6 +32,9 @@ import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto'
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
 import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
 import { UpdateTimetableColorDto } from './dto/update-timetable-color.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @Controller('timetable')
 @ApiTags('timetable')
@@ -77,6 +81,7 @@ export class TimetableController {
 
   // 시간표 생성 (시간표 틀)
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '시간표 생성',
     description:
@@ -91,10 +96,12 @@ export class TimetableController {
     type: CommonTimetableResponseDto,
   })
   async createTimetable(
+    @TransactionManager() transactionManager: EntityManager,
     @Body() createTimetableDto: CreateTimetableDto,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonTimetableResponseDto> {
     return await this.timetableService.createTimetable(
+      transactionManager,
       createTimetableDto,
       user,
     );
@@ -212,6 +219,7 @@ export class TimetableController {
 
   // 시간표 삭제
   @Delete('/:timetableId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '시간표 삭제',
     description:
@@ -227,10 +235,15 @@ export class TimetableController {
     type: CommonDeleteResponseDto,
   })
   async deleteTimetable(
+    @TransactionManager() transactionManager: EntityManager,
     @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
   ): Promise<CommonDeleteResponseDto> {
-    return await this.timetableService.deleteTimetable(timetableId, user);
+    return await this.timetableService.deleteTimetable(
+      transactionManager,
+      timetableId,
+      user,
+    );
   }
 
   // 시간표 색상 변경
@@ -295,6 +308,7 @@ export class TimetableController {
 
   // 대표 시간표 변경
   @Patch('/:timetableId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '대표 시간표 변경',
     description:
@@ -313,11 +327,13 @@ export class TimetableController {
     type: CommonTimetableResponseDto,
   })
   async updateMainTimetable(
+    @TransactionManager() transactionManager: EntityManager,
     @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
     @Body() timetableDto: TimetableDto,
   ): Promise<CommonTimetableResponseDto> {
     return await this.timetableService.updateMainTimetable(
+      transactionManager,
       timetableId,
       user,
       timetableDto,

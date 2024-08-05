@@ -9,7 +9,10 @@ import { CreateCourseReviewRequestDto } from './dto/create-course-review-request
 import { CourseReviewResponseDto } from './dto/course-review-response.dto';
 import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto';
 import { UserService } from 'src/user/user.service';
-import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
+import {
+  GetCourseReviewsResponseDto,
+  ReviewDto,
+} from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
 import { DataSource, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
@@ -59,30 +62,45 @@ export class CourseReviewService {
       );
     }
 
-    const courseReview = this.courseReviewRepository.create({
-      ...createCourseReviewRequestDto,
-      userId: user.id,
-    });
-    await this.courseReviewRepository.save(courseReview);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    return {
-      id: courseReview.id,
-      reviewer: user.username,
-      createdAt: courseReview.createdAt,
-      rate: courseReview.rate,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      recommendCount: courseReview.recommendCount,
-      textReview: courseReview.textReview,
-      professorName: courseReview.professorName,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      courseCode: courseReview.courseCode,
-      userId: courseReview.userId,
-    };
+    try {
+      const courseReview = queryRunner.manager.create(CourseReviewEntity, {
+        ...createCourseReviewRequestDto,
+        userId: user.id,
+      });
+      await queryRunner.manager.save(courseReview);
+
+      // 해당 강의에 대한 모든 강의평 조회
+      const courseReviews = await queryRunner.manager.find(CourseReviewEntity, {
+        where: {
+          courseCode: createCourseReviewRequestDto.courseCode,
+          professorName: createCourseReviewRequestDto.professorName,
+        },
+      });
+
+      // 강의평 점수들의 평균 계산
+      const totalRate =
+        courseReviews.reduce((sum, review) => sum + review.rate, 0) /
+        courseReviews.length;
+
+      const courses =
+        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+          createCourseReviewRequestDto.courseCode,
+          createCourseReviewRequestDto.professorName,
+        );
+      const courseIds = courses.map((course) => course.id);
+      await this.courseService.updateCourseTotalRate(courseIds, totalRate);
+      await queryRunner.commitTransaction();
+      return new CourseReviewResponseDto(courseReview, user.username);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getCourseReviewSummary(
@@ -154,24 +172,10 @@ export class CourseReviewService {
       where: { userId: user.id },
     });
 
-    return courseReviews.map((courseReview) => ({
-      id: courseReview.id,
-      reviewer: user.username,
-      createdAt: courseReview.createdAt,
-      rate: courseReview.rate,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      recommendCount: courseReview.recommendCount,
-      textReview: courseReview.textReview,
-      professorName: courseReview.professorName,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      courseCode: courseReview.courseCode,
-      userId: courseReview.userId,
-    }));
+    return courseReviews.map(
+      (courseReview) =>
+        new CourseReviewResponseDto(courseReview, user.username),
+    );
   }
 
   async getCourseReviews(
@@ -226,22 +230,13 @@ export class CourseReviewService {
       (recommend) => recommend.courseReviewId,
     );
 
-    const reviews = courseReviews.map((courseReview) => ({
-      id: courseReview.id,
-      rate: courseReview.rate,
-      createdAt: courseReview.createdAt,
-      reviewer: courseReview.user.username,
-      year: courseReview.year,
-      semester: courseReview.semester,
-      myRecommend: recommendedReviewIds.includes(courseReview.id), // id가 추천한 리뷰 ID 중 하나인지 확인
-      recommendCount: courseReview.recommendCount,
-      classLevel: courseReview.classLevel,
-      teamProject: courseReview.teamProject,
-      amountLearned: courseReview.amountLearned,
-      teachingSkills: courseReview.teachingSkills,
-      attendance: courseReview.attendance,
-      text: courseReview.textReview,
-    }));
+    const reviews = courseReviews.map(
+      (courseReview) =>
+        new ReviewDto(
+          courseReview,
+          recommendedReviewIds.includes(courseReview.id),
+        ),
+    );
 
     return {
       totalRate: parseFloat(totalRate.toFixed(1)), // 소수점 이하 첫째자리까지 나타내기
@@ -314,24 +309,7 @@ export class CourseReviewService {
       }
       await queryRunner.commitTransaction();
 
-      return {
-        id: courseReview.id,
-        reviewer: courseReview.user.username,
-        createdAt: courseReview.createdAt,
-        rate: courseReview.rate,
-        classLevel: courseReview.classLevel,
-        teamProject: courseReview.teamProject,
-        amountLearned: courseReview.amountLearned,
-        teachingSkills: courseReview.teachingSkills,
-        attendance: courseReview.attendance,
-        recommendCount: courseReview.recommendCount,
-        textReview: courseReview.textReview,
-        professorName: courseReview.professorName,
-        year: courseReview.year,
-        semester: courseReview.semester,
-        courseCode: courseReview.courseCode,
-        userId: courseReview.userId,
-      };
+      return new CourseReviewResponseDto(courseReview, user.username);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

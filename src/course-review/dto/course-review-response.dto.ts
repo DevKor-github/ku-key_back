@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CourseReviewEntity } from 'src/entities/course-review.entity';
 
 export class CourseReviewResponseDto {
   @ApiProperty({ description: 'id' })
@@ -48,4 +49,23 @@ export class CourseReviewResponseDto {
 
   @ApiProperty({ description: '강의평 작성한 유저 ID' })
   userId: number;
+
+  constructor(courseReviewEntity: CourseReviewEntity, username: string) {
+    this.id = courseReviewEntity.id;
+    this.reviewer = username;
+    this.createdAt = courseReviewEntity.createdAt;
+    this.rate = courseReviewEntity.rate;
+    this.classLevel = courseReviewEntity.classLevel;
+    this.teamProject = courseReviewEntity.teamProject;
+    this.amountLearned = courseReviewEntity.amountLearned;
+    this.teachingSkills = courseReviewEntity.teachingSkills;
+    this.attendance = courseReviewEntity.attendance;
+    this.recommendCount = courseReviewEntity.recommendCount;
+    this.textReview = courseReviewEntity.textReview;
+    this.professorName = courseReviewEntity.professorName;
+    this.year = courseReviewEntity.year;
+    this.semester = courseReviewEntity.semester;
+    this.courseCode = courseReviewEntity.courseCode;
+    this.userId = courseReviewEntity.userId;
+  }
 }
