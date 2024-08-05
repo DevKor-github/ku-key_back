@@ -53,6 +53,14 @@ export class UserRepository extends Repository<UserEntity> {
     return user;
   }
 
+  async findUserByEmailWithDeleted(email: string): Promise<UserEntity> {
+    const user = await this.findOne({
+      where: { email: email },
+      withDeleted: true,
+    });
+    return user;
+  }
+
   async findUserById(id: number): Promise<UserEntity> {
     const user = await this.findOne({
       where: { id: id },
@@ -63,6 +71,14 @@ export class UserRepository extends Repository<UserEntity> {
   async findUserByUsername(username: string): Promise<UserEntity> {
     const user = await this.findOne({
       where: { username: username },
+    });
+    return user;
+  }
+
+  async findUserByUsernameWithDeleted(username: string): Promise<UserEntity> {
+    const user = await this.findOne({
+      where: { username: username },
+      withDeleted: true,
     });
     return user;
   }

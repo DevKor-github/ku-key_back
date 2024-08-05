@@ -14,7 +14,7 @@ export class PostReactionEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   userId: number;
 
   @Column({ nullable: false })
@@ -25,7 +25,7 @@ export class PostReactionEntity extends CommonEntity {
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.postScraps, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   user: UserEntity;
 
