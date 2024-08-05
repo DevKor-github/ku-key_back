@@ -25,9 +25,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import {
-  GetPostListRequestDto,
-  GetPostListResponseDto,
-} from './dto/get-post-list.dto';
+  GetPostListWithBoardRequestDto,
+  GetPostListWithBoardResponseDto,
+} from './dto/get-post-list-with-board.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -35,17 +35,35 @@ import { CreatePostRequestDto } from './dto/create-post.dto';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
+import { ScrapPostResponseDto } from './dto/scrap-post.dto';
+import {
+  getAllPostListRequestDto,
+  GetPostListRequestDto,
+  GetPostListResponseDto,
+} from './dto/get-post-list.dto';
+import {
+  ReactPostRequestDto,
+  ReactPostResponseDto,
+} from './dto/react-post.dto';
+import {
+  CreateReportRequestDto,
+  CreateReportResponseDto,
+} from '../report/dto/create-report.dto';
+import { ReportService } from '../report/report.service';
 
 @Controller('post')
 @ApiTags('post')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly reportService: ReportService,
+  ) {}
 
   @Get()
   @ApiOperation({
-    summary: '게시글 목록 조회',
+    summary: '게시판 별 게시글 목록 조회',
     description: '게시판 별로 게시글 목록을 조회합니다.',
   })
   @ApiQuery({ name: 'boardId', description: '조회하고자 하는 게시판 ID' })
@@ -55,16 +73,106 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
-    type: GetPostListResponseDto,
+    type: GetPostListWithBoardResponseDto,
   })
   async getPostList(
-    @Query() requestDto: GetPostListRequestDto,
-  ): Promise<GetPostListResponseDto> {
+    @Query() requestDto: GetPostListWithBoardRequestDto,
+  ): Promise<GetPostListWithBoardResponseDto> {
     return await this.postService.getPostList(
       requestDto.boardId,
       requestDto.pageSize,
       requestDto.pageNumber,
       requestDto.keyword,
+    );
+  }
+
+  @Get('/my')
+  @ApiOperation({
+    summary: '내가 쓴 글 목록 조회',
+    description: '내가 쓴 글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: '내가 쓴 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getMyPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getMyPostList(
+      user,
+      requestDto.pageSize,
+      requestDto.pageNumber,
+    );
+  }
+
+  @Get('/all')
+  @ApiOperation({
+    summary: '전체 게시글 목록 조회',
+    description: '전체 게시글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: '전체 게시글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getAllPostList(
+    @Query() requestDto: getAllPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getAllPostList(
+      requestDto.pageSize,
+      requestDto.pageNumber,
+      requestDto.keyword,
+    );
+  }
+
+  @Get('/hot')
+  @ApiOperation({
+    summary: 'hot 게시글 목록 조회',
+    description: 'hot 게시글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: 'hot 게시글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getHotPostList(
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getHotPostList(
+      requestDto.pageSize,
+      requestDto.pageNumber,
+    );
+  }
+
+  @Get('/scrap')
+  @ApiOperation({
+    summary: '스크랩한 글 목록 조회',
+    description: '스크랩한 글 목록을 조회합니다.',
+  })
+  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
+  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
+  @ApiResponse({
+    status: 200,
+    description: '스크랩한 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getScrapPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getScrapPostList(
+      user,
+      requestDto.pageSize,
+      requestDto.pageNumber,
     );
   }
 
@@ -167,5 +275,81 @@ export class PostController {
     @Param('postId') postId: number,
   ): Promise<DeletePostResponseDto> {
     return await this.postService.deletePost(user, postId);
+  }
+
+  @Post('/:postId/scrap')
+  @ApiOperation({
+    summary: '게시글 스크랩',
+    description:
+      '게시글을 스크랩합니다. 만일 이미 스크랩한 게시글이라면 스크랩을 취소합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 스크랩(취소) 성공',
+    type: ScrapPostResponseDto,
+  })
+  async scrapPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+  ): Promise<ScrapPostResponseDto> {
+    return await this.postService.scrapPost(user, postId);
+  }
+
+  @Post('/:postId/reaction')
+  @ApiOperation({
+    summary: '게시글 반응',
+    description:
+      '게시글에 반응을 남깁니다. 만일 이미 반응을 남긴 게시글이라면 반응을 변경합니다.',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiBody({
+    type: ReactPostRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 반응(변경) 성공',
+    type: ReactPostResponseDto,
+  })
+  async reactPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+    @Body() body: ReactPostRequestDto,
+  ): Promise<ReactPostResponseDto> {
+    return await this.postService.reactPost(user, postId, body);
+  }
+
+  @Post('/:postId/report')
+  @ApiOperation({
+    summary: '게시글 신고',
+    description: '게시글을 신고합니다',
+  })
+  @ApiParam({
+    name: 'postId',
+    description: '게시글의 고유 ID',
+  })
+  @ApiBody({
+    type: CreateReportRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 신고 성공',
+    type: CreateReportResponseDto,
+  })
+  async reportPost(
+    @User() user: AuthorizedUserDto,
+    @Param('postId') postId: number,
+    @Body() body: CreateReportRequestDto,
+  ): Promise<CreateReportResponseDto> {
+    if (!(await this.postService.isExistingPostId(postId))) {
+      throw new BadRequestException('Wrong PostId!');
+    }
+    return await this.reportService.createReport(user.id, body.reason, postId);
   }
 }

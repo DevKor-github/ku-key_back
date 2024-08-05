@@ -5,9 +5,22 @@ import { CommentController } from './comment.controller';
 import { CommentService } from './comment.service';
 import { CommentRepository } from './comment.repository';
 import { PostModule } from '../post/post.module';
+import { CommentLikeEntity } from 'src/entities/comment-like.entity';
+import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-number.entity';
+import { NoticeModule } from 'src/notice/notice.module';
+import { ReportModule } from '../report/report.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CommentEntity]), PostModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      CommentEntity,
+      CommentLikeEntity,
+      CommentAnonymousNumberEntity,
+    ]),
+    PostModule,
+    NoticeModule,
+    ReportModule,
+  ],
   controllers: [CommentController],
   providers: [CommentService, CommentRepository],
 })

@@ -20,6 +20,7 @@ import { DataSource, Repository } from 'typeorm';
 import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
+import { DeleteUserResponseDto } from './dto/delete-user.dto';
 
 @Injectable()
 export class UserService {
@@ -54,11 +55,22 @@ export class UserService {
     });
   }
 
-  async deleteUser(userId: number): Promise<void> {
-    const isDeleted = await this.userRepository.deleteUser(userId);
+  async hardDeleteUser(userId: number): Promise<boolean> {
+    const isDeleted = await this.userRepository.hardDeleteUser(userId);
     if (!isDeleted) {
       throw new InternalServerErrorException('remove user failed!');
     }
+
+    return isDeleted;
+  }
+
+  async softDeleteUser(userId: number): Promise<DeleteUserResponseDto> {
+    const isDeleted = await this.userRepository.softDeleteUser(userId);
+    if (!isDeleted) {
+      throw new InternalServerErrorException('remove user failed!');
+    }
+
+    return new DeleteUserResponseDto(isDeleted);
   }
 
   async checkUsernamePossible(
@@ -97,7 +109,7 @@ export class UserService {
     id: number,
     requestDto: SetExchangeDayReqeustDto,
   ): Promise<SetResponseDto> {
-    if (requestDto.startDay > requestDto.endDay) {
+    if (requestDto.startDay >= requestDto.endDay) {
       throw new BadRequestException('StartDay should be earlier than EndDay!');
     }
     const isSet = await this.userRepository.setExchangeDay(id, requestDto);
@@ -213,14 +225,6 @@ export class UserService {
       order: { createdAt: 'DESC' },
     });
 
-    return histories.map(
-      (history) =>
-        new GetPointHistoryResponseDto(
-          history.createdAt,
-          history.history,
-          history.changePoint,
-          history.resultPoint,
-        ),
-    );
+    return histories.map((history) => new GetPointHistoryResponseDto(history));
   }
 }

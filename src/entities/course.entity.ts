@@ -41,6 +41,9 @@ export class CourseEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   syllabus: string;
 
+  @Column('float', { nullable: false, default: 0.0 })
+  totalRate: number;
+
   @OneToMany(
     () => CourseDetailEntity,
     (courseDetailEntity) => courseDetailEntity.course,

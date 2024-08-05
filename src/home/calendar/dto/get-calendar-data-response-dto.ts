@@ -25,10 +25,14 @@ export class GetCalendarDataResponseDto {
   @ApiProperty({ description: '행사/일정 제목', type: [Event] })
   event: Event[];
 
+  @ApiProperty({ description: '행사/일정 개수' })
+  eventCount: number;
+
   constructor(date: Date, calendars: CalendarEntity[]) {
     this.date = date;
     this.event = calendars.map((calendar) => {
       return new Event(calendar);
     });
+    this.eventCount = this.event.length;
   }
 }

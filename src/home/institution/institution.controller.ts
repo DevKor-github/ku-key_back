@@ -9,26 +9,26 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { InstitutionService } from './institution.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import {
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
-import { GetInstitutionResponseDto } from './dto/get-institution-response-dto';
 import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
-import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
+import { CreateInstitutionRequestDto } from './dto/create-institution-request-dto';
 import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
 import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
 import { DeleteInstitutionResponseDto } from './dto/delete-institution-response-dto';
+import { InstitutionResponseDto } from './dto/institution-response-dto';
 
 @Controller('institution')
+@ApiTags('institution')
 export class InstitutionController {
   constructor(private readonly institutionService: InstitutionService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: '기관 목록 조회',
@@ -37,9 +37,9 @@ export class InstitutionController {
   @ApiOkResponse({
     description: '전체 기관 목록을 배열로 반환합니다.',
     isArray: true,
-    type: GetInstitutionResponseDto,
+    type: InstitutionResponseDto,
   })
-  async getInstitutionList(): Promise<GetInstitutionResponseDto[]> {
+  async getInstitutionList(): Promise<InstitutionResponseDto[]> {
     return await this.institutionService.getInstitutionList();
   }
 
@@ -52,11 +52,11 @@ export class InstitutionController {
   @ApiBody({ type: CreateInstitutionRequestDto })
   @ApiCreatedResponse({
     description: '기관 생성 성공',
-    type: GetInstitutionResponseDto,
+    type: InstitutionResponseDto,
   })
   async createInstitution(
     @Body() body: CreateInstitutionRequestDto,
-  ): Promise<GetInstitutionResponseDto> {
+  ): Promise<InstitutionResponseDto> {
     return await this.institutionService.createInstitution(body);
   }
 

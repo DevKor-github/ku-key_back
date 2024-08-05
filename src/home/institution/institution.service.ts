@@ -3,27 +3,27 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { GetInstitutionResponseDto } from './dto/get-institution-response-dto';
 import { InstitutionRepository } from './institution.repository';
-import { CreateInstitutionRequestDto } from './dto/create-insitution-request-dto';
+import { CreateInstitutionRequestDto } from './dto/create-institution-request-dto';
 import { UpdateInstitutionRequestDto } from './dto/update-institution-request-dto';
 import { UpdateInstitutionResponseDto } from './dto/update-institution-response-dto';
 import { DeleteInstitutionResponseDto } from './dto/delete-institution-response-dto';
+import { InstitutionResponseDto } from './dto/institution-response-dto';
 
 @Injectable()
 export class InstitutionService {
   constructor(private readonly institutionRepository: InstitutionRepository) {}
 
-  async getInstitutionList(): Promise<GetInstitutionResponseDto[]> {
+  async getInstitutionList(): Promise<InstitutionResponseDto[]> {
     const institutions = await this.institutionRepository.find();
     return institutions.map((institution) => {
-      return new GetInstitutionResponseDto(institution);
+      return new InstitutionResponseDto(institution);
     });
   }
 
   async createInstitution(
     requestDto: CreateInstitutionRequestDto,
-  ): Promise<GetInstitutionResponseDto> {
+  ): Promise<InstitutionResponseDto> {
     const { name, category, imgDir, linkUrl } = requestDto;
     const institution = await this.institutionRepository.createInstitution(
       name,
@@ -31,7 +31,7 @@ export class InstitutionService {
       imgDir,
       linkUrl,
     );
-    return new GetInstitutionResponseDto(institution);
+    return new InstitutionResponseDto(institution);
   }
 
   async updateInstitution(
