@@ -70,7 +70,11 @@ export class UserEntity extends CommonEntity {
   @Column('boolean', { default: false })
   isViewable: boolean;
 
-  @Column('varchar', { default: Role.user })
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.user,
+  })
   role: Role;
 
   @OneToOne(
