@@ -22,7 +22,7 @@ export class ClubLikeEntity extends CommonEntity {
   club: ClubEntity;
 
   @ManyToOne(() => UserEntity, (user) => user.clubLikes, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'userId' })
   user: UserEntity;
