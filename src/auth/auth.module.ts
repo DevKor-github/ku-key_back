@@ -8,7 +8,6 @@ import { RefreshStrategy } from './strategies/refresh.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 import { KuVerificationRepository } from './ku-verification.repository';
-import { AdminStrategy } from './strategies/admin.strategy';
 import { UserModule } from 'src/user/user.module';
 import { CommonModule } from 'src/common/common.module';
 import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
@@ -27,7 +26,6 @@ import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
     LocalStrategy,
     JwtStrategy,
     RefreshStrategy,
-    AdminStrategy,
     OptionalJwtAuthGuard,
   ],
 })
