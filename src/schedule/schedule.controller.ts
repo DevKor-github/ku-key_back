@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -24,6 +25,9 @@ import { CreateScheduleResponseDto } from './dto/create-schedule-response.dto';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @Controller('schedule')
 @ApiTags('schedule')
@@ -58,6 +62,7 @@ export class ScheduleController {
   }
 
   @Patch('/:scheduleId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '시간표에 개인 스케쥴 수정',
     description: '시간표에 등록된 개인 스케쥴을 수정합니다.',
@@ -77,11 +82,13 @@ export class ScheduleController {
     type: UpdateScheduleResponseDto,
   })
   async updateSchedule(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('scheduleId') scheduleId: number,
     @Body() updateScheduleRequestDto: UpdateScheduleRequestDto,
   ): Promise<UpdateScheduleResponseDto> {
     return await this.scheduleService.updateSchedule(
+      transactionManager,
       user,
       scheduleId,
       updateScheduleRequestDto,

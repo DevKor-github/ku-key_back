@@ -17,11 +17,11 @@ export class InstitutionResponseDto {
   @ApiProperty({ description: '리다이렉션 링크' })
   linkUrl: string;
 
-  constructor(institution: InstitutionEntity) {
+  constructor(institution: InstitutionEntity, imgDir: string) {
     this.id = institution.id;
     this.name = institution.name;
     this.category = institution.category;
-    this.imgDir = institution.imgDir;
+    this.imgDir = imgDir;
     this.linkUrl = institution.linkUrl;
   }
 }

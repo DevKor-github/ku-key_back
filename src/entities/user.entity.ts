@@ -22,6 +22,7 @@ import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity'
 import { ReportEntity } from './report.entity';
 import { NoticeEntity } from './notice.entity';
 import { AttendanceCheckEntity } from './attendance-check.entity';
+import { Role } from 'src/enums/role.enum';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -69,6 +70,13 @@ export class UserEntity extends CommonEntity {
 
   @Column('boolean', { default: false })
   isViewable: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.user,
+  })
+  role: Role;
 
   @OneToOne(
     () => KuVerificationEntity,
