@@ -39,6 +39,7 @@ export class UserRepository extends Repository<UserEntity> {
         'timetables.schedules',
         'pointHistories',
         'commentAnonymousNumbers',
+        'notices',
       ],
     });
     const deleteResult = await this.softRemove(user);
