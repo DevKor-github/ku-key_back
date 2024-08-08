@@ -2,7 +2,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
@@ -22,6 +21,7 @@ import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto'
 import { ColorType } from './dto/update-timetable-color.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
+import { isConflictingTime } from 'src/utils/time-utils';
 
 @Injectable()
 export class TimetableService {
@@ -95,7 +95,7 @@ export class TimetableService {
       for (const existingInfo of existingCourseInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingTime(
+          isConflictingTime(
             existingInfo.startTime,
             existingInfo.endTime,
             newDetail.startTime,
@@ -114,7 +114,7 @@ export class TimetableService {
       for (const existingInfo of existingScheduleInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingTime(
+          isConflictingTime(
             existingInfo.startTime,
             existingInfo.endTime,
             newDetail.startTime,
@@ -167,31 +167,6 @@ export class TimetableService {
       startTime: schedule.startTime,
       endTime: schedule.endTime,
     }));
-  }
-
-  private isConflictingTime(
-    existingStartTime: string,
-    existingEndTime: string,
-    newStartTime: string,
-    newEndTime: string,
-  ): boolean {
-    // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
-    const timeToNumber = (time: string): number => {
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      return hours * 3600 + minutes * 60 + seconds;
-    };
-
-    const existingStart = timeToNumber(existingStartTime);
-    const existingEnd = timeToNumber(existingEndTime);
-    const newStart = timeToNumber(newStartTime);
-    const newEnd = timeToNumber(newEndTime);
-
-    // 시간이 겹치는지 확인
-    return (
-      (newStart >= existingStart && newStart < existingEnd) ||
-      (newEnd > existingStart && newEnd <= existingEnd) ||
-      (newStart <= existingStart && newEnd >= existingEnd)
-    );
   }
 
   async createTimetable(
