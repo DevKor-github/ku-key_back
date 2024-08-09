@@ -11,7 +11,6 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import { DayType } from './dto/get-courseinfo-timetable.dto';
 import { CourseService } from 'src/course/course.service';
 import { ScheduleService } from 'src/schedule/schedule.service';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
@@ -22,6 +21,7 @@ import { ColorType } from './dto/update-timetable-color.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { isConflictingTime } from 'src/utils/time-utils';
+import { DayType } from 'src/utils/day-type.utils';
 
 @Injectable()
 export class TimetableService {
