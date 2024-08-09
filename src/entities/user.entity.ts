@@ -22,6 +22,7 @@ import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity'
 import { ReportEntity } from './report.entity';
 import { NoticeEntity } from './notice.entity';
 import { Role } from 'src/enums/role.enum';
+import { CharacterEntity } from './character.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -83,6 +84,11 @@ export class UserEntity extends CommonEntity {
     { cascade: true },
   )
   kuVerification: KuVerificationEntity;
+
+  @OneToOne(() => CharacterEntity, (character) => character.user, {
+    cascade: true,
+  })
+  character: CharacterEntity;
 
   @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser, {
     cascade: true,
