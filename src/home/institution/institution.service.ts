@@ -1,4 +1,6 @@
+import { FileService } from './../../common/file.service';
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,30 +14,50 @@ import { InstitutionResponseDto } from './dto/institution-response-dto';
 
 @Injectable()
 export class InstitutionService {
-  constructor(private readonly institutionRepository: InstitutionRepository) {}
+  constructor(
+    private readonly institutionRepository: InstitutionRepository,
+    private readonly fileService: FileService,
+  ) {}
 
   async getInstitutionList(): Promise<InstitutionResponseDto[]> {
     const institutions = await this.institutionRepository.find();
     return institutions.map((institution) => {
-      return new InstitutionResponseDto(institution);
+      const imgDir = this.fileService.makeUrlByFileDir(institution.imgDir);
+      return new InstitutionResponseDto(institution, imgDir);
     });
   }
 
   async createInstitution(
+    logoImage: Express.Multer.File,
     requestDto: CreateInstitutionRequestDto,
   ): Promise<InstitutionResponseDto> {
-    const { name, category, imgDir, linkUrl } = requestDto;
+    if (!this.fileService.imagefilter(logoImage)) {
+      throw new BadRequestException('Only image file can be uploaded!');
+    }
+
+    const { name, category, linkUrl } = requestDto;
+
+    const filename = await this.fileService.uploadFile(
+      logoImage,
+      'Institution',
+      'logo',
+    );
+
     const institution = await this.institutionRepository.createInstitution(
       name,
       category,
-      imgDir,
+      filename,
       linkUrl,
     );
-    return new InstitutionResponseDto(institution);
+
+    const imgDir = this.fileService.makeUrlByFileDir(filename);
+
+    return new InstitutionResponseDto(institution, imgDir);
   }
 
   async updateInstitution(
     institutionId: number,
+    logoImage: Express.Multer.File,
     requestDto: UpdateInstitutionRequestDto,
   ): Promise<UpdateInstitutionResponseDto> {
     const institution = await this.institutionRepository.findOne({
@@ -45,11 +67,26 @@ export class InstitutionService {
       throw new NotFoundException('기관 정보를 찾을 수 없습니다');
     }
 
-    const isUpdated = await this.institutionRepository.updateInstitution(
-      institutionId,
-      requestDto,
+    const updateData: any = { ...requestDto };
+    delete updateData.logoImage;
+    let filename: string | null = null;
+
+    if (logoImage) {
+      await this.fileService.deleteFile(institution.imgDir);
+      filename = await this.fileService.uploadFile(
+        logoImage,
+        'Institution',
+        'logo',
+      );
+      updateData.imgDir = filename;
+    }
+
+    const updated = await this.institutionRepository.update(
+      { id: institutionId },
+      updateData,
     );
-    if (!isUpdated) {
+
+    if (updated.affected === 0) {
       throw new InternalServerErrorException('업데이트에 실패했습니다.');
     }
     return new UpdateInstitutionResponseDto(true);
@@ -64,6 +101,8 @@ export class InstitutionService {
     if (!institution) {
       throw new NotFoundException('기관 정보를 찾을 수 없습니다.');
     }
+
+    await this.fileService.deleteFile(institution.imgDir);
 
     const idDeleted =
       await this.institutionRepository.deleteInstitution(institutionId);

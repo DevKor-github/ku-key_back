@@ -20,6 +20,8 @@ import { PostReactionEntity } from './post-reaction.entity';
 import { CommentLikeEntity } from './comment-like.entity';
 import { CommentAnonymousNumberEntity } from './comment-anonymous-number.entity';
 import { ReportEntity } from './report.entity';
+import { NoticeEntity } from './notice.entity';
+import { Role } from 'src/enums/role.enum';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -67,6 +69,13 @@ export class UserEntity extends CommonEntity {
 
   @Column('boolean', { default: false })
   isViewable: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.user,
+  })
+  role: Role;
 
   @OneToOne(
     () => KuVerificationEntity,
@@ -142,4 +151,9 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => ReportEntity, (reportEntity) => reportEntity.user)
   reports: ReportEntity[];
+
+  @OneToMany(() => NoticeEntity, (noticeEntity) => noticeEntity.user, {
+    cascade: true,
+  })
+  notices: NoticeEntity[];
 }

@@ -39,10 +39,10 @@ export class ClubService {
       return [];
     }
 
-    // 현재 접속 중인 유저의 각 동아리에 대한 찜 여부 함께 반환. 유저 존재하지 않을 시 false
+    // 현재 접속 중인 유저의 각 동아리에 대한 좋아요 여부 함께 반환. 유저 존재하지 않을 시 false
     let clubList = clubs.map((club) => {
       const isLiked = club.clubLikes.some((clubLike) =>
-        user ? clubLike.user.id === user.id : false,
+        user && clubLike.user ? clubLike.user.id === user.id : false,
       );
       return new GetClubResponseDto(club, isLiked);
     });

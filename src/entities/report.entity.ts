@@ -15,7 +15,7 @@ export class ReportEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   reporterId: number;
 
   @Column({ nullable: false })
@@ -29,7 +29,7 @@ export class ReportEntity extends CommonEntity {
 
   @JoinColumn({ name: 'reporterId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.reports, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   user: UserEntity;
 

@@ -35,6 +35,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
+import { Notice } from 'src/notice/enum/notice.enum';
 
 @Injectable()
 export class PostService {
@@ -466,9 +467,11 @@ export class PostService {
             10,
             'Hot post selected',
           );
-          this.noticeService.emitNotice(
+          await this.noticeService.emitNotice(
             post.userId,
             'Your Post is selected to Hot Board!',
+            Notice.hotPost,
+            post.id,
           );
         }
       } else {

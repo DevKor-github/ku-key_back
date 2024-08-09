@@ -76,7 +76,8 @@ export class UserService {
   async checkUsernamePossible(
     username: string,
   ): Promise<checkPossibleResponseDto> {
-    const user = await this.userRepository.findUserByUsername(username);
+    const user =
+      await this.userRepository.findUserByUsernameWithDeleted(username);
     if (!user) {
       return new checkPossibleResponseDto(true);
     } else {
@@ -85,11 +86,22 @@ export class UserService {
   }
 
   async checkEmailPossible(email: string): Promise<checkPossibleResponseDto> {
-    const user = await this.userRepository.findUserByEmail(email);
+    const user = await this.userRepository.findUserByEmailWithDeleted(email);
+
     if (!user) {
       return new checkPossibleResponseDto(true);
-    } else {
+    } else if (!user.deletedAt) {
       return new checkPossibleResponseDto(false);
+    } else if (
+      user.deletedAt.getTime() >
+      new Date().getTime() - 1000 * 60 * 60 * 24 * 7
+    ) {
+      throw new BadRequestException(
+        'Re-registration is not possible within 7 days of withdrawal.',
+      );
+    } else {
+      await this.hardDeleteUser(user.id);
+      return new checkPossibleResponseDto(true);
     }
   }
 

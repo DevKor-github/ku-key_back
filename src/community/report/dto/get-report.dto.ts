@@ -6,8 +6,8 @@ import { UserEntity } from 'src/entities/user.entity';
 
 class ReportedUser {
   constructor(userEntity: UserEntity) {
-    this.id = userEntity.id;
-    this.username = userEntity.username;
+    this.id = userEntity ? userEntity.id : -1;
+    this.username = userEntity ? userEntity.username : 'Deleted';
   }
   @ApiProperty({ description: '사용자 고유 ID' })
   id: number;
