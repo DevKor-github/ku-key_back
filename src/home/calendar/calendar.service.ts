@@ -15,6 +15,7 @@ import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
+import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
 
 @Injectable()
 export class CalendarService {
@@ -27,17 +28,7 @@ export class CalendarService {
     year: number,
     month: number,
   ): Promise<GetDailyCalendarDataResponseDto[]> {
-    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1));
-    const lastDayOfMonth = new Date(Date.UTC(year, month, 0));
-
-    const daysFromPrevMonth = firstDayOfMonth.getDay();
-    const daysFromNextMonth = 6 - lastDayOfMonth.getDay();
-    const startDate = new Date(
-      Date.UTC(year, month - 1, -daysFromPrevMonth + 1),
-    );
-    const endDate = new Date(
-      Date.UTC(year, month - 1, lastDayOfMonth.getDate() + daysFromNextMonth),
-    );
+    const { startDate, endDate } = this.getStartAndEndDate(year, month);
 
     // 해당 월에 걸쳐있는 모든 이벤트를 가져옴
     const monthEvents = await this.calendarRepository.find({
@@ -85,6 +76,38 @@ export class CalendarService {
       );
     }
     return allCalendarData;
+  }
+
+  async getAcademicScheduleData(
+    year: number,
+    semester: number,
+  ): Promise<GetAcademicScheduleDataResponseDto[]> {
+    const startMonth = semester === 1 ? 1 : 8;
+    const endMonth = semester === 1 ? 8 : 14; // 13, 14는 다음해 1, 2월로 처리
+    const academicScheduleData: GetAcademicScheduleDataResponseDto[] = [];
+
+    for (let month = startMonth; month <= endMonth; month++) {
+      const { startDate, endDate } = this.getStartAndEndDate(
+        month > 12 ? year + 1 : year,
+        month > 12 ? month - 12 : month,
+      );
+      const monthData = await this.calendarRepository.getMonthEvents(
+        startDate,
+        endDate,
+      );
+      // isAcademic이 true인 것만 반환
+      const filteredData = monthData.filter(
+        (data) =>
+          data.endDate.getMonth() === month - 1 && data.isAcademic === true,
+      );
+      academicScheduleData.push(
+        new GetAcademicScheduleDataResponseDto(
+          month > 12 ? month - 12 : month,
+          filteredData,
+        ),
+      );
+    }
+    return academicScheduleData;
   }
 
   async createCalendarData(
@@ -148,5 +171,25 @@ export class CalendarService {
     }
 
     return new DeleteCalendarDataResponseDto(true);
+  }
+
+  // 연도, 월 정보를 받아 캘린더의 시작 - 끝 날짜를 반환하는 함수
+  private getStartAndEndDate(
+    year: number,
+    month: number,
+  ): { startDate: Date; endDate: Date } {
+    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1));
+    const lastDayOfMonth = new Date(Date.UTC(year, month, 0));
+
+    const daysFromPrevMonth = firstDayOfMonth.getDay();
+    const daysFromNextMonth = 6 - lastDayOfMonth.getDay();
+    const startDate = new Date(
+      Date.UTC(year, month - 1, -daysFromPrevMonth + 1),
+    );
+    const endDate = new Date(
+      Date.UTC(year, month - 1, lastDayOfMonth.getDate() + daysFromNextMonth),
+    );
+
+    return { startDate, endDate };
   }
 }

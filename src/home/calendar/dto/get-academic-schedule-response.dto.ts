@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 
+enum DayOfWeek {
+  SUN = 0,
+  MON = 1,
+  TUE = 2,
+  WED = 3,
+  THU = 4,
+  FRI = 5,
+  SAT = 6,
+}
+
 class AcademicSchedule {
   @ApiProperty({ description: '행사/일정 제목' })
   title: string;
@@ -12,21 +22,21 @@ class AcademicSchedule {
   startDate: Date;
 
   @ApiProperty({ description: '시작 요일' })
-  startDay: number;
+  startDay: string;
 
   @ApiProperty({ description: '종료 날짜' })
   endDate: Date;
 
   @ApiProperty({ description: '종료 요일' })
-  endDay: number;
+  endDay: string;
 
   constructor(calendar: CalendarEntity) {
     this.title = calendar.title;
     this.description = calendar.description;
     this.startDate = calendar.startDate;
-    this.startDay = this.startDate.getDay();
+    this.startDay = DayOfWeek[this.startDate.getDay()];
     this.endDate = calendar.endDate;
-    this.endDay = this.endDate.getDay();
+    this.endDay = DayOfWeek[this.endDate.getDay()];
   }
 }
 
@@ -40,8 +50,10 @@ export class GetAcademicScheduleDataResponseDto {
   })
   schedules: AcademicSchedule[];
 
-  constructor(month: number, schedules: AcademicSchedule[]) {
+  constructor(month: number, calendars: CalendarEntity[]) {
     this.month = month;
-    this.schedules = schedules;
+    this.schedules = calendars.map((calendar) => {
+      return new AcademicSchedule(calendar);
+    });
   }
 }

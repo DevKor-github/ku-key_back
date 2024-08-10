@@ -38,6 +38,7 @@ import { RolesGuard } from 'src/auth/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 import { GetAcademicScheduleDataRequestDto } from './dto/get-academic-schedule-request.dto';
+import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -78,9 +79,16 @@ export class CalendarController {
   @ApiOkResponse({
     description: '특정 연도, 학기별 Academic Schedule 행사/일정 데이터 반환',
     isArray: true,
-    type: GetAcademicScheduleDataRequestDto,
+    type: GetAcademicScheduleDataResponseDto,
   })
-  async getAcademicScheduleData() {}
+  async getAcademicScheduleData(
+    @Query() queryDto: GetAcademicScheduleDataRequestDto,
+  ): Promise<GetAcademicScheduleDataResponseDto[]> {
+    return await this.calendarService.getAcademicScheduleData(
+      queryDto.year,
+      queryDto.semester,
+    );
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)

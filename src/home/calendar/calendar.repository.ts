@@ -1,12 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { CalendarEntity } from 'src/entities/calendar.entity';
-import { DataSource, Repository } from 'typeorm';
+import {
+  DataSource,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 
 @Injectable()
 export class CalendarRepository extends Repository<CalendarEntity> {
   constructor(dataSource: DataSource) {
     super(CalendarEntity, dataSource.createEntityManager());
+  }
+
+  // startDate ~ endDate 사이의 데이터 가져오기
+  async getMonthEvents(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CalendarEntity[]> {
+    return await this.find({
+      where: [
+        {
+          startDate: LessThanOrEqual(endDate),
+          endDate: MoreThanOrEqual(startDate),
+        },
+      ],
+      order: {
+        startDate: 'ASC',
+      },
+    });
   }
 
   async createCalendarData(
