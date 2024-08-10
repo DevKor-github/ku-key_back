@@ -7,8 +7,8 @@ import {
 import { PostRepository } from './post.repository';
 import { BoardService } from '../board/board.service';
 import {
+  GetPostListWithBoardRequestDto,
   GetPostListWithBoardResponseDto,
-  PostPreview,
 } from './dto/get-post-list-with-board.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
@@ -22,8 +22,9 @@ import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import {
+  getAllPostListRequestDto,
+  GetPostListRequestDto,
   GetPostListResponseDto,
-  PostPreviewWithBoardName,
 } from './dto/get-post-list.dto';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 import {
@@ -36,6 +37,8 @@ import { Cache } from 'cache-manager';
 import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
+import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
 
 @Injectable()
 export class PostService {
@@ -51,31 +54,40 @@ export class PostService {
   ) {}
 
   async getPostList(
-    boardId: number,
-    pageSize: number,
-    pageNumber: number,
-    keyword?: string,
+    user: AuthorizedUserDto,
+    requestDto: GetPostListWithBoardRequestDto,
   ): Promise<GetPostListWithBoardResponseDto> {
-    const board = await this.boardService.getBoardById(boardId);
+    const board = await this.boardService.getBoardById(requestDto.boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
-    const posts = keyword
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+    const posts = requestDto.keyword
       ? await this.postRepository.getPostsByBoardIdwithKeyword(
-          boardId,
-          keyword,
-          pageSize,
-          pageNumber,
+          requestDto.boardId,
+          requestDto.keyword,
+          requestDto.take + 1,
+          cursor,
         )
       : await this.postRepository.getPostsByBoardId(
-          boardId,
-          pageSize,
-          pageNumber,
+          requestDto.boardId,
+          requestDto.take + 1,
+          cursor,
         );
-    const postList = new GetPostListWithBoardResponseDto(board, posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListWithBoardResponseDto(board, posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getPost(
@@ -342,66 +354,114 @@ export class PostService {
 
   async getMyPostList(
     user: AuthorizedUserDto,
-    pageSize: number,
-    pageNumber: number,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
     const posts = await this.postRepository.getPostsByUserId(
       user.id,
-      pageSize,
-      pageNumber,
+      requestDto.take + 1,
+      cursor,
     );
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getAllPostList(
-    pageSize: number,
-    pageNumber: number,
-    keyword?: string,
+    user: AuthorizedUserDto,
+    requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    const posts = keyword
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+    const posts = requestDto.keyword
       ? await this.postRepository.getAllPostsWithKeyword(
-          keyword,
-          pageSize,
-          pageNumber,
+          requestDto.keyword,
+          requestDto.take + 1,
+          cursor,
         )
-      : await this.postRepository.getAllPosts(pageSize, pageNumber);
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
+      : await this.postRepository.getAllPosts(requestDto.take + 1, cursor);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getHotPostList(
-    pageSize: number,
-    pageNumber: number,
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    const posts = await this.postRepository.getHotPosts(pageSize, pageNumber);
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
 
-    return postList;
+    const posts = await this.postRepository.getHotPosts(
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getScrapPostList(
     user: AuthorizedUserDto,
-    pageSize: number,
-    pageNumber: number,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
     const postIds = await this.postScrapRepository.getScrapPostIdsWithUserId(
       user.id,
     );
+
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
     const posts = await this.postRepository.getScrapPostsByPostIds(
       postIds,
-      pageSize,
-      pageNumber,
+      requestDto.take + 1,
+      cursor,
     );
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async reactPost(
@@ -513,16 +573,14 @@ export class PostService {
   }
 
   makeThumbnailDirUrlInPostList(
-    postList: GetPostListResponseDto | GetPostListWithBoardResponseDto,
+    postList: PostPreview[] | PostPreviewWithBoardName[],
   ): void {
-    postList.posts.map(
-      (postPreview: PostPreviewWithBoardName | PostPreview) => {
-        const imgDir = postPreview.thumbnailDir;
-        if (imgDir) {
-          postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-        }
-      },
-    );
+    postList.map((postPreview: PostPreviewWithBoardName | PostPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
   }
 
   makeImgDirUrlInPost(post: GetPostResponseDto): void {
