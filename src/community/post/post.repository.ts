@@ -25,7 +25,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user'],
+      relations: ['postImages', 'user', 'postScraps'],
       take: take,
     });
     return posts;
@@ -53,7 +53,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user'],
+      relations: ['postImages', 'user', 'postScraps'],
       take: take,
     });
     return posts;
@@ -67,7 +67,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
+      relations: ['postImages', 'user', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -86,7 +86,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
+      relations: ['postImages', 'user', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -101,7 +101,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
+      relations: ['postImages', 'user', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -142,6 +142,8 @@ export class PostRepository extends Repository<PostEntity> {
         'postImages',
         'comments.user',
         'commentAnonymousNumbers',
+        'postScraps',
+        'postReactions',
       ],
     });
     return post;
@@ -157,7 +159,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
+      relations: ['postImages', 'user', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -173,7 +175,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
+      relations: ['postImages', 'user', 'board', 'postScraps'],
       take: take,
     });
     return posts;

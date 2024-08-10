@@ -6,10 +6,10 @@ import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { PostPreviewWithBoardName } from './post-preview.dto';
 
 export class GetPostListResponseDto extends CursorPageResponseDto<PostPreviewWithBoardName> {
-  constructor(postEntities: PostEntity[]) {
+  constructor(postEntities: PostEntity[], userId: number) {
     super();
     this.data = postEntities.map(
-      (postEntity) => new PostPreviewWithBoardName(postEntity),
+      (postEntity) => new PostPreviewWithBoardName(postEntity, userId),
     );
   }
 }

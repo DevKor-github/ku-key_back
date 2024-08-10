@@ -72,9 +72,10 @@ export class PostController {
     type: GetPostListWithBoardResponseDto,
   })
   async getPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListWithBoardRequestDto,
   ): Promise<GetPostListWithBoardResponseDto> {
-    return await this.postService.getPostList(requestDto);
+    return await this.postService.getPostList(user, requestDto);
   }
 
   @Get('/my')
@@ -105,9 +106,10 @@ export class PostController {
     type: GetPostListResponseDto,
   })
   async getAllPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getAllPostList(requestDto);
+    return await this.postService.getAllPostList(user, requestDto);
   }
 
   @Get('/hot')
@@ -121,9 +123,10 @@ export class PostController {
     type: GetPostListResponseDto,
   })
   async getHotPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getHotPostList(requestDto);
+    return await this.postService.getHotPostList(user, requestDto);
   }
 
   @Get('/scrap')

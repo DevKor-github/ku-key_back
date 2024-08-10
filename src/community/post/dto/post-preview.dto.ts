@@ -3,7 +3,7 @@ import { CommunityUser } from './community-user.dto';
 import { PostEntity } from 'src/entities/post.entity';
 
 export class PostPreview {
-  constructor(postEntity: PostEntity) {
+  constructor(postEntity: PostEntity, userId: number) {
     this.id = postEntity.id;
     this.title = postEntity.title;
     this.content = postEntity.content.substring(0, 100);
@@ -11,6 +11,9 @@ export class PostPreview {
     this.user = new CommunityUser(postEntity.user, postEntity.isAnonymous);
     this.commentCount = postEntity.commentCount;
     this.scrapCount = postEntity.scrapCount;
+    this.myScrap = postEntity.postScraps.some(
+      (postScrap) => postScrap.userId === userId,
+    );
     this.thumbnailDir =
       postEntity.postImages.length > 0 ? postEntity.postImages[0].imgDir : null;
     this.reactionCount = postEntity.allReactionCount;
@@ -38,6 +41,9 @@ export class PostPreview {
   @ApiProperty({ description: '스크랩 수' })
   scrapCount: number;
 
+  @ApiProperty({ description: '스크랩 여부' })
+  myScrap: boolean;
+
   @ApiProperty({ description: '사진 미리보기(사진이 없으면 null)' })
   thumbnailDir: string | null;
 
@@ -49,8 +55,8 @@ export class PostPreview {
 }
 
 export class PostPreviewWithBoardName extends PostPreview {
-  constructor(postEntity: PostEntity) {
-    super(postEntity);
+  constructor(postEntity: PostEntity, userId: number) {
+    super(postEntity, userId);
     this.boardName = postEntity.board.name;
   }
 

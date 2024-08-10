@@ -54,6 +54,7 @@ export class PostService {
   ) {}
 
   async getPostList(
+    user: AuthorizedUserDto,
     requestDto: GetPostListWithBoardRequestDto,
   ): Promise<GetPostListWithBoardResponseDto> {
     const board = await this.boardService.getBoardById(requestDto.boardId);
@@ -82,7 +83,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListWithBoardResponseDto(board, posts);
+    const result = new GetPostListWithBoardResponseDto(board, posts, user.id);
     result.meta = meta;
     this.makeThumbnailDirUrlInPostList(result.data);
 
@@ -371,7 +372,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts);
+    const result = new GetPostListResponseDto(posts, user.id);
     result.meta = meta;
     this.makeThumbnailDirUrlInPostList(result.data);
 
@@ -379,6 +380,7 @@ export class PostService {
   }
 
   async getAllPostList(
+    user: AuthorizedUserDto,
     requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
     const cursor = new Date('9999-12-31');
@@ -398,7 +400,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts);
+    const result = new GetPostListResponseDto(posts, user.id);
     result.meta = meta;
     this.makeThumbnailDirUrlInPostList(result.data);
 
@@ -406,6 +408,7 @@ export class PostService {
   }
 
   async getHotPostList(
+    user: AuthorizedUserDto,
     requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
     const cursor = new Date('9999-12-31');
@@ -423,7 +426,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts);
+    const result = new GetPostListResponseDto(posts, user.id);
     result.meta = meta;
     this.makeThumbnailDirUrlInPostList(result.data);
 
@@ -454,7 +457,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts);
+    const result = new GetPostListResponseDto(posts, user.id);
     result.meta = meta;
     this.makeThumbnailDirUrlInPostList(result.data);
 

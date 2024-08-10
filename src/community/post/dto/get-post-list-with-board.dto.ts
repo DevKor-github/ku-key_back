@@ -32,10 +32,16 @@ class BoardInfo {
 }
 
 export class GetPostListWithBoardResponseDto extends CursorPageResponseDto<PostPreview> {
-  constructor(boardEntity: BoardEntity, postEntities: PostEntity[]) {
+  constructor(
+    boardEntity: BoardEntity,
+    postEntities: PostEntity[],
+    userId: number,
+  ) {
     super();
     this.board = new BoardInfo(boardEntity);
-    this.data = postEntities.map((postEntity) => new PostPreview(postEntity));
+    this.data = postEntities.map(
+      (postEntity) => new PostPreview(postEntity, userId),
+    );
   }
 
   @ApiProperty({ description: '게시판 정보' })
