@@ -66,7 +66,7 @@ export class AuthController {
   @ApiOperation({
     summary: '로그인',
     description: `로그인하여 JWT Token을 발급받습니다.
-      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 30일, 아닐 경우 7일입니다.`,
+      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 14일, 아닐 경우 2일입니다.`,
   })
   @ApiBody({
     type: LoginRequestDto,
