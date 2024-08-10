@@ -50,6 +50,9 @@ import {
   CreateReportResponseDto,
 } from '../report/dto/create-report.dto';
 import { ReportService } from '../report/report.service';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @Controller('post')
 @ApiTags('post')
@@ -300,6 +303,7 @@ export class PostController {
   }
 
   @Post('/:postId/reaction')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '게시글 반응',
     description:
@@ -318,11 +322,17 @@ export class PostController {
     type: ReactPostResponseDto,
   })
   async reactPost(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
     @Body() body: ReactPostRequestDto,
   ): Promise<ReactPostResponseDto> {
-    return await this.postService.reactPost(user, postId, body);
+    return await this.postService.reactPost(
+      transactionManager,
+      user,
+      postId,
+      body,
+    );
   }
 
   @Post('/:postId/report')

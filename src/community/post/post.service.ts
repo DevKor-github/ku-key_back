@@ -16,7 +16,7 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
@@ -405,6 +405,7 @@ export class PostService {
   }
 
   async reactPost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
     requestDto: ReactPostRequestDto,
@@ -422,100 +423,88 @@ export class PostService {
       'funnyReactionCount',
     ];
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const existingReaction = await transactionManager.findOne(
+      PostReactionEntity,
+      { where: { userId: user.id, postId: postId } },
+    );
 
-    try {
-      const existingReaction = await queryRunner.manager.findOne(
-        PostReactionEntity,
-        { where: { userId: user.id, postId: postId } },
+    if (!existingReaction) {
+      const reaction = transactionManager.create(PostReactionEntity, {
+        userId: user.id,
+        postId: postId,
+        reaction: requestDto.reaction,
+      });
+      await transactionManager.save(reaction);
+
+      const updateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[requestDto.reaction],
+        1,
       );
-
-      if (!existingReaction) {
-        const reaction = queryRunner.manager.create(PostReactionEntity, {
-          userId: user.id,
-          postId: postId,
-          reaction: requestDto.reaction,
-        });
-        await queryRunner.manager.save(reaction);
-
-        const updateResult = await queryRunner.manager.increment(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[requestDto.reaction],
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('React Failed!');
-        }
-
-        const allReactionCountUpdateResult =
-          await queryRunner.manager.increment(
-            PostEntity,
-            { id: postId },
-            'allReactionCount',
-            1,
-          );
-        if (!allReactionCountUpdateResult.affected) {
-          throw new InternalServerErrorException('React Failed!');
-        }
-
-        if (post.allReactionCount + 1 >= 10) {
-          await this.userService.changePoint(
-            post.userId,
-            10,
-            'Hot post selected',
-          );
-          await this.noticeService.emitNotice(
-            post.userId,
-            'Your Post is selected to Hot Board!',
-            Notice.hotPost,
-            post.id,
-          );
-        }
-      } else {
-        if (existingReaction.reaction === requestDto.reaction) {
-          throw new BadRequestException('Same Reaction!');
-        }
-
-        const decreasingUpdateResult = await queryRunner.manager.decrement(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[existingReaction.reaction],
-          1,
-        );
-        if (!decreasingUpdateResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
-
-        const updateReactionResult = await queryRunner.manager.update(
-          PostReactionEntity,
-          { id: existingReaction.id },
-          { reaction: requestDto.reaction },
-        );
-        if (!updateReactionResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
-
-        const increasingUpdateResult = await queryRunner.manager.increment(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[requestDto.reaction],
-          1,
-        );
-        if (!increasingUpdateResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('React Failed!');
       }
 
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      const allReactionCountUpdateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        'allReactionCount',
+        1,
+      );
+      if (!allReactionCountUpdateResult.affected) {
+        throw new InternalServerErrorException('React Failed!');
+      }
+
+      if (post.allReactionCount + 1 >= 10) {
+        await this.userService.changePoint(
+          post.userId,
+          100,
+          'Hot post selected',
+          transactionManager,
+        );
+        await this.noticeService.emitNotice(
+          post.userId,
+          'Your Post is selected to Hot Board!',
+          Notice.hotPost,
+          post.id,
+        );
+      }
+    } else {
+      if (existingReaction.reaction === requestDto.reaction) {
+        throw new BadRequestException('Same Reaction!');
+      }
+
+      const decreasingUpdateResult = await transactionManager.decrement(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[existingReaction.reaction],
+        1,
+      );
+      if (!decreasingUpdateResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
+
+      const updateReactionResult = await transactionManager.update(
+        PostReactionEntity,
+        { id: existingReaction.id },
+        { reaction: requestDto.reaction },
+      );
+      if (!updateReactionResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
+
+      const increasingUpdateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[requestDto.reaction],
+        1,
+      );
+      if (!increasingUpdateResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
     }
+
     return new ReactPostResponseDto(requestDto.reaction);
   }
 
