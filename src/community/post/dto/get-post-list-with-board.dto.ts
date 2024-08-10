@@ -52,7 +52,7 @@ export class GetPostListWithBoardRequestDto extends CursorPageOptionsDto {
   @Max(3)
   boardId: number;
 
-  @ApiProperty({ description: '검색어, 없으면 전체 조회' })
+  @ApiProperty({ description: '검색어, 없으면 전체 조회', required: false })
   @IsOptional()
   @IsString()
   @MinLength(2)

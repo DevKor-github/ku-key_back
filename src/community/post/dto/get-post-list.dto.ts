@@ -17,7 +17,7 @@ export class GetPostListResponseDto extends CursorPageResponseDto<PostPreviewWit
 export class GetPostListRequestDto extends CursorPageOptionsDto {}
 
 export class getAllPostListRequestDto extends CursorPageOptionsDto {
-  @ApiProperty({ description: '검색어, 없으면 전체 조회' })
+  @ApiProperty({ description: '검색어, 없으면 전체 조회', required: false })
   @IsOptional()
   @IsString()
   @MinLength(2)
