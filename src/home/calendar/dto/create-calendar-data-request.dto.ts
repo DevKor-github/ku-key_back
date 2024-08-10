@@ -7,8 +7,16 @@ export class CreateCalendarDataRequestDto {
   })
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: '날짜 (AAAA-BB-CC 형식)' })
-  date: string;
+  @ApiProperty({ description: '시작 날짜 (AAAA-BB-CC 형식)' })
+  startDate: string;
+
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: '날짜 형식이 잘못되었습니다.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '종료 날짜 (AAAA-BB-CC 형식)' })
+  endDate: string;
 
   @IsString()
   @IsNotEmpty()

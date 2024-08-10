@@ -10,12 +10,14 @@ export class CalendarRepository extends Repository<CalendarEntity> {
   }
 
   async createCalendarData(
-    date: string,
+    startDate: string,
+    endDate: string,
     title: string,
     description: string,
   ): Promise<CalendarEntity> {
     const calendarData = this.create({
-      date: new Date(date),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
       title,
       description,
     });
@@ -27,16 +29,17 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     calendarId: number,
     requestDto: UpdateCalendarDataRequestDto,
   ): Promise<boolean> {
-    if (requestDto.date) {
-      const { date, ...others } = requestDto;
-      const newDate = new Date(date);
-      const updated = await this.update(
-        { id: calendarId },
-        { date: newDate, ...others },
-      );
-      return updated.affected ? true : false;
+    const updateData: any = { ...requestDto };
+
+    if (requestDto.startDate) {
+      updateData.startDate = new Date(requestDto.startDate);
     }
-    const updated = await this.update({ id: calendarId }, requestDto);
+
+    if (requestDto.endDate) {
+      updateData.endDate = new Date(requestDto.endDate);
+    }
+
+    const updated = await this.update({ id: calendarId }, updateData);
 
     return updated.affected ? true : false;
   }

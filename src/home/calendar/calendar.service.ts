@@ -9,10 +9,9 @@ import {
   GetDailyCalendarDataResponseDto,
   GetMonthlyCalendarDataResponseDto,
 } from './dto/get-calendar-data-response-dto';
-import { CalendarEntity } from 'src/entities/calendar.entity';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
-import { Between } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
@@ -28,29 +27,39 @@ export class CalendarService {
     year: number,
     month: number,
   ): Promise<GetDailyCalendarDataResponseDto[]> {
-    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1)).getDay(); // 현재 월 시작 요일
-    const lastDayOfMonth = new Date(Date.UTC(year, month, 0)).getDay(); // 현재 월 끝 요일
+    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1));
+    const lastDayOfMonth = new Date(Date.UTC(year, month, 0));
 
-    const daysFromPrevMonth = firstDayOfMonth; // 저번 달에서 가져올 개수
-    const daysFromNextMonth = 13 - lastDayOfMonth; // 다음 달에서 가져올 개수
+    const daysFromPrevMonth = firstDayOfMonth.getDay();
+    const daysFromNextMonth = 6 - lastDayOfMonth.getDay();
     const startDate = new Date(
       Date.UTC(year, month - 1, -daysFromPrevMonth + 1),
     );
-    const endDate = new Date(Date.UTC(year, month, daysFromNextMonth));
-    // 시작 - 끝 날짜에 대한 이벤트들을 찾아서 각 날짜별로 묶어줌
+    const endDate = new Date(
+      Date.UTC(year, month - 1, lastDayOfMonth.getDate() + daysFromNextMonth),
+    );
+
+    // 해당 월에 걸쳐있는 모든 이벤트를 가져옴
     const monthEvents = await this.calendarRepository.find({
-      where: { date: Between(startDate, endDate) },
+      where: [
+        {
+          startDate: LessThanOrEqual(endDate),
+          endDate: MoreThanOrEqual(startDate),
+        },
+      ],
     });
-    const eventByDates = this.groupEventsByDate(monthEvents);
+
     const monthCalendarData: GetDailyCalendarDataResponseDto[] = [];
 
     for (let i = 0; i < 42; i++) {
       const currentDate = new Date(
         startDate.getTime() + i * 24 * 60 * 60 * 1000,
       );
-      const formattedDate = this.formatDate(currentDate);
-      // 이벤트가 있으면 배열 형태로, 없다면 빈 배열
-      const dayEvents = eventByDates.get(formattedDate) || [];
+      // 현재 날짜에 해당하는 이벤트 필터링
+      const dayEvents = monthEvents.filter(
+        (event) =>
+          currentDate >= event.startDate && currentDate <= event.endDate,
+      );
 
       const dayCalendarData = new GetDailyCalendarDataResponseDto(
         currentDate,
@@ -81,9 +90,10 @@ export class CalendarService {
   async createCalendarData(
     requestDto: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
-    const { date, title, description } = requestDto;
+    const { startDate, endDate, title, description } = requestDto;
     const calendarData = await this.calendarRepository.createCalendarData(
-      date,
+      startDate,
+      endDate,
       title,
       description,
     );
@@ -138,25 +148,5 @@ export class CalendarService {
     }
 
     return new DeleteCalendarDataResponseDto(true);
-  }
-
-  // 날짜별 이벤트를 묶어주는 함수
-  private groupEventsByDate(
-    events: CalendarEntity[],
-  ): Map<string, CalendarEntity[]> {
-    const eventMap = new Map<string, CalendarEntity[]>();
-    for (const event of events) {
-      const dateKey = event.date.toISOString().split('T')[0];
-      if (!eventMap.has(dateKey)) {
-        eventMap.set(dateKey, []);
-      }
-      eventMap.get(dateKey)!.push(event);
-    }
-
-    return eventMap;
-  }
-
-  private formatDate(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 }
