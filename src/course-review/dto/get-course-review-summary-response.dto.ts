@@ -21,4 +21,7 @@ export class GetCourseReviewSummaryResponseDto {
 
   @ApiProperty({ description: '출석 체크 방식' })
   attendance: number;
+
+  @ApiProperty({ description: '강의명' })
+  courseName: string;
 }

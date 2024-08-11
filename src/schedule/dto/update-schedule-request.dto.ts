@@ -7,6 +7,7 @@ import {
   IsString,
   ValidateIf,
 } from 'class-validator';
+import { IsTime } from 'src/decorators/time.decorator';
 
 const DayType = {
   Mon: 'Mon',
@@ -39,13 +40,13 @@ export class UpdateScheduleRequestDto {
 
   @ApiPropertyOptional({ description: '시작 시간' })
   @ValidateIf((o) => o.day || o.startTime || o.endTime)
-  @IsString()
+  @IsTime()
   @IsNotEmpty()
   startTime: string;
 
   @ApiPropertyOptional({ description: '종료 시간' })
   @ValidateIf((o) => o.day || o.startTime || o.endTime)
-  @IsString()
+  @IsTime()
   @IsNotEmpty()
   endTime: string;
 

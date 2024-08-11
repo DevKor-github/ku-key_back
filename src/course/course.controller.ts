@@ -49,7 +49,7 @@ export class CourseController {
     return await this.courseService.searchCourseCode(searchCourseCodeDto);
   }
 
-  // 전공 - 과목명 검색
+  // 전공 -- 과목명 검색
   @UseGuards(JwtAuthGuard)
   @Get('search-major-course-name')
   @ApiBearerAuth('accessToken')
