@@ -1,16 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-
-const DayType = {
-  Mon: 'Mon',
-  Tue: 'Tue',
-  Wed: 'Wed',
-  Thu: 'Thu',
-  Fri: 'Fri',
-  Sat: 'Sat',
-  Sun: 'Sun',
-} as const;
-
-export type DayType = (typeof DayType)[keyof typeof DayType];
+import { DayType } from 'src/utils/day-type.utils';
 
 export class GetCourseInfoByTimetableIdResponseDto {
   @ApiProperty({ description: '강의 ID' })

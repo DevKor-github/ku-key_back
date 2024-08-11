@@ -2,7 +2,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
@@ -12,7 +11,6 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
-import { DayType } from './dto/get-courseinfo-timetable.dto';
 import { CourseService } from 'src/course/course.service';
 import { ScheduleService } from 'src/schedule/schedule.service';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
@@ -22,6 +20,8 @@ import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto'
 import { ColorType } from './dto/update-timetable-color.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
+import { isConflictingTime } from 'src/utils/time-utils';
+import { DayType } from 'src/utils/day-type.utils';
 
 @Injectable()
 export class TimetableService {
@@ -31,7 +31,6 @@ export class TimetableService {
     @InjectRepository(TimetableCourseEntity)
     private readonly timetableCourseRepository: Repository<TimetableCourseEntity>,
     private readonly courseService: CourseService,
-    private readonly dataSource: DataSource,
     @Inject(forwardRef(() => ScheduleService))
     private readonly scheduleService: ScheduleService,
   ) {}
@@ -74,8 +73,6 @@ export class TimetableService {
     }
 
     const timetableCourse = this.timetableCourseRepository.create({
-      timetableId,
-      courseId,
       timetable,
       course,
     });
@@ -95,7 +92,7 @@ export class TimetableService {
       for (const existingInfo of existingCourseInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingTime(
+          isConflictingTime(
             existingInfo.startTime,
             existingInfo.endTime,
             newDetail.startTime,
@@ -114,7 +111,7 @@ export class TimetableService {
       for (const existingInfo of existingScheduleInfo) {
         if (
           existingInfo.day === newDetail.day &&
-          this.isConflictingTime(
+          isConflictingTime(
             existingInfo.startTime,
             existingInfo.endTime,
             newDetail.startTime,
@@ -167,31 +164,6 @@ export class TimetableService {
       startTime: schedule.startTime,
       endTime: schedule.endTime,
     }));
-  }
-
-  private isConflictingTime(
-    existingStartTime: string,
-    existingEndTime: string,
-    newStartTime: string,
-    newEndTime: string,
-  ): boolean {
-    // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
-    const timeToNumber = (time: string): number => {
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      return hours * 3600 + minutes * 60 + seconds;
-    };
-
-    const existingStart = timeToNumber(existingStartTime);
-    const existingEnd = timeToNumber(existingEndTime);
-    const newStart = timeToNumber(newStartTime);
-    const newEnd = timeToNumber(newEndTime);
-
-    // 시간이 겹치는지 확인
-    return (
-      (newStart >= existingStart && newStart < existingEnd) ||
-      (newEnd > existingStart && newEnd <= existingEnd) ||
-      (newStart <= existingStart && newEnd >= existingEnd)
-    );
   }
 
   async createTimetable(
@@ -313,13 +285,9 @@ export class TimetableService {
       where: { userId },
     });
     if (!userTimetable) throw new NotFoundException('Timetable not found');
-    return userTimetable.map((table) => ({
-      timetableId: table.id,
-      semester: table.semester,
-      year: table.year,
-      mainTimetable: table.mainTimetable,
-      timetableName: table.timetableName,
-    }));
+    return userTimetable.map(
+      (table) => new GetTimetableByUserIdResponseDto(table),
+    );
   }
 
   // 친구 시간표 조회
@@ -374,7 +342,7 @@ export class TimetableService {
       courseId,
     });
 
-    return { deleted: true };
+    return new CommonDeleteResponseDto(true);
   }
 
   async deleteTimetable(
@@ -412,7 +380,7 @@ export class TimetableService {
       }
     }
     await transactionManager.softRemove(timetable);
-    return { deleted: true };
+    return new CommonDeleteResponseDto(true);
   }
 
   async getMainTimetable(

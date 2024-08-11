@@ -1,7 +1,11 @@
 import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import {
+  PostPreview,
+  PostPreviewWithBoardName,
+} from 'src/community/post/dto/post-preview.dto';
 import { GetNoticeResponseDto } from 'src/notice/dto/get-notice.dto';
 
-@ApiExtraModels(GetNoticeResponseDto)
+@ApiExtraModels(GetNoticeResponseDto, PostPreview, PostPreviewWithBoardName)
 export class CursorPageMetaResponseDto {
   @ApiProperty({ description: '다음 페이지 존재 여부' })
   hasNextData: boolean;
@@ -13,10 +17,14 @@ export class CursorPageMetaResponseDto {
 
 export class CursorPageResponseDto<T> {
   @ApiProperty({
-    description: '다음 페이지 존재 여부',
+    description: '데이터 목록',
     type: 'array',
     items: {
-      oneOf: [{ $ref: getSchemaPath(GetNoticeResponseDto) }],
+      oneOf: [
+        { $ref: getSchemaPath(GetNoticeResponseDto) },
+        { $ref: getSchemaPath(PostPreview) },
+        { $ref: getSchemaPath(PostPreviewWithBoardName) },
+      ],
     },
   })
   data: T[];
