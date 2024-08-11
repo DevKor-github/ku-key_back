@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -24,9 +25,9 @@ import {
   GetMonthlyCalendarDataResponseDto,
 } from './dto/get-calendar-data-response-dto';
 import {
-  GetMonthlyCalendarDataQueryDto,
-  GetYearlyCalendarDataQueryDto,
-} from './dto/get-calendar-data-query-dto';
+  GetMonthlyCalendarDataRequestDto,
+  GetYearlyCalendarDataRequestDto,
+} from './dto/get-calendar-data-request-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
@@ -36,9 +37,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
+import { GetAcademicScheduleDataRequestDto } from './dto/get-academic-schedule-request.dto';
+import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
+@ApiBearerAuth('accessToken')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
@@ -56,7 +60,7 @@ export class CalendarController {
     type: GetDailyCalendarDataResponseDto,
   })
   async getMonthlyCalendarData(
-    @Query() queryDto: GetMonthlyCalendarDataQueryDto,
+    @Query() queryDto: GetMonthlyCalendarDataRequestDto,
   ): Promise<GetDailyCalendarDataResponseDto[]> {
     return await this.calendarService.getMonthlyCalendarData(
       queryDto.year,
@@ -64,6 +68,30 @@ export class CalendarController {
     );
   }
 
+  @Get('academic')
+  @ApiOperation({
+    summary: 'Academic Schedule 행사/일정 조회',
+    description:
+      '연도, 학기 정보를 받아 Academic Schedule에 해당하는 행사/일정을 조회합니다. 행사/일정이 존재하는 날짜의 경우에만 가져옵니다.',
+  })
+  @ApiQuery({ name: 'year', required: true, description: '연도' })
+  @ApiQuery({ name: 'semester', required: true, description: '학기' })
+  @ApiOkResponse({
+    description: '특정 연도, 학기별 Academic Schedule 행사/일정 데이터 반환',
+    isArray: true,
+    type: GetAcademicScheduleDataResponseDto,
+  })
+  async getAcademicScheduleData(
+    @Query() queryDto: GetAcademicScheduleDataRequestDto,
+  ): Promise<GetAcademicScheduleDataResponseDto[]> {
+    return await this.calendarService.getAcademicScheduleData(
+      queryDto.year,
+      queryDto.semester,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @Get('yearly')
   @ApiOperation({
     summary: '연도별 행사/일정 전체 조회',
@@ -77,7 +105,7 @@ export class CalendarController {
     type: GetMonthlyCalendarDataResponseDto,
   })
   async getYearlyCalendarData(
-    @Query() queryDto: GetYearlyCalendarDataQueryDto,
+    @Query() queryDto: GetYearlyCalendarDataRequestDto,
   ): Promise<GetMonthlyCalendarDataResponseDto[]> {
     return await this.calendarService.getYearlyCalendarData(queryDto.year);
   }

@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CalendarEntity } from 'src/entities/calendar.entity';
-import { DataSource, Repository } from 'typeorm';
+import {
+  DataSource,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 
 @Injectable()
@@ -9,13 +14,33 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     super(CalendarEntity, dataSource.createEntityManager());
   }
 
+  // startDate ~ endDate 사이의 데이터 가져오기
+  async getMonthEvents(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CalendarEntity[]> {
+    return await this.find({
+      where: [
+        {
+          startDate: LessThanOrEqual(endDate),
+          endDate: MoreThanOrEqual(startDate),
+        },
+      ],
+      order: {
+        startDate: 'ASC',
+      },
+    });
+  }
+
   async createCalendarData(
-    date: string,
+    startDate: string,
+    endDate: string,
     title: string,
     description: string,
   ): Promise<CalendarEntity> {
     const calendarData = this.create({
-      date: new Date(date),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
       title,
       description,
     });
@@ -27,16 +52,17 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     calendarId: number,
     requestDto: UpdateCalendarDataRequestDto,
   ): Promise<boolean> {
-    if (requestDto.date) {
-      const { date, ...others } = requestDto;
-      const newDate = new Date(date);
-      const updated = await this.update(
-        { id: calendarId },
-        { date: newDate, ...others },
-      );
-      return updated.affected ? true : false;
+    const updateData: any = { ...requestDto };
+
+    if (requestDto.startDate) {
+      updateData.startDate = new Date(requestDto.startDate);
     }
-    const updated = await this.update({ id: calendarId }, requestDto);
+
+    if (requestDto.endDate) {
+      updateData.endDate = new Date(requestDto.endDate);
+    }
+
+    const updated = await this.update({ id: calendarId }, updateData);
 
     return updated.affected ? true : false;
   }
