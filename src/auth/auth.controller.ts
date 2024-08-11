@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -194,7 +195,7 @@ export class AuthController {
     description: '학교인증 요청 조회 성공',
     type: [GetScreenshotVerificationsResponseDto],
   })
-  @Post('admin/requests')
+  @Get('admin/request')
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {

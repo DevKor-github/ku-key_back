@@ -1,4 +1,4 @@
-import { Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ReportService } from './report.service';
 import { GetReportListResponseDto } from './dto/get-report-list.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -15,7 +15,7 @@ export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Roles(Role.admin)
-  @Post()
+  @Get()
   @ApiOperation({
     summary: '신고 목록 조회',
     description: '신고 목록을 조회합니다.',
