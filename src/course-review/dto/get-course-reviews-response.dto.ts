@@ -48,7 +48,9 @@ export class ReviewDto {
     this.id = courseReviewEntity.id;
     this.rate = courseReviewEntity.rate;
     this.createdAt = courseReviewEntity.createdAt;
-    this.reviewer = courseReviewEntity.user.username;
+    this.reviewer = courseReviewEntity.user.deletedAt
+      ? 'Deleted'
+      : courseReviewEntity.user.username;
     this.year = courseReviewEntity.year;
     this.semester = courseReviewEntity.semester;
     this.myRecommend = myRecommend;
