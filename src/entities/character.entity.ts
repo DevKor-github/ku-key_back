@@ -1,7 +1,15 @@
-import { Column, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
+import { CharacterType } from 'src/notice/enum/character-type.enum';
 
+@Entity('character')
 export class CharacterEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
@@ -12,8 +20,8 @@ export class CharacterEntity extends CommonEntity {
   @Column('int', { nullable: false })
   level: number;
 
-  @Column('int', { nullable: false })
-  type: number;
+  @Column({ type: 'enum', enum: CharacterType, nullable: false })
+  type: CharacterType;
 
   @OneToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })

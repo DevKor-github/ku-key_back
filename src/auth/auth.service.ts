@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
   UnauthorizedException,
@@ -214,6 +215,12 @@ export class AuthService {
       homeUniversity: requestDto.homeUniversity,
       major: requestDto.major,
     });
+
+    const character = await this.userService.createUserCharacter(user.id);
+
+    if (!character) {
+      throw new InternalServerErrorException('캐릭터 생성에 실패했습니다.');
+    }
 
     const studentNumber = requestDto.studentNumber;
 

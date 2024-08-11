@@ -21,6 +21,8 @@ import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
+import { CharacterEntity } from 'src/entities/character.entity';
+import { CharacterType } from 'src/notice/enum/character-type.enum';
 
 @Injectable()
 export class UserService {
@@ -30,6 +32,8 @@ export class UserService {
     private readonly dataSource: DataSource,
     @InjectRepository(PointHistoryEntity)
     private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
+    @InjectRepository(CharacterEntity)
+    private readonly characterRepository: Repository<CharacterEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
@@ -229,5 +233,27 @@ export class UserService {
     });
 
     return histories.map((history) => new GetPointHistoryResponseDto(history));
+  }
+
+  async createUserCharacter(userId: number): Promise<CharacterEntity> {
+    const existingCharacter = await this.characterRepository.findOne({
+      where: { userId: userId },
+    });
+    if (existingCharacter) {
+      throw new BadRequestException('이미 캐릭터가 존재합니다.');
+    }
+    const character = this.characterRepository.create({
+      userId: userId,
+      level: 1,
+      type: this.getRandomCharacterType(),
+    });
+
+    return await this.characterRepository.save(character);
+  }
+
+  private getRandomCharacterType(): CharacterType {
+    const characterTypes = Object.values(CharacterType);
+    const randomIndex = Math.floor(Math.random() * characterTypes.length);
+    return characterTypes[randomIndex];
   }
 }
