@@ -31,7 +31,6 @@ export class TimetableService {
     @InjectRepository(TimetableCourseEntity)
     private readonly timetableCourseRepository: Repository<TimetableCourseEntity>,
     private readonly courseService: CourseService,
-    private readonly dataSource: DataSource,
     @Inject(forwardRef(() => ScheduleService))
     private readonly scheduleService: ScheduleService,
   ) {}
@@ -74,8 +73,6 @@ export class TimetableService {
     }
 
     const timetableCourse = this.timetableCourseRepository.create({
-      timetableId,
-      courseId,
       timetable,
       course,
     });
@@ -288,13 +285,9 @@ export class TimetableService {
       where: { userId },
     });
     if (!userTimetable) throw new NotFoundException('Timetable not found');
-    return userTimetable.map((table) => ({
-      timetableId: table.id,
-      semester: table.semester,
-      year: table.year,
-      mainTimetable: table.mainTimetable,
-      timetableName: table.timetableName,
-    }));
+    return userTimetable.map(
+      (table) => new GetTimetableByUserIdResponseDto(table),
+    );
   }
 
   // 친구 시간표 조회
@@ -349,7 +342,7 @@ export class TimetableService {
       courseId,
     });
 
-    return { deleted: true };
+    return new CommonDeleteResponseDto(true);
   }
 
   async deleteTimetable(
@@ -387,7 +380,7 @@ export class TimetableService {
       }
     }
     await transactionManager.softRemove(timetable);
-    return { deleted: true };
+    return new CommonDeleteResponseDto(true);
   }
 
   async getMainTimetable(
