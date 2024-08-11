@@ -2,7 +2,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
@@ -31,7 +30,6 @@ export class TimetableService {
     @InjectRepository(TimetableCourseEntity)
     private readonly timetableCourseRepository: Repository<TimetableCourseEntity>,
     private readonly courseService: CourseService,
-    private readonly dataSource: DataSource,
     @Inject(forwardRef(() => ScheduleService))
     private readonly scheduleService: ScheduleService,
   ) {}
