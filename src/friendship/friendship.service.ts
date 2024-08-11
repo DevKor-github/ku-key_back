@@ -19,6 +19,9 @@ import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-ti
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { DataSource, EntityManager } from 'typeorm';
+import { NoticeService } from 'src/notice/notice.service';
+import { Notice } from 'src/notice/enum/notice.enum';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 
 @Injectable()
 export class FriendshipService {
@@ -27,6 +30,7 @@ export class FriendshipService {
     private readonly friendshipRepository: FriendshipRepository,
     private readonly userService: UserService,
     private readonly timetableService: TimetableService,
+    private readonly noticeService: NoticeService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -120,9 +124,12 @@ export class FriendshipService {
 
   async sendFriendshipRequest(
     transactionManager: EntityManager,
-    fromUserId: number,
+    fromUser: AuthorizedUserDto,
     toUsername: string,
   ): Promise<SendFriendshipResponseDto> {
+    const fromUserId = fromUser.id;
+    const fromUsername = fromUser.username;
+
     const toUser = await this.userService.findUserByUsername(toUsername);
 
     if (!toUser) {
@@ -166,6 +173,11 @@ export class FriendshipService {
     if (!savedFriendship) {
       throw new BadRequestException('친구 요청 보내기에 실패했습니다.');
     } else {
+      await this.noticeService.emitNotice(
+        toUserId,
+        `${fromUsername} sent you a friend request!`,
+        Notice.friendRequest,
+      );
       return new SendFriendshipResponseDto(true);
     }
   }
@@ -227,7 +239,7 @@ export class FriendshipService {
   ): Promise<UpdateFriendshipResponseDto> {
     const friendship = await transactionManager.findOne(FriendshipEntity, {
       where: { id: friendshipId },
-      relations: ['toUser'],
+      relations: ['fromUser', 'toUser'],
     });
 
     if (!friendship) {
@@ -252,6 +264,12 @@ export class FriendshipService {
     if (updatedResult.affected === 0) {
       throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
     } else {
+      console.log(friendship.toUser);
+      await this.noticeService.emitNotice(
+        friendship.fromUser.id,
+        `${friendship.toUser.username} has just accepted your friend request!`,
+        Notice.friendAccept,
+      );
       return new UpdateFriendshipResponseDto(true);
     }
   }

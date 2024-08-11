@@ -148,11 +148,10 @@ export class FriendshipController {
     @Body() sendFriendDto: SendFriendshipRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SendFriendshipResponseDto> {
-    const fromUserId = user.id;
     const toUsername = sendFriendDto.toUsername;
     return await this.friendshipService.sendFriendshipRequest(
       transactionManager,
-      fromUserId,
+      user,
       toUsername,
     );
   }
