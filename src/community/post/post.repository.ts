@@ -141,6 +141,7 @@ export class PostRepository extends Repository<PostEntity> {
         'user',
         'postImages',
         'comments.user',
+        'comments.commentLikes',
         'commentAnonymousNumbers',
         'postScraps',
         'postReactions',

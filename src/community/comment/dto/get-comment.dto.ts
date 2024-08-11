@@ -21,6 +21,9 @@ export class GetCommentResponseDto {
         anonymousNumber,
       );
       this.likeCount = commentEntity.likeCount;
+      this.myLike = commentEntity.commentLikes.some(
+        (commentLike) => commentLike.userId === userId,
+      );
     }
   }
   @ApiProperty({ description: '댓글 고유 ID' })
@@ -46,4 +49,7 @@ export class GetCommentResponseDto {
 
   @ApiProperty({ description: '좋아요 수' })
   likeCount?: number;
+
+  @ApiProperty({ description: '좋아요 눌렀는지 여부' })
+  myLike: boolean;
 }

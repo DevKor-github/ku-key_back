@@ -74,10 +74,9 @@ export class GetPostResponseDto {
       (postScrap) => postScrap.userId === userId,
     );
     this.reactionCount = new ReactionCount(postEntity);
-    this.myReaction =
-      postEntity.postReactions.find(
-        (postReaction) => postReaction.userId === userId,
-      )?.reaction || null;
+    this.myReaction = postEntity.postReactions.find(
+      (postReaction) => postReaction.userId === userId,
+    )?.reaction;
 
     this.comments = [];
     postEntity.comments
