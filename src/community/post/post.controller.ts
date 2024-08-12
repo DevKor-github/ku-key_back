@@ -150,6 +150,23 @@ export class PostController {
     return await this.postService.getScrapPostList(user, requestDto);
   }
 
+  @Get('/react')
+  @ApiOperation({
+    summary: '반응 남긴 글 목록 조회',
+    description: '반응을 남긴 글 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '반응 남긴 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getReactedPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getReactedPostList(user, requestDto);
+  }
+
   @Get('/:postId')
   @ApiOperation({
     summary: '게시글 조회',

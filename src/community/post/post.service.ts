@@ -16,7 +16,7 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
@@ -39,12 +39,15 @@ import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postScrapRepository: PostScrapRepository,
+    @InjectRepository(PostReactionEntity)
+    private readonly postReactionRepository: Repository<PostReactionEntity>,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
     private readonly userService: UserService,
@@ -464,7 +467,39 @@ export class PostService {
     const cursor = new Date('9999-12-31');
     if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
 
-    const posts = await this.postRepository.getScrapPostsByPostIds(
+    const posts = await this.postRepository.getPostsByPostIds(
+      postIds,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
+  }
+
+  async getReactedPostList(
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    const reactionList = await this.postReactionRepository.find({
+      where: { userId: user.id },
+    });
+    const postIds = reactionList.map((reaction) => reaction.postId);
+
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const posts = await this.postRepository.getPostsByPostIds(
       postIds,
       requestDto.take + 1,
       cursor,
