@@ -8,18 +8,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { IsTime } from 'src/decorators/time.decorator';
-
-const DayType = {
-  Mon: 'Mon',
-  Tue: 'Tue',
-  Wed: 'Wed',
-  Thu: 'Thu',
-  Fri: 'Fri',
-  Sat: 'Sat',
-  Sun: 'Sun',
-} as const;
-
-export type DayType = (typeof DayType)[keyof typeof DayType];
+import { DayType } from 'src/utils/day-type.utils';
 
 export class UpdateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })
