@@ -1,7 +1,8 @@
 import { PipeTransform } from '@nestjs/common';
 import * as Sharp from 'sharp';
 
-const MAX_LENGTH = 1024;
+const MAX_WIDTH = 777;
+const MAX_HEIGHT = 437;
 
 export class ResizeImagePipe implements PipeTransform {
   isSingleFile(value: any): value is Express.Multer.File {
@@ -34,12 +35,14 @@ export class ResizeImagePipe implements PipeTransform {
   async resizeImage(value: Express.Multer.File) {
     const { width, height } = await Sharp(value.buffer).metadata();
 
-    if (width < MAX_LENGTH && height < MAX_LENGTH) {
+    if (width < MAX_WIDTH && height < MAX_HEIGHT) {
       return value;
     }
 
     const resizeOption =
-      width >= height ? { width: MAX_LENGTH } : { height: MAX_LENGTH };
+      width / MAX_WIDTH >= height / MAX_HEIGHT
+        ? { width: MAX_WIDTH }
+        : { height: MAX_HEIGHT };
 
     const buffer = await Sharp(value.buffer).resize(resizeOption).toBuffer();
 
