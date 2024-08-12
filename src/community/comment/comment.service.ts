@@ -18,6 +18,7 @@ import { CommentLikeEntity } from 'src/entities/comment-like.entity';
 import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-number.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NoticeService } from 'src/notice/notice.service';
+import { Notice } from 'src/notice/enum/notice.enum';
 
 @Injectable()
 export class CommentService {
@@ -122,9 +123,11 @@ export class CommentService {
       );
 
       if (post.userId !== user.id) {
-        this.noticeService.emitNotice(
+        await this.noticeService.emitNotice(
           post.userId,
           'New comment was posted on your post!',
+          Notice.commentOnPost,
+          post.id,
         );
       }
 
@@ -132,9 +135,11 @@ export class CommentService {
         createdComment.parentCommentId &&
         createdComment.parentComment.userId !== user.id
       ) {
-        this.noticeService.emitNotice(
+        await this.noticeService.emitNotice(
           createdComment.parentComment.userId,
           'New reply was posted on your comment!',
+          Notice.commentOnComment,
+          post.id,
         );
       }
       return new GetCommentResponseDto(

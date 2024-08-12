@@ -16,7 +16,7 @@ import {
   SetProfileRequestDto,
 } from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
@@ -76,7 +76,8 @@ export class UserService {
   async checkUsernamePossible(
     username: string,
   ): Promise<checkPossibleResponseDto> {
-    const user = await this.userRepository.findUserByUsername(username);
+    const user =
+      await this.userRepository.findUserByUsernameWithDeleted(username);
     if (!user) {
       return new checkPossibleResponseDto(true);
     } else {
@@ -85,11 +86,22 @@ export class UserService {
   }
 
   async checkEmailPossible(email: string): Promise<checkPossibleResponseDto> {
-    const user = await this.userRepository.findUserByEmail(email);
+    const user = await this.userRepository.findUserByEmailWithDeleted(email);
+
     if (!user) {
       return new checkPossibleResponseDto(true);
-    } else {
+    } else if (!user.deletedAt) {
       return new checkPossibleResponseDto(false);
+    } else if (
+      user.deletedAt.getTime() >
+      new Date().getTime() - 1000 * 60 * 60 * 24 * 7
+    ) {
+      throw new BadRequestException(
+        'Re-registration is not possible within 7 days of withdrawal.',
+      );
+    } else {
+      await this.hardDeleteUser(user.id);
+      return new checkPossibleResponseDto(true);
     }
   }
 
@@ -181,8 +193,12 @@ export class UserService {
     userId: number,
     changePoint: number,
     history: string,
+    transactionManager: EntityManager,
   ): Promise<number> {
-    const user = await this.userRepository.findUserById(userId);
+    const user = await transactionManager.findOne(UserEntity, {
+      where: { id: userId },
+    });
+
     if (!user) {
       throw new BadRequestException('Wrong userId!');
     }
@@ -191,29 +207,16 @@ export class UserService {
       throw new BadRequestException("Don't have enough point!");
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      user.point = originPoint + changePoint;
-      await queryRunner.manager.save(user);
+    user.point = originPoint + changePoint;
+    await transactionManager.save(user);
 
-      const newHistory = queryRunner.manager.create(PointHistoryEntity, {
-        userId: userId,
-        history: history,
-        changePoint: changePoint,
-        resultPoint: user.point,
-      });
-      await queryRunner.manager.save(newHistory);
-
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-
+    const newHistory = transactionManager.create(PointHistoryEntity, {
+      userId: userId,
+      history: history,
+      changePoint: changePoint,
+      resultPoint: user.point,
+    });
+    await transactionManager.save(newHistory);
     return user.point;
   }
 

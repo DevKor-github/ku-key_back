@@ -72,7 +72,7 @@ export class EmailService {
           <h1>🍪School Verification Complete!</h1>
           <p>Now you can use KU-key service right now.</p>
           <p>We hope this service will help you a lot in your exchange student life.</p>
-          <a href="#">
+          <a href="https://ku-key.devkor.club">
             <button style="width: 209px; padding: 12px 0px; margin: 5px 0px; border-radius: 24px; border: 1px solid #E70000; background: #E70000; color: white";>
               Start now
             </button>
@@ -82,7 +82,7 @@ export class EmailService {
           <h1>🍪School Verification Failed!</h1>
           <p>We have some difficulty verifying you as a Korea University student in your screenshot.</p>
           <p>Please try to sign up again with a clearer screen shot.</p>
-          <a href="#">
+          <a href="https://ku-key.devkor.club/register">
             <button style="width: 209px; padding: 12px 0px; margin: 5px 0px; border-radius: 24px; border: 1px solid #E70000; background: #E70000; color: white";>
               Try again
             </button>

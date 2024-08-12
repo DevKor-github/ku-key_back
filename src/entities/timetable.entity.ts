@@ -10,6 +10,7 @@ import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 import { TimetableCourseEntity } from './timetable-course.entity';
 import { ScheduleEntity } from './schedule.entity';
+import { ColorType } from 'src/timetable/dto/update-timetable-color.dto';
 
 @Entity('timetable')
 export class TimetableEntity extends CommonEntity {
@@ -32,7 +33,7 @@ export class TimetableEntity extends CommonEntity {
   mainTimetable: boolean;
 
   @Column('varchar', { nullable: false, default: 'Red' })
-  color: string;
+  color: ColorType;
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.timetables, {

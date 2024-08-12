@@ -7,7 +7,7 @@ import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { Like, MoreThan } from 'typeorm';
+import { EntityManager, Like, MoreThan } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
@@ -51,12 +51,12 @@ export class CourseService {
   async searchCourseCodeWithProfessorName(
     courseCode: string,
     professorName: string,
-  ): Promise<boolean> {
+  ): Promise<CourseEntity> {
     const course = await this.courseRepository.findOne({
       where: { courseCode: Like(`${courseCode}%`), professorName },
     });
 
-    return course ? true : false;
+    return course;
   }
 
   async searchCoursesByCourseCodeAndProfessorName(
@@ -97,40 +97,65 @@ export class CourseService {
     return await this.mappingCourseDetailsToCourses(courses);
   }
 
-  // 전공 과목명 검색 (띄어쓰기로 단어 구분)
+  // 전공 과목명 검색 (최소 3글자 이상 입력 )
   async searchMajorCourseName(
     major: string,
     searchCourseNameDto: SearchCourseNameDto,
   ): Promise<PaginatedCoursesDto> {
     if (!major) throw new BadRequestException('전공을 입력하세요!');
 
-    try {
-      const words = searchCourseNameDto.courseName
-        .split(/\s+/)
-        .filter((word) => word.length);
-      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-      const queryBuilder = this.courseRepository
-        .createQueryBuilder('course')
-        .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-        .where(`course.courseName REGEXP :pattern`, {
-          pattern: `^${searchPattern}.*$`,
-        })
-        .andWhere('course.major = :major', { major })
-        .andWhere('course.category = :category', { category: 'Major' })
-        .orderBy('course.id', 'ASC')
-        .limit(21);
+    let courses = [];
 
-      if (searchCourseNameDto.cursorId) {
-        queryBuilder.andWhere('course.id > :cursorId', {
-          cursorId: searchCourseNameDto.cursorId,
-        });
-      }
-      const majorCourses = await queryBuilder.getMany();
-      return await this.mappingCourseDetailsToCourses(majorCourses);
-    } catch (error) {
-      console.log(error);
-      throw error;
+    if (searchCourseNameDto.cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          courseName: Like(`%${searchCourseNameDto.courseName}%`),
+          major: major,
+          category: 'Major',
+          id: MoreThan(searchCourseNameDto.cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 21,
+        relations: ['courseDetails'],
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: {
+          courseName: Like(`%${searchCourseNameDto.courseName}%`),
+          major: major,
+          category: 'Major',
+        },
+        order: { id: 'ASC' },
+        take: 21,
+        relations: ['courseDetails'],
+      });
     }
+
+    return await this.mappingCourseDetailsToCourses(courses);
+
+    // try {
+    //   const words = searchCourseNameDto.courseName
+    //     .split(/\s+/)
+    //     .filter((word) => word.length);
+    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+    //   const queryBuilder = this.courseRepository
+    //     .createQueryBuilder('course')
+    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
+    //     .where(`course.courseName REGEXP :pattern`, {
+    //       pattern: `^${searchPattern}.*$`,
+    //     })
+    //     .andWhere('course.major = :major', { major })
+    //     .andWhere('course.category = :category', { category: 'Major' })
+    //     .orderBy('course.id', 'ASC')
+    //     .limit(21);
+
+    //   if (searchCourseNameDto.cursorId) {
+    //     queryBuilder.andWhere('course.id > :cursorId', {
+    //       cursorId: searchCourseNameDto.cursorId,
+    //     });
+    //   }
+    //   const majorCourses = await queryBuilder.getMany();
+    //   return await this.mappingCourseDetailsToCourses(majorCourses);
   }
 
   // 전공 교수님 성함 검색
@@ -171,38 +196,60 @@ export class CourseService {
     return await this.mappingCourseDetailsToCourses(courses);
   }
 
-  // 교양 과목명 검색 (띄어쓰기로 단어 구분)
+  // 교양 과목명 검색 (최소 3글자 이상 입력)
   async searchGeneralCourseName(
     searchCourseNameDto: SearchCourseNameDto,
   ): Promise<PaginatedCoursesDto> {
-    try {
-      const words = searchCourseNameDto.courseName
-        .split(/\s+/)
-        .filter((word) => word.length);
-      const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-      const queryBuilder = await this.courseRepository
-        .createQueryBuilder('course')
-        .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-        .where(`course.courseName REGEXP :pattern`, {
-          pattern: `^${searchPattern}.*$`,
-        })
-        .andWhere('course.category = :category', {
-          category: 'General Studies',
-        })
-        .orderBy('course.id', 'ASC')
-        .limit(21);
+    let courses = [];
 
-      if (searchCourseNameDto.cursorId) {
-        queryBuilder.andWhere('course.id > :cursorId', {
-          cursorId: searchCourseNameDto.cursorId,
-        });
-      }
-      const generalCourses = await queryBuilder.getMany();
-      return await this.mappingCourseDetailsToCourses(generalCourses);
-    } catch (error) {
-      console.log(error);
-      throw error;
+    if (searchCourseNameDto.cursorId) {
+      courses = await this.courseRepository.find({
+        where: {
+          courseName: Like(`%${searchCourseNameDto.courseName}%`),
+          category: 'General Studies',
+          id: MoreThan(searchCourseNameDto.cursorId),
+        },
+        order: { id: 'ASC' },
+        take: 21,
+        relations: ['courseDetails'],
+      });
+    } else {
+      courses = await this.courseRepository.find({
+        where: {
+          courseName: Like(`%${searchCourseNameDto.courseName}%`),
+          category: 'General Studies',
+        },
+        order: { id: 'ASC' },
+        take: 21,
+        relations: ['courseDetails'],
+      });
     }
+
+    return await this.mappingCourseDetailsToCourses(courses);
+    // try {
+    //   const words = searchCourseNameDto.courseName
+    //     .split(/\s+/)
+    //     .filter((word) => word.length);
+    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
+    //   const queryBuilder = await this.courseRepository
+    //     .createQueryBuilder('course')
+    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
+    //     .where(`course.courseName REGEXP :pattern`, {
+    //       pattern: `^${searchPattern}.*$`,
+    //     })
+    //     .andWhere('course.category = :category', {
+    //       category: 'General Studies',
+    //     })
+    //     .orderBy('course.id', 'ASC')
+    //     .limit(21);
+
+    //   if (searchCourseNameDto.cursorId) {
+    //     queryBuilder.andWhere('course.id > :cursorId', {
+    //       cursorId: searchCourseNameDto.cursorId,
+    //     });
+    //   }
+    //   const generalCourses = await queryBuilder.getMany();
+    //   return await this.mappingCourseDetailsToCourses(generalCourses);
   }
 
   // 교양 교수님 성함 검색
@@ -317,9 +364,10 @@ export class CourseService {
   async updateCourseTotalRate(
     courseIds: number[],
     totalRate: number,
+    transactionManager: EntityManager,
   ): Promise<void> {
     for (const id of courseIds) {
-      await this.courseRepository.update(id, {
+      await transactionManager.update(CourseEntity, id, {
         totalRate: parseFloat(totalRate.toFixed(1)),
       });
     }

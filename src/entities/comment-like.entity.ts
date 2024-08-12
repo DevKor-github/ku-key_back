@@ -14,7 +14,7 @@ export class CommentLikeEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   userId: number;
 
   @Column({ nullable: false })
@@ -22,7 +22,7 @@ export class CommentLikeEntity extends CommonEntity {
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.commentLikes, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   user: UserEntity;
 

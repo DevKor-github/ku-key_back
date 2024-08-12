@@ -3,6 +3,8 @@ import { GetCommentResponseDto } from 'src/community/comment/dto/get-comment.dto
 import { CommentEntity } from 'src/entities/comment.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostEntity } from 'src/entities/post.entity';
+import { CommunityUser } from './community-user.dto';
+import { Reaction } from './react-post.dto';
 
 class Comment extends GetCommentResponseDto {
   constructor(
@@ -34,6 +36,13 @@ class Image {
 }
 
 export class ReactionCount {
+  constructor(postEntity: PostEntity) {
+    this.good = postEntity.goodReactionCount;
+    this.sad = postEntity.sadReactionCount;
+    this.amazing = postEntity.amazingReactionCount;
+    this.angry = postEntity.angryReactionCount;
+    this.funny = postEntity.funnyReactionCount;
+  }
   @ApiProperty({ description: '좋아요' })
   good: number;
 
@@ -58,27 +67,16 @@ export class GetPostResponseDto {
     this.content = postEntity.content;
     this.createdAt = postEntity.createdAt;
     this.updatedAt = postEntity.updatedAt;
-    this.username =
-      postEntity.user == null || postEntity.user.deletedAt
-        ? 'Deleted'
-        : postEntity.isAnonymous
-          ? 'Anonymous'
-          : postEntity.user.username.substring(
-              0,
-              Math.floor(postEntity.user.username.length / 2),
-            ) +
-            '*'.repeat(
-              postEntity.user.username.length -
-                Math.floor(postEntity.user.username.length / 2),
-            );
+    this.user = new CommunityUser(postEntity.user, postEntity.isAnonymous);
     this.views = postEntity.views;
     this.scrapCount = postEntity.scrapCount;
-    this.reaction = new ReactionCount();
-    this.reaction.good = postEntity.goodReactionCount;
-    this.reaction.sad = postEntity.sadReactionCount;
-    this.reaction.amazing = postEntity.amazingReactionCount;
-    this.reaction.angry = postEntity.angryReactionCount;
-    this.reaction.funny = postEntity.funnyReactionCount;
+    this.myScrap = postEntity.postScraps.some(
+      (postScrap) => postScrap.userId === userId,
+    );
+    this.reactionCount = new ReactionCount(postEntity);
+    this.myReaction = postEntity.postReactions.find(
+      (postReaction) => postReaction.userId === userId,
+    )?.reaction;
 
     this.comments = [];
     postEntity.comments
@@ -123,7 +121,7 @@ export class GetPostResponseDto {
   updatedAt: Date;
 
   @ApiProperty({ description: '게시글을 생성한 사용자' })
-  username: string;
+  user: CommunityUser;
 
   @ApiProperty({ description: '조회수' })
   views: number;
@@ -131,8 +129,14 @@ export class GetPostResponseDto {
   @ApiProperty({ description: '스크랩 수' })
   scrapCount: number;
 
+  @ApiProperty({ description: '스크랩 여부' })
+  myScrap: boolean;
+
   @ApiProperty({ description: '반응' })
-  reaction: ReactionCount;
+  reactionCount: ReactionCount;
+
+  @ApiProperty({ description: '내 반응(없으면 null)' })
+  myReaction: Reaction;
 
   @ApiProperty({ description: '댓글', type: [Comment] })
   comments: Comment[];

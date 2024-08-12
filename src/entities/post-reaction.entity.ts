@@ -8,24 +8,25 @@ import {
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 import { PostEntity } from './post.entity';
+import { Reaction } from 'src/community/post/dto/react-post.dto';
 
 @Entity('post_reaction')
 export class PostReactionEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   userId: number;
 
   @Column({ nullable: false })
   postId: number;
 
   @Column('tinyint', { nullable: false })
-  reaction: number;
+  reaction: Reaction;
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.postScraps, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   user: UserEntity;
 

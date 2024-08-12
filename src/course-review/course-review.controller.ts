@@ -6,6 +6,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CourseReviewService } from './course-review.service';
 import {
@@ -26,6 +27,9 @@ import { GetCourseReviewsRequestDto } from './dto/get-course-reviews-request.dto
 import { GetCourseReviewsResponseDto } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -49,11 +53,14 @@ export class CourseReviewController {
     type: CourseReviewResponseDto,
   })
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   async createCourseReview(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Body() createCourseReviewRequestDto: CreateCourseReviewRequestDto,
   ): Promise<CourseReviewResponseDto> {
     return await this.courseReviewService.createCourseReview(
+      transactionManager,
       user,
       createCourseReviewRequestDto,
     );
@@ -167,11 +174,14 @@ export class CourseReviewController {
     type: CourseReviewResponseDto,
   })
   @Post('recommend/:courseReviewId')
+  @UseInterceptors(TransactionInterceptor)
   async toggleRecommendCourseReview(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('courseReviewId') courseReviewId: number,
   ): Promise<CourseReviewResponseDto> {
     return await this.courseReviewService.toggleRecommendCourseReview(
+      transactionManager,
       user,
       courseReviewId,
     );

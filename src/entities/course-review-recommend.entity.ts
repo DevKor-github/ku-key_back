@@ -16,7 +16,7 @@ export class CourseReviewRecommendEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   userId: number;
 
   @Column({ nullable: false })
@@ -24,7 +24,7 @@ export class CourseReviewRecommendEntity extends CommonEntity {
 
   @JoinColumn({ name: 'userId' })
   @ManyToOne(() => UserEntity, (user) => user.courseReviewRecommends, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   user: UserEntity;
 

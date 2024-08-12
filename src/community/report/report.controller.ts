@@ -1,30 +1,24 @@
-import { Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ReportService } from './report.service';
-import { AdminAuthGuard } from 'src/auth/guards/admin-auth.guard';
 import { GetReportListResponseDto } from './dto/get-report-list.dto';
-import {
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { AdminRequestDto } from 'src/auth/dto/admin-request.dto';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetReportResponseDto } from './dto/get-report.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
 @Controller('report')
-@UseGuards(AdminAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('report')
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
-  @Post()
+  @Roles(Role.admin)
+  @Get()
   @ApiOperation({
     summary: '신고 목록 조회',
     description: '신고 목록을 조회합니다.',
-  })
-  @ApiBody({
-    type: AdminRequestDto,
   })
   @ApiResponse({
     status: 201,
@@ -35,13 +29,11 @@ export class ReportController {
     return await this.reportService.getReportList();
   }
 
+  @Roles(Role.admin)
   @Post('/:reportId')
   @ApiOperation({
     summary: '신고 세부내용 조회',
     description: '신고 세부내용을 조회합니다.',
-  })
-  @ApiBody({
-    type: AdminRequestDto,
   })
   @ApiParam({
     name: 'reportId',

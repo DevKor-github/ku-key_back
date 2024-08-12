@@ -10,6 +10,6 @@ import { PointHistoryEntity } from 'src/entities/point-history.entity';
   imports: [TypeOrmModule.forFeature([UserEntity, PointHistoryEntity])],
   controllers: [UserController],
   providers: [UserService, UserRepository],
-  exports: [UserService],
+  exports: [UserService, UserRepository],
 })
 export class UserModule {}
