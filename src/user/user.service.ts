@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -22,7 +23,7 @@ import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
 import { CharacterEntity } from 'src/entities/character.entity';
-import { CharacterType } from 'src/notice/enum/character-type.enum';
+import { CharacterType } from 'src/enums/character-type.enum';
 
 @Injectable()
 export class UserService {
@@ -249,6 +250,101 @@ export class UserService {
     });
 
     return await this.characterRepository.save(character);
+  }
+
+  async updateViewableUntil(
+    transactionManager: EntityManager,
+    userId: number,
+    daysToAdd: number,
+  ): Promise<Date> {
+    const user = await transactionManager.findOne(UserEntity, {
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
+    }
+
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
+
+    let newExpireDate: Date;
+
+    if (user.viewableUntil === null) {
+      newExpireDate = new Date(Date.now() + offset);
+    } else {
+      newExpireDate = user.viewableUntil;
+    }
+
+    newExpireDate.setDate(newExpireDate.getDate() + daysToAdd);
+
+    const updated = await transactionManager.update(
+      UserEntity,
+      { id: userId },
+      { viewableUntil: newExpireDate },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return newExpireDate;
+  }
+
+  async upgradeUserCharacter(
+    transactionManager: EntityManager,
+    userId: number,
+    level: number,
+  ): Promise<number> {
+    const character = await transactionManager.findOne(CharacterEntity, {
+      where: { userId: userId },
+    });
+
+    if (!character) {
+      throw new NotFoundException('캐릭터 정보가 없습니다.');
+    }
+
+    if (character.level !== level - 1) {
+      throw new BadRequestException('캐릭터 레벨은 1씩 업그레이드 가능합니다.');
+    }
+
+    const updated = await transactionManager.update(
+      CharacterEntity,
+      { id: character.id },
+      { level: level },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return level;
+  }
+
+  async changeUserCharacterType(
+    transactionManager: EntityManager,
+    userId: number,
+  ): Promise<CharacterType> {
+    const character = await transactionManager.findOne(CharacterEntity, {
+      where: { userId: userId },
+    });
+
+    if (!character) {
+      throw new NotFoundException('캐릭터 정보가 없습니다.');
+    }
+
+    const newType = this.getRandomCharacterType();
+
+    const updated = await transactionManager.update(
+      CharacterEntity,
+      { id: character.id },
+      { type: newType },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return newType;
   }
 
   private getRandomCharacterType(): CharacterType {
