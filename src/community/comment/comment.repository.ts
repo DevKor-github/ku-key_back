@@ -66,8 +66,8 @@ export class CommentRepository extends Repository<CommentEntity> {
     return deleteResult.affected ? true : false;
   }
 
-  async isExistingCommentId(commentId: number): Promise<boolean> {
+  async isExistingCommentId(commentId: number): Promise<CommentEntity> {
     const comment = await this.findOne({ where: { id: commentId } });
-    return comment ? true : false;
+    return comment;
   }
 }

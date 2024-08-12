@@ -252,8 +252,13 @@ export class CommentService {
     user: AuthorizedUserDto,
     commentId: number,
   ): Promise<LikeCommentResponseDto> {
-    if (!(await this.commentRepository.isExistingCommentId(commentId))) {
+    const comment = await this.commentRepository.isExistingCommentId(commentId);
+    if (!comment) {
       throw new BadRequestException('Wrong CommentId!');
+    }
+
+    if (comment.userId === user.id) {
+      throw new BadRequestException('Cannot like my comment!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();

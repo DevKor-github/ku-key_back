@@ -304,8 +304,14 @@ export class PostService {
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<ScrapPostResponseDto> {
-    if (!(await this.postRepository.isExistingPostId(postId))) {
+    const post = await this.postRepository.isExistingPostId(postId);
+
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot scrap my post!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -487,6 +493,10 @@ export class PostService {
     const post = await this.postRepository.isExistingPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot react my post!');
     }
 
     const ReactionColumn = [
