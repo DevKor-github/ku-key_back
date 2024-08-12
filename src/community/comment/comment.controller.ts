@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   Post,
@@ -32,6 +33,8 @@ import {
   CreateReportResponseDto,
 } from '../report/dto/create-report.dto';
 import { ReportService } from '../report/report.service';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -42,6 +45,23 @@ export class CommentController {
     private readonly commentService: CommentService,
     private readonly reportService: ReportService,
   ) {}
+
+  @Get('/my')
+  @ApiOperation({
+    summary: '내가 쓴 댓글 목록 조회',
+    description: '내가 쓴 댓글 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '내가 쓴 댓글 목록 조회 성공',
+    type: GetMyCommentListResponseDto,
+  })
+  async getMyPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: CursorPageOptionsDto,
+  ): Promise<GetMyCommentListResponseDto> {
+    return await this.commentService.getMyCommentList(user, requestDto);
+  }
 
   @Post()
   @ApiOperation({
