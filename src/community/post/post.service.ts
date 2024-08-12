@@ -104,7 +104,11 @@ export class PostService {
     }
 
     if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
-      await this.cacheManager.set(`${postId}-${user.id}`, new Date());
+      await this.cacheManager.set(
+        `${postId}-${user.id}`,
+        new Date(),
+        1000 * 60 * 30,
+      );
       const isViewsIncreased = await this.postRepository.increaseViews(postId);
       if (!isViewsIncreased) {
         console.log('Views Increase Failed!');
