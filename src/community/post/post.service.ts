@@ -134,6 +134,10 @@ export class PostService {
       }
     }
 
+    if (images.length > 5) {
+      throw new BadRequestException('Only up to five images can be uploaded.');
+    }
+
     const board = await this.boardService.getBoardById(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
@@ -207,6 +211,12 @@ export class PostService {
         if (!this.fileService.imagefilter(image)) {
           throw new BadRequestException('Only image file can be uploaded!');
         }
+      }
+
+      if (images.length > 5) {
+        throw new BadRequestException(
+          'Only up to five images can be uploaded.',
+        );
       }
     }
 
