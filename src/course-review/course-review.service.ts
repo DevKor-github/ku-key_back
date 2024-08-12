@@ -190,9 +190,13 @@ export class CourseReviewService {
     if (!course) {
       throw new NotFoundException('해당 강의가 존재하지 않습니다.');
     }
+
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
+    const koreaTime = new Date(Date.now() + offset);
+
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
-    if (!viewableUser.isViewable) {
+    if (viewableUser.viewableUntil.getDate() < koreaTime.getDate()) {
       throw new ForbiddenException('열람권을 구매해야 합니다.');
     }
 
@@ -257,9 +261,12 @@ export class CourseReviewService {
       throw new NotFoundException('해당 강의평을 찾을 수 없습니다.');
     }
 
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
+    const koreaTime = new Date(Date.now() + offset);
+
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
-    if (!viewableUser.isViewable) {
+    if (viewableUser.viewableUntil.getDate() < koreaTime.getDate()) {
       throw new ForbiddenException('열람권을 구매해야 합니다.');
     }
 
