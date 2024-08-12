@@ -69,8 +69,8 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
-  @Column('boolean', { default: false })
-  isViewable: boolean;
+  @Column('timestamp', { default: null })
+  viewableUntil: Date | null;
 
   @Column({
     type: 'enum',

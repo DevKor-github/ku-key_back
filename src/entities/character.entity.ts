@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
-import { CharacterType } from 'src/notice/enum/character-type.enum';
+import { CharacterType } from 'src/enums/character-type.enum';
 
 @Entity('character')
 export class CharacterEntity extends CommonEntity {
