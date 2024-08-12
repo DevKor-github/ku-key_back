@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DayType } from 'src/utils/day-type.utils';
+import { DayType } from 'src/common/types/day-type.utils';
 
 export class GetScheduleInfoByTimetableIdResponseDto {
   @ApiProperty({ description: '일정 ID' })
