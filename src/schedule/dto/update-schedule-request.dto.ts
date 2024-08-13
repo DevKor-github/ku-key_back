@@ -7,8 +7,8 @@ import {
   IsString,
   ValidateIf,
 } from 'class-validator';
+import { DayType } from 'src/common/types/day-type.utils';
 import { IsTime } from 'src/decorators/time.decorator';
-import { DayType } from 'src/utils/day-type.utils';
 
 export class UpdateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })
