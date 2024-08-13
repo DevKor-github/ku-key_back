@@ -42,7 +42,6 @@ import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-
 
 @Controller('calendar')
 @ApiTags('calendar')
-@ApiBearerAuth('accessToken')
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
@@ -93,6 +92,7 @@ export class CalendarController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Get('yearly')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '연도별 행사/일정 전체 조회',
     description:
@@ -113,6 +113,7 @@ export class CalendarController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Post()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '특정 날짜 행사/일정 생성',
     description: 'admin page에서 특정 날짜의 행사/일정을 생성합니다.',
@@ -131,6 +132,7 @@ export class CalendarController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Patch('/:calendarId')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '특정 행사/일정 수정',
     description:
@@ -152,6 +154,7 @@ export class CalendarController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Delete('/:calendarId')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '특정 행사/일정 삭제',
     description:

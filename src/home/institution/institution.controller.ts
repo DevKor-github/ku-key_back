@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { InstitutionService } from './institution.service';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -53,6 +54,7 @@ export class InstitutionController {
   @Roles(Role.admin)
   @UseInterceptors(FileInterceptor('logoImage'))
   @Post()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '기관 추가',
     description: 'admin page에서 기관 정보를 추가합니다.',
@@ -73,6 +75,7 @@ export class InstitutionController {
   @Roles(Role.admin)
   @UseInterceptors(FileInterceptor('logoImage'))
   @Patch('/:institutionId')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '기관 정보 수정',
     description: '기관 id를 받아 admin page에서 기관 정보를 수정합니다.',
@@ -98,6 +101,7 @@ export class InstitutionController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Delete('/:institutionId')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '기관 정보 삭제',
     description: '기관 id를 받아 admin page에서 기관 정보를 삭제합니다.',
