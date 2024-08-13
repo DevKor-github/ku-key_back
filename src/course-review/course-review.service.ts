@@ -209,6 +209,7 @@ export class CourseReviewService {
       },
       order: { [criteria]: direction },
       relations: ['user'],
+      withDeleted: true,
     });
 
     if (courseReviews.length === 0) {

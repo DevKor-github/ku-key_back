@@ -141,6 +141,7 @@ export class PostRepository extends Repository<PostEntity> {
         'user',
         'postImages',
         'comments.user',
+        'comments.commentLikes',
         'commentAnonymousNumbers',
         'postScraps',
         'postReactions',
@@ -165,7 +166,7 @@ export class PostRepository extends Repository<PostEntity> {
     return posts;
   }
 
-  async getScrapPostsByPostIds(
+  async getPostsByPostIds(
     postIds: number[],
     take: number,
     cursor: Date,

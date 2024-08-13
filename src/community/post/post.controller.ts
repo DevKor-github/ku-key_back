@@ -53,6 +53,7 @@ import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { ResizeImagePipe } from 'src/common/pipe/resize-image.pipe';
 
 @Controller('post')
 @ApiTags('post')
@@ -149,6 +150,23 @@ export class PostController {
     return await this.postService.getScrapPostList(user, requestDto);
   }
 
+  @Get('/react')
+  @ApiOperation({
+    summary: '반응 남긴 글 목록 조회',
+    description: '반응을 남긴 글 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '반응 남긴 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getReactedPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getReactedPostList(user, requestDto);
+  }
+
   @Get('/:postId')
   @ApiOperation({
     summary: '게시글 조회',
@@ -192,7 +210,7 @@ export class PostController {
   async createPost(
     @User() user: AuthorizedUserDto,
     @Query('boardId') boardId: number,
-    @UploadedFiles() images: Array<Express.Multer.File>,
+    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     if (!boardId) {
@@ -223,7 +241,7 @@ export class PostController {
   async updatePost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
-    @UploadedFiles() images: Array<Express.Multer.File>,
+    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
     @Body() body: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     return await this.postService.updatePost(user, postId, images, body);
