@@ -11,7 +11,6 @@ import {
 } from './dto/get-calendar-data-response-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
-import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
@@ -31,14 +30,10 @@ export class CalendarService {
     const { startDate, endDate } = this.getStartAndEndDate(year, month);
 
     // 해당 월에 걸쳐있는 모든 이벤트를 가져옴
-    const monthEvents = await this.calendarRepository.find({
-      where: [
-        {
-          startDate: LessThanOrEqual(endDate),
-          endDate: MoreThanOrEqual(startDate),
-        },
-      ],
-    });
+    const monthEvents = await this.calendarRepository.getMonthEvents(
+      startDate,
+      endDate,
+    );
 
     const monthCalendarData: GetDailyCalendarDataResponseDto[] = [];
 
@@ -82,7 +77,7 @@ export class CalendarService {
     year: number,
     semester: number,
   ): Promise<GetAcademicScheduleDataResponseDto[]> {
-    const startMonth = semester === 1 ? 1 : 8;
+    const startMonth = semester === 1 ? 2 : 8;
     const endMonth = semester === 1 ? 8 : 14; // 13, 14는 다음해 1, 2월로 처리
     const academicScheduleData: GetAcademicScheduleDataResponseDto[] = [];
 
