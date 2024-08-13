@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { CommunityUser } from 'src/community/post/dto/community-user.dto';
 import { CommentEntity } from 'src/entities/comment.entity';
 
@@ -52,4 +52,33 @@ export class GetCommentResponseDto {
 
   @ApiProperty({ description: '좋아요 눌렀는지 여부' })
   myLike: boolean;
+}
+
+export class MyComment extends PickType(GetCommentResponseDto, [
+  'id',
+  'createdAt',
+  'updatedAt',
+  'content',
+  'likeCount',
+]) {
+  constructor(commentEntity: CommentEntity) {
+    super();
+    this.id = commentEntity.id;
+    this.createdAt = commentEntity.createdAt;
+    this.updatedAt = commentEntity.updatedAt;
+    this.content = commentEntity.content;
+    this.likeCount = commentEntity.likeCount;
+    this.postId = commentEntity.postId;
+    this.replyCount = commentEntity.replyComments.length;
+    this.isAnonymous = commentEntity.isAnonymous;
+  }
+
+  @ApiProperty({ description: '댓글을 작성한 게시글 Id' })
+  postId: number;
+
+  @ApiProperty({ description: '답글 수' })
+  replyCount: number;
+
+  @ApiProperty({ description: '익명 설정 여부' })
+  isAnonymous: boolean;
 }

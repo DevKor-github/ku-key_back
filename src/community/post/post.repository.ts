@@ -166,7 +166,7 @@ export class PostRepository extends Repository<PostEntity> {
     return posts;
   }
 
-  async getScrapPostsByPostIds(
+  async getPostsByPostIds(
     postIds: number[],
     take: number,
     cursor: Date,
