@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -48,7 +49,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AdminRequestDto } from './dto/admin-request.dto';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { RolesGuard } from './guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -190,15 +190,12 @@ export class AuthController {
     summary: '학교인증 요청 목록 조회',
     description: '승인 대기 중인 학교 인증 요청 목록을 조회합니다.',
   })
-  @ApiBody({
-    type: AdminRequestDto,
-  })
   @ApiResponse({
     status: 201,
     description: '학교인증 요청 조회 성공',
     type: [GetScreenshotVerificationsResponseDto],
   })
-  @Post('admin/requests')
+  @Get('admin/request')
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {
