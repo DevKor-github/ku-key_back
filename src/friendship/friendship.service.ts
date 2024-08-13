@@ -104,7 +104,7 @@ export class FriendshipService {
       if (checkFriendship) {
         if (!checkFriendship.areWeFriend) {
           userInfo.status =
-            checkFriendship.fromUser.id == myId ? 'requested' : 'pending';
+            checkFriendship.fromUserId == myId ? 'requested' : 'pending';
         } else {
           userInfo.status = 'friend';
         }
@@ -233,19 +233,21 @@ export class FriendshipService {
 
   async acceptFriendshipRequest(
     transactionManager: EntityManager,
-    userId: number,
+    user: AuthorizedUserDto,
     friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
+    const userId = user.id;
+    const username = user.username;
+
     const friendship = await transactionManager.findOne(FriendshipEntity, {
       where: { id: friendshipId },
-      relations: ['fromUser', 'toUser'],
     });
 
     if (!friendship) {
       throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
     }
 
-    if (friendship.toUser.id !== userId) {
+    if (friendship.toUserId !== userId) {
       throw new BadRequestException(
         '나에게 온 친구 요청만 수락할 수 있습니다.',
       );
@@ -264,8 +266,8 @@ export class FriendshipService {
       throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
     } else {
       await this.noticeService.emitNotice(
-        friendship.fromUser.id,
-        `${friendship.toUser.username} has just accepted your friend request!`,
+        friendship.fromUserId,
+        `${username} has just accepted your friend request!`,
         Notice.friendAccept,
       );
       return new UpdateFriendshipResponseDto(true);
@@ -279,14 +281,13 @@ export class FriendshipService {
   ): Promise<DeleteFriendshipResponseDto> {
     const friendship = await transactionManager.findOne(FriendshipEntity, {
       where: { id: friendshipId },
-      relations: ['toUser'],
     });
 
     if (!friendship) {
       throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
     }
 
-    if (friendship.toUser.id !== userId) {
+    if (friendship.toUserId !== userId) {
       throw new BadRequestException(
         '나에게 온 친구 요청만 거절할 수 있습니다.',
       );
@@ -315,14 +316,13 @@ export class FriendshipService {
   ): Promise<DeleteFriendshipResponseDto> {
     const friendship = await transactionManager.findOne(FriendshipEntity, {
       where: { id: friendshipId },
-      relations: ['fromUser'],
     });
 
     if (!friendship) {
       throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
     }
 
-    if (friendship.fromUser.id !== userId) {
+    if (friendship.fromUserId !== userId) {
       throw new BadRequestException(
         '내가 보낸 친구 요청만 취소할 수 있습니다.',
       );
@@ -351,14 +351,13 @@ export class FriendshipService {
   ): Promise<DeleteFriendshipResponseDto> {
     const friendship = await transactionMangager.findOne(FriendshipEntity, {
       where: { id: friendshipId },
-      relations: ['fromUser', 'toUser'],
     });
 
     if (!friendship) {
       throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
     }
 
-    if (friendship.toUser.id !== userId && friendship.fromUser.id !== userId) {
+    if (friendship.toUserId !== userId && friendship.fromUserId !== userId) {
       throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
     }
 

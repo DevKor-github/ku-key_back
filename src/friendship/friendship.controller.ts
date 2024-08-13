@@ -214,10 +214,9 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
-    const userId = user.id;
     return await this.friendshipService.acceptFriendshipRequest(
       transactionManager,
-      userId,
+      user,
       friendshipId,
     );
   }
