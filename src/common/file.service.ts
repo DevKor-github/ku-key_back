@@ -65,10 +65,8 @@ export class FileService {
   }
 
   imagefilter(file: Express.Multer.File): boolean {
-    const splitedFileNames = file.originalname.split('.');
-    const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    const validExtensions = ['jpg', 'jpeg', 'png'];
-    return validExtensions.includes(extension);
+    const filetype = file.mimetype.split('/');
+    return filetype[0] === 'image';
   }
 
   makeUrlByFileDir(fileDir: string): string {
