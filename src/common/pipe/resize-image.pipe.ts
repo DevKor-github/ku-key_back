@@ -11,18 +11,18 @@ export class ResizeImagePipe implements PipeTransform {
 
   async transform(value: Express.Multer.File | Express.Multer.File[]) {
     if (this.isSingleFile(value)) {
-      return await this.ifImageThanResize(value);
+      return await this.ifImageThenResize(value);
     } else {
       const result: Express.Multer.File[] = [];
       for (const file of value) {
-        result.push(await this.ifImageThanResize(file));
+        result.push(await this.ifImageThenResize(file));
       }
 
       return result;
     }
   }
 
-  async ifImageThanResize(
+  async ifImageThenResize(
     value: Express.Multer.File,
   ): Promise<Express.Multer.File> {
     const filetype = value.mimetype.split('/');
