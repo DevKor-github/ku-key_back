@@ -113,12 +113,13 @@ export class CalendarService {
   async createCalendarData(
     requestDto: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
-    const { startDate, endDate, title, description } = requestDto;
+    const { startDate, endDate, title, description, isAcademic } = requestDto;
     const calendarData = await this.calendarRepository.createCalendarData(
       startDate,
       endDate,
       title,
       description,
+      isAcademic,
     );
 
     if (!calendarData) {
@@ -140,16 +141,10 @@ export class CalendarService {
       throw new NotFoundException('행사/일정 정보가 없습니다.');
     }
 
-    const isUpdated = await this.calendarRepository.updateCalendarData(
+    return await this.calendarRepository.updateCalendarData(
       calendarId,
       requestDto,
     );
-
-    if (!isUpdated) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
-    }
-
-    return new UpdateCalendarDataResponseDto(true);
   }
 
   async deleteCalendarData(

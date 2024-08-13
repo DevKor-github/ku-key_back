@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class CreateCalendarDataRequestDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
@@ -27,4 +28,9 @@ export class CreateCalendarDataRequestDto {
   @IsNotEmpty()
   @ApiProperty({ description: '행사/일정 설명' })
   description: string;
+
+  @IsNotEmpty()
+  @ToBoolean()
+  @ApiProperty({ description: '학사 일정 여부' })
+  isAcademic: boolean;
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CalendarEntity } from 'src/entities/calendar.entity';
 import {
   DataSource,
@@ -37,12 +37,14 @@ export class CalendarRepository extends Repository<CalendarEntity> {
     endDate: string,
     title: string,
     description: string,
+    isAcademic: boolean,
   ): Promise<CalendarEntity> {
     const calendarData = this.create({
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       title,
       description,
+      isAcademic,
     });
 
     return await this.save(calendarData);
@@ -51,20 +53,22 @@ export class CalendarRepository extends Repository<CalendarEntity> {
   async updateCalendarData(
     calendarId: number,
     requestDto: UpdateCalendarDataRequestDto,
-  ): Promise<boolean> {
-    const updateData: any = { ...requestDto };
-
-    if (requestDto.startDate) {
-      updateData.startDate = new Date(requestDto.startDate);
-    }
-
-    if (requestDto.endDate) {
-      updateData.endDate = new Date(requestDto.endDate);
-    }
+  ): Promise<CalendarEntity> {
+    const updateData = {
+      ...requestDto,
+      startDate: requestDto.startDate
+        ? new Date(requestDto.startDate)
+        : undefined,
+      endDate: requestDto.endDate ? new Date(requestDto.endDate) : undefined,
+    };
 
     const updated = await this.update({ id: calendarId }, updateData);
 
-    return updated.affected ? true : false;
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return await this.findOne({ where: { id: calendarId } });
   }
 
   async deleteCalendarData(calendarId: number): Promise<boolean> {
