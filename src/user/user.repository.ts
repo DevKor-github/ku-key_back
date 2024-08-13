@@ -13,8 +13,11 @@ export class UserRepository extends Repository<UserEntity> {
     super(UserEntity, dataSource.createEntityManager());
   }
 
-  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
-    const user = this.create({ ...createUserDto });
+  async createUser(
+    createUserDto: CreateUserRequestDto,
+    expireDate: Date,
+  ): Promise<UserEntity> {
+    const user = this.create({ ...createUserDto, viewableUntil: expireDate });
     return await this.save(user);
   }
 

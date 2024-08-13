@@ -53,11 +53,15 @@ export class UserService {
     }
 
     const hashedPassword = await hash(createUserDto.password, 10);
+    const defaultExpireDate = this.generateExpiredate(3);
 
-    return await this.userRepository.createUser({
-      ...createUserDto,
-      password: hashedPassword,
-    });
+    return await this.userRepository.createUser(
+      {
+        ...createUserDto,
+        password: hashedPassword,
+      },
+      defaultExpireDate,
+    );
   }
 
   async hardDeleteUser(userId: number): Promise<boolean> {
@@ -351,5 +355,13 @@ export class UserService {
     const characterTypes = Object.values(CharacterType);
     const randomIndex = Math.floor(Math.random() * characterTypes.length);
     return characterTypes[randomIndex];
+  }
+
+  private generateExpiredate(daysToAdd: number): Date {
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
+    const expireDate = new Date(Date.now() + offset);
+    expireDate.setDate(expireDate.getDate() + daysToAdd);
+
+    return expireDate;
   }
 }
