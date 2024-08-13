@@ -18,7 +18,7 @@ import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
-import { DataSource, EntityManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -31,7 +31,6 @@ export class FriendshipService {
     private readonly userService: UserService,
     private readonly timetableService: TimetableService,
     private readonly noticeService: NoticeService,
-    private readonly dataSource: DataSource,
   ) {}
 
   async getFriendList(
@@ -264,7 +263,6 @@ export class FriendshipService {
     if (updatedResult.affected === 0) {
       throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
     } else {
-      console.log(friendship.toUser);
       await this.noticeService.emitNotice(
         friendship.fromUser.id,
         `${friendship.toUser.username} has just accepted your friend request!`,
