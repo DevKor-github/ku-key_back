@@ -56,7 +56,7 @@ export class CommentController {
     description: '내가 쓴 댓글 목록 조회 성공',
     type: GetMyCommentListResponseDto,
   })
-  async getMyPostList(
+  async getMyCommentList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: CursorPageOptionsDto,
   ): Promise<GetMyCommentListResponseDto> {
