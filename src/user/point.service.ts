@@ -38,8 +38,7 @@ export class PointService {
         userId,
         days,
       );
-      historyDescription =
-        'Purchase course review reading ticket successfully!';
+      historyDescription = `Reading course reviews - ${days} days`;
     } else if (itemCategory === ItemCategory.CHARACTER_EVOLUTION) {
       const { level } = itemMetadata as CharacterEvolutionMetadata;
       responseDto.upgradeLevel = await this.userSerivce.upgradeUserCharacter(
@@ -47,20 +46,20 @@ export class PointService {
         userId,
         level,
       );
-      historyDescription = `Successful evolution to level ${level}!`;
+      historyDescription = `Evolving characters level ${level}`;
     } else {
       responseDto.newCharacterType =
         await this.userSerivce.changeUserCharacterType(
           transactionManager,
           userId,
         );
-      historyDescription = `Change your character type successfully!`;
+      historyDescription = `Changing character types`;
     }
 
     await this.userSerivce.changePoint(
       userId,
       -1 * requiredPoints,
-      `${historyDescription} Use ${requiredPoints} points!`,
+      historyDescription,
       transactionManager,
     );
 
