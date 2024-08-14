@@ -18,8 +18,8 @@ export class CommunityUser {
           '*'.repeat(
             user.username.length - Math.floor(user.username.length / 2),
           );
-      else if (!anonymousNumber) this.username = 'Anonymous';
       else if (anonymousNumber === 0) this.username = 'Author';
+      else if (!anonymousNumber) this.username = 'Anonymous';
       else this.username = `Anonymous ${anonymousNumber}`;
     }
   }
