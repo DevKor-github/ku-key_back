@@ -72,6 +72,13 @@ export class CourseReviewService {
 
     await transactionManager.save(courseReview);
 
+    await this.userService.changePoint(
+      user.id,
+      100,
+      'Writing course review',
+      transactionManager,
+    );
+
     // 해당 강의에 대한 모든 강의평 조회
     const courseReviews = await transactionManager.find(CourseReviewEntity, {
       where: {
