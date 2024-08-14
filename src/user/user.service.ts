@@ -137,16 +137,10 @@ export class UserService {
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
     const user = await this.userRepository.findUserById(id);
-    const profile: GetProfileResponseDto = {
-      name: user.name,
-      country: user.country,
-      homeUniversity: user.homeUniversity,
-      major: user.major,
-      startDay: user.startDay,
-      endDay: user.endDay,
-      point: user.point,
-    };
-    return profile;
+    const character = await this.characterRepository.findOne({
+      where: { userId: id },
+    });
+    return new GetProfileResponseDto(user, character);
   }
 
   async checkUserVerified(userId: number): Promise<boolean> {
