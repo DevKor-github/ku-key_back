@@ -119,7 +119,7 @@ export class UserController {
   async getPointHistory(
     @User() user: AuthorizedUserDto,
   ): Promise<GetPointHistoryResponseDto[]> {
-    return await this.userService.getPointHistory(user);
+    return await this.pointService.getPointHistory(user);
   }
 
   @ApiOperation({

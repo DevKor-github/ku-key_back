@@ -17,10 +17,7 @@ import {
   SetProfileRequestDto,
 } from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, EntityManager, Repository } from 'typeorm';
-import { PointHistoryEntity } from 'src/entities/point-history.entity';
-import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
+import { EntityManager, Repository } from 'typeorm';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
 import { CharacterEntity } from 'src/entities/character.entity';
 import { CharacterType } from 'src/enums/character-type.enum';
@@ -30,9 +27,6 @@ export class UserService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-    private readonly dataSource: DataSource,
-    @InjectRepository(PointHistoryEntity)
-    private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
     @InjectRepository(CharacterEntity)
     private readonly characterRepository: Repository<CharacterEntity>,
   ) {}
@@ -196,48 +190,6 @@ export class UserService {
     }
     const hashedPassword = await hash(newPassword, 10);
     return await this.userRepository.updatePassword(userId, hashedPassword);
-  }
-
-  async changePoint(
-    userId: number,
-    changePoint: number,
-    history: string,
-    transactionManager: EntityManager,
-  ): Promise<number> {
-    const user = await transactionManager.findOne(UserEntity, {
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new BadRequestException('Wrong userId!');
-    }
-    const originPoint = user.point;
-    if (originPoint + changePoint < 0) {
-      throw new BadRequestException("Don't have enough point!");
-    }
-
-    user.point = originPoint + changePoint;
-    await transactionManager.save(user);
-
-    const newHistory = transactionManager.create(PointHistoryEntity, {
-      userId: userId,
-      history: history,
-      changePoint: changePoint,
-      resultPoint: user.point,
-    });
-    await transactionManager.save(newHistory);
-    return user.point;
-  }
-
-  async getPointHistory(
-    user: AuthorizedUserDto,
-  ): Promise<GetPointHistoryResponseDto[]> {
-    const histories = await this.pointHistoryRepository.find({
-      where: { userId: user.id },
-      order: { createdAt: 'DESC' },
-    });
-
-    return histories.map((history) => new GetPointHistoryResponseDto(history));
   }
 
   async createUserCharacter(userId: number): Promise<CharacterEntity> {

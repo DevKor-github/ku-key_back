@@ -14,6 +14,6 @@ import { PointService } from './point.service';
   ],
   controllers: [UserController],
   providers: [UserService, PointService, UserRepository],
-  exports: [UserService, UserRepository],
+  exports: [UserService, PointService, UserRepository],
 })
 export class UserModule {}

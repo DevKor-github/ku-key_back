@@ -20,6 +20,7 @@ import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
 import { CourseService } from 'src/course/course.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PointService } from 'src/user/point.service';
 
 @Injectable()
 export class CourseReviewService {
@@ -29,6 +30,7 @@ export class CourseReviewService {
     @InjectRepository(CourseReviewRecommendEntity)
     private readonly courseReviewRecommendRepository: Repository<CourseReviewRecommendEntity>,
     private readonly userService: UserService,
+    private readonly pointService: PointService,
     private readonly courseService: CourseService,
   ) {}
 
@@ -72,7 +74,7 @@ export class CourseReviewService {
 
     await transactionManager.save(courseReview);
 
-    await this.userService.changePoint(
+    await this.pointService.changePoint(
       user.id,
       100,
       'Writing course review',

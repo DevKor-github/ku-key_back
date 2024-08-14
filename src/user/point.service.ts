@@ -1,5 +1,9 @@
-import { EntityManager } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { EntityManager, Repository } from 'typeorm';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CharacterEvolutionMetadata,
   CourseReviewMetadata,
@@ -9,10 +13,49 @@ import { UserService } from './user.service';
 import { UserEntity } from 'src/entities/user.entity';
 import { ItemCategory } from 'src/enums/item-category.enum';
 import { PurchaseItemResponseDto } from './dto/purchase-item-response-dto';
+import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
+import { PointHistoryEntity } from 'src/entities/point-history.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PointService {
-  constructor(private readonly userSerivce: UserService) {}
+  constructor(
+    private readonly userSerivce: UserService,
+    @InjectRepository(PointHistoryEntity)
+    private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
+  ) {}
+
+  async changePoint(
+    userId: number,
+    changePoint: number,
+    history: string,
+    transactionManager: EntityManager,
+  ): Promise<number> {
+    const user = await transactionManager.findOne(UserEntity, {
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Wrong userId!');
+    }
+    const originPoint = user.point;
+    if (originPoint + changePoint < 0) {
+      throw new BadRequestException("Don't have enough point!");
+    }
+
+    user.point = originPoint + changePoint;
+    await transactionManager.save(user);
+
+    const newHistory = transactionManager.create(PointHistoryEntity, {
+      userId: userId,
+      history: history,
+      changePoint: changePoint,
+      resultPoint: user.point,
+    });
+    await transactionManager.save(newHistory);
+    return user.point;
+  }
 
   async purchaseItem(
     transactionManager: EntityManager,
@@ -56,7 +99,7 @@ export class PointService {
       historyDescription = `Changing character types`;
     }
 
-    await this.userSerivce.changePoint(
+    await this.changePoint(
       userId,
       -1 * requiredPoints,
       historyDescription,
@@ -64,5 +107,16 @@ export class PointService {
     );
 
     return responseDto;
+  }
+
+  async getPointHistory(
+    user: AuthorizedUserDto,
+  ): Promise<GetPointHistoryResponseDto[]> {
+    const histories = await this.pointHistoryRepository.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+    });
+
+    return histories.map((history) => new GetPointHistoryResponseDto(history));
   }
 }
