@@ -31,6 +31,7 @@ import { SignUpRequestDto } from './dto/sign-up-request.dto';
 import { LogoutResponseDto } from './dto/logout-response.dto';
 import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 import { SendTempPasswordResponseDto } from './dto/send-temporary-password.dto';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -198,6 +199,7 @@ export class AuthService {
   }
 
   async createUserandScreenshotRequest(
+    transactionManager: EntityManager,
     screenshot: Express.Multer.File,
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
@@ -206,7 +208,7 @@ export class AuthService {
     }
 
     //유저생성
-    const user = await this.userService.createUser({
+    const user = await this.userService.createUser(transactionManager, {
       email: requestDto.email,
       password: requestDto.password,
       username: requestDto.username,
@@ -216,7 +218,10 @@ export class AuthService {
       major: requestDto.major,
     });
 
-    const character = await this.userService.createUserCharacter(user.id);
+    const character = await this.userService.createUserCharacter(
+      transactionManager,
+      user.id,
+    );
 
     if (!character) {
       throw new InternalServerErrorException('캐릭터 생성에 실패했습니다.');
@@ -232,6 +237,7 @@ export class AuthService {
     );
 
     await this.kuVerificationRepository.createVerificationRequest(
+      transactionManager,
       filename,
       studentNumber,
       user,

@@ -31,7 +31,10 @@ export class UserService {
     private readonly characterRepository: Repository<CharacterEntity>,
   ) {}
 
-  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
+  async createUser(
+    transactionManager: EntityManager,
+    createUserDto: CreateUserRequestDto,
+  ): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findUserByEmail(
       createUserDto.email,
     );
@@ -49,13 +52,13 @@ export class UserService {
     const hashedPassword = await hash(createUserDto.password, 10);
     const defaultExpireDate = this.generateExpiredate(3);
 
-    return await this.userRepository.createUser(
-      {
-        ...createUserDto,
-        password: hashedPassword,
-      },
-      defaultExpireDate,
-    );
+    const user = transactionManager.create(UserEntity, {
+      ...createUserDto,
+      password: hashedPassword,
+      viewableUntil: defaultExpireDate,
+    });
+
+    return await transactionManager.save(user);
   }
 
   async hardDeleteUser(userId: number): Promise<boolean> {
@@ -186,20 +189,23 @@ export class UserService {
     return await this.userRepository.updatePassword(userId, hashedPassword);
   }
 
-  async createUserCharacter(userId: number): Promise<CharacterEntity> {
+  async createUserCharacter(
+    tranasactionManager: EntityManager,
+    userId: number,
+  ): Promise<CharacterEntity> {
     const existingCharacter = await this.characterRepository.findOne({
       where: { userId: userId },
     });
     if (existingCharacter) {
       throw new BadRequestException('이미 캐릭터가 존재합니다.');
     }
-    const character = this.characterRepository.create({
+    const character = tranasactionManager.create(CharacterEntity, {
       userId: userId,
       level: 1,
       type: this.getRandomCharacterType(),
     });
 
-    return await this.characterRepository.save(character);
+    return await tranasactionManager.save(character);
   }
 
   async updateViewableUntil(
