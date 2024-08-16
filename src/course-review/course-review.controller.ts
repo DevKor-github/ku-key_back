@@ -113,6 +113,26 @@ export class CourseReviewController {
     return await this.courseReviewService.getMyCourseReviews(user);
   }
 
+  @ApiOperation({
+    summary: '이미 해당 강의에 대해 강의평 작성했는 지 조회',
+    description:
+      '해당 강의에 대해 이미 강의평을 작성했으면 true, 아니면 false 반환',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '강의평 작성 여부 조회 성공',
+  })
+  @Get('check-submission')
+  async checkCourseReviewSubmission(
+    @User() user: AuthorizedUserDto,
+    @Query() getCourseReviewRequestDto: GetCourseReviewsRequestDto,
+  ): Promise<boolean> {
+    return await this.courseReviewService.checkCourseReviewSubmission(
+      user,
+      getCourseReviewRequestDto,
+    );
+  }
+
   // 강의평 조회
   @ApiOperation({
     summary: '강의평 조회',
