@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { AttendanceCheckEntity } from 'src/entities/attendance-check.entity';
 import { EntityManager } from 'typeorm';
 import { TakeAttendanceResponseDto } from './dto/take-attendance.dto';
@@ -27,7 +27,7 @@ export class AttendanceCheckService {
       },
     );
     if (isAlreadyAttended) {
-      throw new ForbiddenException('Already attended');
+      throw new ConflictException('Already attended');
     }
 
     const attendance = transactionManager.create(AttendanceCheckEntity, {
