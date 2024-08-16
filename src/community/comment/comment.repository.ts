@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CommentEntity } from 'src/entities/comment.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class CommentRepository extends Repository<CommentEntity> {
@@ -11,7 +11,7 @@ export class CommentRepository extends Repository<CommentEntity> {
   async getCommentByCommentId(commentId: number) {
     const comment = await this.findOne({
       where: { id: commentId },
-      relations: ['parentComment', 'user'],
+      relations: ['parentComment', 'user', 'commentLikes'],
     });
 
     return comment;
@@ -24,6 +24,22 @@ export class CommentRepository extends Repository<CommentEntity> {
     });
 
     return comment;
+  }
+
+  async getCommentsByUserId(
+    userId: number,
+    take: number,
+    cursor: Date,
+  ): Promise<CommentEntity[]> {
+    const comments = await this.find({
+      where: { userId: userId, createdAt: LessThanOrEqual(cursor) },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['replyComments'],
+      take: take,
+    });
+    return comments;
   }
 
   async createComment(
@@ -66,8 +82,8 @@ export class CommentRepository extends Repository<CommentEntity> {
     return deleteResult.affected ? true : false;
   }
 
-  async isExistingCommentId(commentId: number): Promise<boolean> {
+  async isExistingCommentId(commentId: number): Promise<CommentEntity> {
     const comment = await this.findOne({ where: { id: commentId } });
-    return comment ? true : false;
+    return comment;
   }
 }

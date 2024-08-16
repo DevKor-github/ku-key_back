@@ -53,6 +53,7 @@ import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { ResizeImagePipe } from 'src/common/pipe/resize-image.pipe';
 
 @Controller('post')
 @ApiTags('post')
@@ -69,24 +70,16 @@ export class PostController {
     summary: '게시판 별 게시글 목록 조회',
     description: '게시판 별로 게시글 목록을 조회합니다.',
   })
-  @ApiQuery({ name: 'boardId', description: '조회하고자 하는 게시판 ID' })
-  @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
-  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
-  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
     type: GetPostListWithBoardResponseDto,
   })
   async getPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListWithBoardRequestDto,
   ): Promise<GetPostListWithBoardResponseDto> {
-    return await this.postService.getPostList(
-      requestDto.boardId,
-      requestDto.pageSize,
-      requestDto.pageNumber,
-      requestDto.keyword,
-    );
+    return await this.postService.getPostList(user, requestDto);
   }
 
   @Get('/my')
@@ -94,8 +87,6 @@ export class PostController {
     summary: '내가 쓴 글 목록 조회',
     description: '내가 쓴 글 목록을 조회합니다.',
   })
-  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
-  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: '내가 쓴 글 목록 조회 성공',
@@ -105,11 +96,7 @@ export class PostController {
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getMyPostList(
-      user,
-      requestDto.pageSize,
-      requestDto.pageNumber,
-    );
+    return await this.postService.getMyPostList(user, requestDto);
   }
 
   @Get('/all')
@@ -117,22 +104,16 @@ export class PostController {
     summary: '전체 게시글 목록 조회',
     description: '전체 게시글 목록을 조회합니다.',
   })
-  @ApiQuery({ name: 'keyword', required: false, description: '검색 키워드' })
-  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
-  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: '전체 게시글 목록 조회 성공',
     type: GetPostListResponseDto,
   })
   async getAllPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getAllPostList(
-      requestDto.pageSize,
-      requestDto.pageNumber,
-      requestDto.keyword,
-    );
+    return await this.postService.getAllPostList(user, requestDto);
   }
 
   @Get('/hot')
@@ -140,20 +121,16 @@ export class PostController {
     summary: 'hot 게시글 목록 조회',
     description: 'hot 게시글 목록을 조회합니다.',
   })
-  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
-  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: 'hot 게시글 목록 조회 성공',
     type: GetPostListResponseDto,
   })
   async getHotPostList(
+    @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getHotPostList(
-      requestDto.pageSize,
-      requestDto.pageNumber,
-    );
+    return await this.postService.getHotPostList(user, requestDto);
   }
 
   @Get('/scrap')
@@ -161,8 +138,6 @@ export class PostController {
     summary: '스크랩한 글 목록 조회',
     description: '스크랩한 글 목록을 조회합니다.',
   })
-  @ApiQuery({ name: 'pageSize', description: '한 페이지에 담길 게시글 수' })
-  @ApiQuery({ name: 'pageNumber', description: '페이지 번호' })
   @ApiResponse({
     status: 200,
     description: '스크랩한 글 목록 조회 성공',
@@ -172,11 +147,24 @@ export class PostController {
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    return await this.postService.getScrapPostList(
-      user,
-      requestDto.pageSize,
-      requestDto.pageNumber,
-    );
+    return await this.postService.getScrapPostList(user, requestDto);
+  }
+
+  @Get('/react')
+  @ApiOperation({
+    summary: '반응 남긴 글 목록 조회',
+    description: '반응을 남긴 글 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '반응 남긴 글 목록 조회 성공',
+    type: GetPostListResponseDto,
+  })
+  async getReactedPostList(
+    @User() user: AuthorizedUserDto,
+    @Query() requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    return await this.postService.getReactedPostList(user, requestDto);
   }
 
   @Get('/:postId')
@@ -222,7 +210,7 @@ export class PostController {
   async createPost(
     @User() user: AuthorizedUserDto,
     @Query('boardId') boardId: number,
-    @UploadedFiles() images: Array<Express.Multer.File>,
+    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     if (!boardId) {
@@ -253,7 +241,7 @@ export class PostController {
   async updatePost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
-    @UploadedFiles() images: Array<Express.Multer.File>,
+    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
     @Body() body: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     return await this.postService.updatePost(user, postId, images, body);

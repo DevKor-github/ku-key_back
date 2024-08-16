@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PostEntity } from 'src/entities/post.entity';
-import { DataSource, ILike, In, MoreThanOrEqual, Repository } from 'typeorm';
+import {
+  DataSource,
+  ILike,
+  In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -10,17 +17,16 @@ export class PostRepository extends Repository<PostEntity> {
 
   async getPostsByBoardId(
     boardId: number,
-    pageSize: number,
-    pageNumber: number,
+    take: number,
+    cursor: Date,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
-      where: { boardId: boardId },
+      where: { boardId: boardId, createdAt: LessThanOrEqual(cursor) },
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'postScraps'],
+      take: take,
     });
     return posts;
   }
@@ -28,73 +34,75 @@ export class PostRepository extends Repository<PostEntity> {
   async getPostsByBoardIdwithKeyword(
     boardId: number,
     keyword: string,
-    pageSize: number,
-    pageNumber: number,
+    take: number,
+    cursor: Date,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: [
-        { boardId: boardId, title: ILike(`%${keyword}%`) },
-        { boardId: boardId, content: ILike(`%${keyword}%`) },
+        {
+          boardId: boardId,
+          title: ILike(`%${keyword}%`),
+          createdAt: LessThanOrEqual(cursor),
+        },
+        {
+          boardId: boardId,
+          content: ILike(`%${keyword}%`),
+          createdAt: LessThanOrEqual(cursor),
+        },
       ],
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'postScraps'],
+      take: take,
     });
     return posts;
   }
 
-  async getAllPosts(
-    pageSize: number,
-    pageNumber: number,
-  ): Promise<PostEntity[]> {
+  async getAllPosts(take: number, cursor: Date): Promise<PostEntity[]> {
     const posts = await this.find({
+      where: {
+        createdAt: LessThanOrEqual(cursor),
+      },
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'board', 'postScraps'],
+      take: take,
     });
     return posts;
   }
 
   async getAllPostsWithKeyword(
     keyword: string,
-    pageSize: number,
-    pageNumber: number,
+    take: number,
+    cursor: Date,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
       where: [
-        { title: ILike(`%${keyword}%`) },
-        { content: ILike(`%${keyword}%`) },
+        { title: ILike(`%${keyword}%`), createdAt: LessThanOrEqual(cursor) },
+        { content: ILike(`%${keyword}%`), createdAt: LessThanOrEqual(cursor) },
       ],
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'board', 'postScraps'],
+      take: take,
     });
     return posts;
   }
 
-  async getHotPosts(
-    pageSize: number,
-    pageNumber: number,
-  ): Promise<PostEntity[]> {
+  async getHotPosts(take: number, cursor: Date): Promise<PostEntity[]> {
     const posts = await this.find({
       where: {
         allReactionCount: MoreThanOrEqual(10),
+        createdAt: LessThanOrEqual(cursor),
       },
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'board', 'postScraps'],
+      take: take,
     });
     return posts;
   }
@@ -133,7 +141,10 @@ export class PostRepository extends Repository<PostEntity> {
         'user',
         'postImages',
         'comments.user',
+        'comments.commentLikes',
         'commentAnonymousNumbers',
+        'postScraps',
+        'postReactions',
       ],
     });
     return post;
@@ -141,34 +152,32 @@ export class PostRepository extends Repository<PostEntity> {
 
   async getPostsByUserId(
     userId: number,
-    pageSize: number,
-    pageNumber: number,
+    take: number,
+    cursor: Date,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
-      where: { userId: userId },
+      where: { userId: userId, createdAt: LessThanOrEqual(cursor) },
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'board', 'postScraps'],
+      take: take,
     });
     return posts;
   }
 
-  async getScrapPostsByPostIds(
+  async getPostsByPostIds(
     postIds: number[],
-    pageSize: number,
-    pageNumber: number,
+    take: number,
+    cursor: Date,
   ): Promise<PostEntity[]> {
     const posts = await this.find({
-      where: { id: In(postIds) },
+      where: { id: In(postIds), createdAt: LessThanOrEqual(cursor) },
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board'],
-      take: pageSize,
-      skip: (pageNumber - 1) * pageSize,
+      relations: ['postImages', 'user', 'board', 'postScraps'],
+      take: take,
     });
     return posts;
   }

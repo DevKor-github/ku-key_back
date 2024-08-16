@@ -23,18 +23,17 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity> {
     return await this.findOne({
       where: [
-        { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
-        { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
+        { fromUserId: fromUserId, toUserId: toUserId },
+        { fromUserId: toUserId, toUserId: fromUserId },
       ],
-      relations: ['fromUser', 'toUser'],
     });
   }
 
   async findFriendshipsByUserId(userId: number): Promise<FriendshipEntity[]> {
     return await this.find({
       where: [
-        { fromUser: { id: userId }, areWeFriend: true },
-        { toUser: { id: userId }, areWeFriend: true },
+        { fromUserId: userId, areWeFriend: true },
+        { toUserId: userId, areWeFriend: true },
       ],
       relations: ['fromUser', 'toUser'],
     });
@@ -83,7 +82,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     userId: number,
   ): Promise<FriendshipEntity[]> {
     return await this.find({
-      where: [{ toUser: { id: userId }, areWeFriend: false }],
+      where: [{ toUserId: userId, areWeFriend: false }],
       relations: ['fromUser', 'toUser'],
     });
   }
@@ -92,7 +91,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     userId: number,
   ): Promise<FriendshipEntity[]> {
     return await this.find({
-      where: [{ fromUser: { id: userId }, areWeFriend: false }],
+      where: [{ fromUserId: userId, areWeFriend: false }],
       relations: ['fromUser', 'toUser'],
     });
   }
