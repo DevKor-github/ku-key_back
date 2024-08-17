@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -197,7 +198,7 @@ export class UserService {
       where: { userId: userId },
     });
     if (existingCharacter) {
-      throw new BadRequestException('이미 캐릭터가 존재합니다.');
+      throw new ConflictException('이미 캐릭터가 존재합니다.');
     }
     const character = tranasactionManager.create(CharacterEntity, {
       userId: userId,
@@ -225,7 +226,7 @@ export class UserService {
 
     let newExpireDate: Date;
 
-    if (user.viewableUntil === null) {
+    if (!user.viewableUntil) {
       newExpireDate = new Date(Date.now() + offset);
     } else {
       newExpireDate = user.viewableUntil;
@@ -249,7 +250,6 @@ export class UserService {
   async upgradeUserCharacter(
     transactionManager: EntityManager,
     userId: number,
-    level: number,
   ): Promise<number> {
     const character = await transactionManager.findOne(CharacterEntity, {
       where: { userId: userId },
@@ -259,21 +259,21 @@ export class UserService {
       throw new NotFoundException('캐릭터 정보가 없습니다.');
     }
 
-    if (character.level !== level - 1) {
-      throw new BadRequestException('캐릭터 레벨은 1씩 업그레이드 가능합니다.');
+    if (character.level === 5) {
+      throw new BadRequestException('최대 레벨입니다.');
     }
 
     const updated = await transactionManager.update(
       CharacterEntity,
       { id: character.id },
-      { level: level },
+      { level: character.level + 1 },
     );
 
     if (updated.affected === 0) {
       throw new InternalServerErrorException('업데이트에 실패했습니다.');
     }
 
-    return level;
+    return character.level + 1;
   }
 
   async changeUserCharacterType(
@@ -288,7 +288,7 @@ export class UserService {
       throw new NotFoundException('캐릭터 정보가 없습니다.');
     }
 
-    const newType = this.getRandomCharacterType();
+    const newType = this.getRandomCharacterType(character.type);
 
     const updated = await transactionManager.update(
       CharacterEntity,
@@ -303,10 +303,19 @@ export class UserService {
     return newType;
   }
 
-  private getRandomCharacterType(): CharacterType {
+  private getRandomCharacterType(existingType?: CharacterType): CharacterType {
     const characterTypes = Object.values(CharacterType);
-    const randomIndex = Math.floor(Math.random() * characterTypes.length);
-    return characterTypes[randomIndex];
+    if (existingType) {
+      // 기존 타입을 제외한 나머지에서 랜덤 선택
+      const availableTypes = characterTypes.filter(
+        (type) => type !== existingType,
+      );
+      const randomIndex = Math.floor(Math.random() * availableTypes.length);
+      return availableTypes[randomIndex];
+    } else {
+      const randomIndex = Math.floor(Math.random() * characterTypes.length);
+      return characterTypes[randomIndex];
+    }
   }
 
   private generateExpiredate(daysToAdd: number): Date {

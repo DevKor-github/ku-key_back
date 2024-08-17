@@ -4,11 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  CharacterEvolutionMetadata,
-  CourseReviewMetadata,
-  PurchaseItemRequestDto,
-} from './dto/purchase-item-request.dto';
+import { PurchaseItemRequestDto } from './dto/purchase-item-request.dto';
 import { UserService } from './user.service';
 import { UserEntity } from 'src/entities/user.entity';
 import { ItemCategory } from 'src/enums/item-category.enum';
@@ -70,12 +66,15 @@ export class PointService {
       throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
     }
 
-    const { requiredPoints, itemCategory, itemMetadata } = requestDto;
+    const { requiredPoints, itemCategory, ...itemMetadata } = requestDto;
     const responseDto = new PurchaseItemResponseDto();
     let historyDescription: string = '';
 
     if (itemCategory === ItemCategory.COURSE_REVIEW_READING_TICKET) {
-      const { days } = itemMetadata as CourseReviewMetadata;
+      const { days } = itemMetadata;
+      if (!days) {
+        throw new BadRequestException('열람권 일수 정보가 없습니다.');
+      }
       responseDto.viewableUntil = await this.userSerivce.updateViewableUntil(
         transactionManager,
         userId,
@@ -83,13 +82,12 @@ export class PointService {
       );
       historyDescription = `Reading course reviews - ${days} days`;
     } else if (itemCategory === ItemCategory.CHARACTER_EVOLUTION) {
-      const { level } = itemMetadata as CharacterEvolutionMetadata;
-      responseDto.upgradeLevel = await this.userSerivce.upgradeUserCharacter(
+      const newLevel = await this.userSerivce.upgradeUserCharacter(
         transactionManager,
         userId,
-        level,
       );
-      historyDescription = `Evolving characters level ${level}`;
+      responseDto.upgradeLevel = newLevel;
+      historyDescription = `Evolving characters level ${newLevel}`;
     } else {
       responseDto.newCharacterType =
         await this.userSerivce.changeUserCharacterType(

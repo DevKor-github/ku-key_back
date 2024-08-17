@@ -1,13 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CharacterType } from 'src/enums/character-type.enum';
 
 export class PurchaseItemResponseDto {
-  @ApiProperty({ description: '업데이트된 열람 가능 기간' })
+  @ApiPropertyOptional({
+    description: '업데이트된 열람 가능 기간 (강의평 열람권 구매 시)',
+  })
   viewableUntil?: Date;
 
-  @ApiProperty({ description: '업그레이드 레벨' })
+  @ApiPropertyOptional({ description: '업그레이드 레벨 (캐릭터 진화 구매 시)' })
   upgradeLevel?: number;
 
-  @ApiProperty({ description: '변경된 캐릭터 타입' })
+  @ApiPropertyOptional({
+    description: '변경된 캐릭터 타입 (캐릭터 타입 변경 구매 시)',
+  })
   newCharacterType?: CharacterType;
 }
