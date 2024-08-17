@@ -51,7 +51,7 @@ export class UserService {
     }
 
     const hashedPassword = await hash(createUserDto.password, 10);
-    const defaultExpireDate = this.generateExpiredate(3);
+    const defaultExpireDate = this.generateDefaultExpiredate();
 
     const user = transactionManager.create(UserEntity, {
       ...createUserDto,
@@ -223,15 +223,14 @@ export class UserService {
     }
 
     const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
-
+    const koreaTime = new Date(Date.now() + offset); // 현재 시간
     let newExpireDate: Date;
 
-    if (!user.viewableUntil) {
-      newExpireDate = new Date(Date.now() + offset);
+    if (user.viewableUntil < koreaTime) {
+      newExpireDate = koreaTime;
     } else {
       newExpireDate = user.viewableUntil;
     }
-
     newExpireDate.setDate(newExpireDate.getDate() + daysToAdd);
 
     const updated = await transactionManager.update(
@@ -318,10 +317,10 @@ export class UserService {
     }
   }
 
-  private generateExpiredate(daysToAdd: number): Date {
+  private generateDefaultExpiredate(): Date {
     const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
     const expireDate = new Date(Date.now() + offset);
-    expireDate.setDate(expireDate.getDate() + daysToAdd);
+    expireDate.setDate(expireDate.getDate() + 3);
 
     return expireDate;
   }
