@@ -140,7 +140,10 @@ export class UserService {
   }
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
-    const user = await this.userRepository.findUserById(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: { userLanguages: true },
+    });
     const profile: GetProfileResponseDto = {
       name: user.name,
       country: user.country,
@@ -149,6 +152,9 @@ export class UserService {
       startDay: user.startDay,
       endDay: user.endDay,
       point: user.point,
+      languages: user.userLanguages.map(
+        (userLanguage) => userLanguage.language,
+      ),
     };
     return profile;
   }
