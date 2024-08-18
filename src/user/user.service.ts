@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -24,7 +25,7 @@ import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
 import { Language } from 'src/enums/language';
 import { UserLanguageEntity } from 'src/entities/user-language.entity';
-import { AppendLanguageResponseDto } from './dto/user-language.dto';
+import { LanguageResponseDto } from './dto/user-language.dto';
 
 @Injectable()
 export class UserService {
@@ -240,7 +241,7 @@ export class UserService {
   async appendLanguage(
     userId: number,
     language: Language,
-  ): Promise<AppendLanguageResponseDto> {
+  ): Promise<LanguageResponseDto> {
     const user = await this.userRepository.findOne({
       where: {
         id: userId,
@@ -273,7 +274,48 @@ export class UserService {
     );
     allLanguage.push(language);
 
-    const result: AppendLanguageResponseDto = {
+    const result: LanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
+  }
+
+  async deleteLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<LanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    const existingLanguage = user.userLanguages.find(
+      (userLanguage) => userLanguage.language === language,
+    );
+    if (!existingLanguage)
+      throw new NotFoundException(`There's no ${language}`);
+
+    if (
+      !(
+        await this.userLanguageRepository.delete({
+          id: existingLanguage.id,
+        })
+      ).affected
+    )
+      throw new InternalServerErrorException('Delete failed!');
+
+    const allLanguage = user.userLanguages
+      .filter((userLanguage) => userLanguage.language !== language)
+      .map((userLanguage) => userLanguage.language);
+
+    const result: LanguageResponseDto = {
       languages: allLanguage,
     };
 

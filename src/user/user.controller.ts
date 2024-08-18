@@ -27,8 +27,8 @@ import {
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
 import {
-  AppendLanguageRequestDto,
-  AppendLanguageResponseDto,
+  LanguageRequestDto,
+  LanguageResponseDto,
 } from './dto/user-language.dto';
 
 @ApiTags('User')
@@ -105,20 +105,42 @@ export class UserController {
     description: '언어를 추가 합니다',
   })
   @ApiBody({
-    type: AppendLanguageRequestDto,
+    type: LanguageRequestDto,
   })
   @ApiResponse({
     status: 201,
     description: '언어 추가 성공',
-    type: AppendLanguageResponseDto,
+    type: LanguageResponseDto,
   })
   @Post('/language')
   async appendLanguage(
-    @Body() requestDto: AppendLanguageRequestDto,
+    @Body() requestDto: LanguageRequestDto,
     @User() user: AuthorizedUserDto,
-  ): Promise<AppendLanguageResponseDto> {
+  ): Promise<LanguageResponseDto> {
     const id = user.id;
     return await this.userService.appendLanguage(id, requestDto.language);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '언어 삭제',
+    description: '언어를 삭제 합니다',
+  })
+  @ApiBody({
+    type: LanguageRequestDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '언어 삭제 성공',
+    type: LanguageResponseDto,
+  })
+  @Delete('/language')
+  async deleteLanguage(
+    @Body() requestDto: LanguageRequestDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<LanguageResponseDto> {
+    const id = user.id;
+    return await this.userService.deleteLanguage(id, requestDto.language);
   }
 
   @ApiOperation({
