@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -25,6 +26,10 @@ import {
 } from '@nestjs/swagger';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
+import {
+  AppendLanguageRequestDto,
+  AppendLanguageResponseDto,
+} from './dto/user-language.dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
@@ -92,6 +97,28 @@ export class UserController {
   ): Promise<GetProfileResponseDto> {
     const id = user.id;
     return await this.userService.getProfile(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '언어 추가',
+    description: '언어를 추가 합니다',
+  })
+  @ApiBody({
+    type: AppendLanguageRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '언어 추가 성공',
+    type: AppendLanguageResponseDto,
+  })
+  @Post('/language')
+  async appendLanguage(
+    @Body() requestDto: AppendLanguageRequestDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<AppendLanguageResponseDto> {
+    const id = user.id;
+    return await this.userService.appendLanguage(id, requestDto.language);
   }
 
   @ApiOperation({

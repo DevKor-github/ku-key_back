@@ -5,9 +5,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { UserRepository } from './user.repository';
 import { PointHistoryEntity } from 'src/entities/point-history.entity';
+import { UserLanguageEntity } from 'src/entities/user-language.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, PointHistoryEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserEntity,
+      PointHistoryEntity,
+      UserLanguageEntity,
+    ]),
+  ],
   controllers: [UserController],
   providers: [UserService, UserRepository],
   exports: [UserService, UserRepository],

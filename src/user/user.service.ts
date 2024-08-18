@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -21,6 +22,9 @@ import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
+import { Language } from 'src/enums/language';
+import { UserLanguageEntity } from 'src/entities/user-language.entity';
+import { AppendLanguageResponseDto } from './dto/user-language.dto';
 
 @Injectable()
 export class UserService {
@@ -30,6 +34,8 @@ export class UserService {
     private readonly dataSource: DataSource,
     @InjectRepository(PointHistoryEntity)
     private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
+    @InjectRepository(UserLanguageEntity)
+    private readonly userLanguageRepository: Repository<UserLanguageEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
@@ -229,5 +235,48 @@ export class UserService {
     });
 
     return histories.map((history) => new GetPointHistoryResponseDto(history));
+  }
+
+  async appendLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<AppendLanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    if (user.userLanguages.length >= 5)
+      throw new BadRequestException('Can Only append up to 5 language!');
+
+    if (
+      user.userLanguages.some(
+        (userLanguage) => userLanguage.language === language,
+      )
+    )
+      throw new ConflictException('Existing Language!');
+
+    const newLanguage = this.userLanguageRepository.create({
+      userId,
+      language,
+    });
+    await this.userLanguageRepository.save(newLanguage);
+
+    const allLanguage = user.userLanguages.map(
+      (userLanguage) => userLanguage.language,
+    );
+    allLanguage.push(language);
+
+    const result: AppendLanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
   }
 }
