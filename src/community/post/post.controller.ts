@@ -53,7 +53,6 @@ import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
-import { ResizeImagePipe } from 'src/common/pipe/resize-image.pipe';
 
 @Controller('post')
 @ApiTags('post')
@@ -210,7 +209,7 @@ export class PostController {
   async createPost(
     @User() user: AuthorizedUserDto,
     @Query('boardId') boardId: number,
-    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
+    @UploadedFiles() images: Array<Express.Multer.File>,
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     if (!boardId) {
@@ -241,7 +240,7 @@ export class PostController {
   async updatePost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
-    @UploadedFiles(new ResizeImagePipe()) images: Array<Express.Multer.File>,
+    @UploadedFiles() images: Array<Express.Multer.File>,
     @Body() body: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     return await this.postService.updatePost(user, postId, images, body);
