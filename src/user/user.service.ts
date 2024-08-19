@@ -248,50 +248,34 @@ export class UserService {
 
   async upgradeUserCharacter(
     transactionManager: EntityManager,
-    userId: number,
+    userCharacter: CharacterEntity,
   ): Promise<number> {
-    const character = await transactionManager.findOne(CharacterEntity, {
-      where: { userId: userId },
-    });
-
-    if (!character) {
-      throw new NotFoundException('캐릭터 정보가 없습니다.');
-    }
-
-    if (character.level === 5) {
+    if (userCharacter.level === 6) {
       throw new BadRequestException('최대 레벨입니다.');
     }
 
     const updated = await transactionManager.update(
       CharacterEntity,
-      { id: character.id },
-      { level: character.level + 1 },
+      { id: userCharacter.id },
+      { level: userCharacter.level + 1 },
     );
 
     if (updated.affected === 0) {
       throw new InternalServerErrorException('업데이트에 실패했습니다.');
     }
 
-    return character.level + 1;
+    return userCharacter.level + 1;
   }
 
   async changeUserCharacterType(
     transactionManager: EntityManager,
-    userId: number,
+    userCharacter: CharacterEntity,
   ): Promise<CharacterType> {
-    const character = await transactionManager.findOne(CharacterEntity, {
-      where: { userId: userId },
-    });
-
-    if (!character) {
-      throw new NotFoundException('캐릭터 정보가 없습니다.');
-    }
-
-    const newType = this.getRandomCharacterType(character.type);
+    const newType = this.getRandomCharacterType(userCharacter.type);
 
     const updated = await transactionManager.update(
       CharacterEntity,
-      { id: character.id },
+      { id: userCharacter.id },
       { type: newType },
     );
 
