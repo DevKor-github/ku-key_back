@@ -34,12 +34,12 @@ import {
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PointService } from 'src/user/point.service';
 
 @Injectable()
 export class PostService {
@@ -50,7 +50,7 @@ export class PostService {
     private readonly postReactionRepository: Repository<PostReactionEntity>,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
-    private readonly userService: UserService,
+    private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -576,7 +576,7 @@ export class PostService {
       }
 
       if (post.allReactionCount + 1 >= 10) {
-        await this.userService.changePoint(
+        await this.pointService.changePoint(
           post.userId,
           100,
           'Hot post selected',

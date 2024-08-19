@@ -23,6 +23,7 @@ import { ReportEntity } from './report.entity';
 import { NoticeEntity } from './notice.entity';
 import { AttendanceCheckEntity } from './attendance-check.entity';
 import { Role } from 'src/enums/role.enum';
+import { CharacterEntity } from './character.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -68,8 +69,8 @@ export class UserEntity extends CommonEntity {
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
-  @Column('boolean', { default: false })
-  isViewable: boolean;
+  @Column('timestamp', { nullable: false })
+  viewableUntil: Date;
 
   @Column({
     type: 'enum',
@@ -84,6 +85,11 @@ export class UserEntity extends CommonEntity {
     { cascade: true },
   )
   kuVerification: KuVerificationEntity;
+
+  @OneToOne(() => CharacterEntity, (character) => character.user, {
+    cascade: true,
+  })
+  character: CharacterEntity;
 
   @OneToMany(() => FriendshipEntity, (friendship) => friendship.fromUser, {
     cascade: true,

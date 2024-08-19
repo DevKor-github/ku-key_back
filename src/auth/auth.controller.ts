@@ -53,6 +53,9 @@ import { JwtTokenDto } from './dto/jwtToken.dto';
 import { RolesGuard } from './guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -170,8 +173,9 @@ export class AuthController {
     type: SignUpResponseDto,
   })
   @Post('sign-up')
-  @UseInterceptors(FileInterceptor('screenshot'))
+  @UseInterceptors(FileInterceptor('screenshot'), TransactionInterceptor)
   async createUserandScreenshotRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
@@ -179,6 +183,7 @@ export class AuthController {
       throw new BadRequestException('screenshot should be uploaded');
     }
     return await this.authService.createUserandScreenshotRequest(
+      transactionManager,
       screenshot,
       body,
     );
