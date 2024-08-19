@@ -54,7 +54,7 @@ export const Language = {
   Ganda: 'lug',
   Georgian: 'kat',
   German: 'deu',
-  Gre다: 'ell',
+  Greek: 'ell',
   Kalaallisut: 'kal',
   Guarani: 'grn',
   Gujarati: 'guj',
