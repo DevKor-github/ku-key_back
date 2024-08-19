@@ -104,7 +104,7 @@ export class PointService {
 
         responseDto.viewableUntil = await this.userSerivce.updateViewableUntil(
           transactionManager,
-          userId,
+          user,
           days,
         );
         historyDescription = `Reading course reviews - ${days} days`;

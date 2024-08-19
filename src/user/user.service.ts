@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -211,17 +210,9 @@ export class UserService {
 
   async updateViewableUntil(
     transactionManager: EntityManager,
-    userId: number,
+    user: UserEntity,
     daysToAdd: number,
   ): Promise<Date> {
-    const user = await transactionManager.findOne(UserEntity, {
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
-    }
-
     const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
     const koreaTime = new Date(Date.now() + offset); // 현재 시간
     let newExpireDate: Date;
@@ -235,7 +226,7 @@ export class UserService {
 
     const updated = await transactionManager.update(
       UserEntity,
-      { id: userId },
+      { id: user.id },
       { viewableUntil: newExpireDate },
     );
 
