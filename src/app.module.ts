@@ -21,6 +21,7 @@ import { NoticeModule } from './notice/notice.module';
 import { CalendarModule } from './home/calendar/calendar.module';
 import { InstitutionModule } from './home/institution/institution.module';
 import { ReportModule } from './community/report/report.module';
+import { AttendanceCheckModule } from './attendance-check/attendance-check.module';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -66,6 +67,7 @@ console.log(`.env.${process.env.NODE_ENV}`);
     CalendarModule,
     InstitutionModule,
     ReportModule,
+    AttendanceCheckModule,
   ],
   controllers: [AppController],
   providers: [AppService],

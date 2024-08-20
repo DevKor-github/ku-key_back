@@ -7,18 +7,8 @@ import {
   IsString,
   ValidateIf,
 } from 'class-validator';
-
-const DayType = {
-  Mon: 'Mon',
-  Tue: 'Tue',
-  Wed: 'Wed',
-  Thu: 'Thu',
-  Fri: 'Fri',
-  Sat: 'Sat',
-  Sun: 'Sun',
-} as const;
-
-export type DayType = (typeof DayType)[keyof typeof DayType];
+import { DayType } from 'src/common/types/day-type.utils';
+import { IsTime } from 'src/decorators/time.decorator';
 
 export class UpdateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })
@@ -39,13 +29,13 @@ export class UpdateScheduleRequestDto {
 
   @ApiPropertyOptional({ description: '시작 시간' })
   @ValidateIf((o) => o.day || o.startTime || o.endTime)
-  @IsString()
+  @IsTime()
   @IsNotEmpty()
   startTime: string;
 
   @ApiPropertyOptional({ description: '종료 시간' })
   @ValidateIf((o) => o.day || o.startTime || o.endTime)
-  @IsString()
+  @IsTime()
   @IsNotEmpty()
   endTime: string;
 

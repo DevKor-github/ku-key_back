@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 
-export class GetCalendarDataQueryDto {
+export class GetMonthlyCalendarDataRequestDto {
   @IsInt()
   @IsNotEmpty()
   @Max(2030)
@@ -15,4 +15,13 @@ export class GetCalendarDataQueryDto {
   @Min(1)
   @ApiProperty({ description: '조회할 월' })
   month: number;
+}
+
+export class GetYearlyCalendarDataRequestDto {
+  @IsInt()
+  @IsNotEmpty()
+  @Max(2030)
+  @Min(2024)
+  @ApiProperty({ description: '조회할 연도' })
+  year: number;
 }

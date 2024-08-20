@@ -7,8 +7,8 @@ import {
 import { PostRepository } from './post.repository';
 import { BoardService } from '../board/board.service';
 import {
+  GetPostListWithBoardRequestDto,
   GetPostListWithBoardResponseDto,
-  PostPreview,
 } from './dto/get-post-list-with-board.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreatePostRequestDto } from './dto/create-post.dto';
@@ -16,14 +16,15 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
 import { ScrapPostResponseDto } from './dto/scrap-post.dto';
 import {
+  getAllPostListRequestDto,
+  GetPostListRequestDto,
   GetPostListResponseDto,
-  PostPreviewWithBoardName,
 } from './dto/get-post-list.dto';
 import { PostScrapEntity } from 'src/entities/post-scrap.entity';
 import {
@@ -33,48 +34,63 @@ import {
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
+import { Notice } from 'src/notice/enum/notice.enum';
+import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PointService } from 'src/user/point.service';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postScrapRepository: PostScrapRepository,
+    @InjectRepository(PostReactionEntity)
+    private readonly postReactionRepository: Repository<PostReactionEntity>,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
-    private readonly userService: UserService,
+    private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async getPostList(
-    boardId: number,
-    pageSize: number,
-    pageNumber: number,
-    keyword?: string,
+    user: AuthorizedUserDto,
+    requestDto: GetPostListWithBoardRequestDto,
   ): Promise<GetPostListWithBoardResponseDto> {
-    const board = await this.boardService.getBoardById(boardId);
+    const board = await this.boardService.getBoardById(requestDto.boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
-    const posts = keyword
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+    const posts = requestDto.keyword
       ? await this.postRepository.getPostsByBoardIdwithKeyword(
-          boardId,
-          keyword,
-          pageSize,
-          pageNumber,
+          requestDto.boardId,
+          requestDto.keyword,
+          requestDto.take + 1,
+          cursor,
         )
       : await this.postRepository.getPostsByBoardId(
-          boardId,
-          pageSize,
-          pageNumber,
+          requestDto.boardId,
+          requestDto.take + 1,
+          cursor,
         );
-    const postList = new GetPostListWithBoardResponseDto(board, posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListWithBoardResponseDto(board, posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getPost(
@@ -91,7 +107,11 @@ export class PostService {
     }
 
     if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
-      await this.cacheManager.set(`${postId}-${user.id}`, new Date());
+      await this.cacheManager.set(
+        `${postId}-${user.id}`,
+        new Date(),
+        1000 * 60 * 30,
+      );
       const isViewsIncreased = await this.postRepository.increaseViews(postId);
       if (!isViewsIncreased) {
         console.log('Views Increase Failed!');
@@ -115,6 +135,10 @@ export class PostService {
       if (!this.fileService.imagefilter(image)) {
         throw new BadRequestException('Only image file can be uploaded!');
       }
+    }
+
+    if (images.length > 5) {
+      throw new BadRequestException('Only up to five images can be uploaded.');
     }
 
     const board = await this.boardService.getBoardById(boardId);
@@ -190,6 +214,12 @@ export class PostService {
         if (!this.fileService.imagefilter(image)) {
           throw new BadRequestException('Only image file can be uploaded!');
         }
+      }
+
+      if (images.length > 5) {
+        throw new BadRequestException(
+          'Only up to five images can be uploaded.',
+        );
       }
     }
 
@@ -277,8 +307,14 @@ export class PostService {
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<ScrapPostResponseDto> {
-    if (!(await this.postRepository.isExistingPostId(postId))) {
+    const post = await this.postRepository.isExistingPostId(postId);
+
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot scrap my post!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -341,69 +377,150 @@ export class PostService {
 
   async getMyPostList(
     user: AuthorizedUserDto,
-    pageSize: number,
-    pageNumber: number,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
     const posts = await this.postRepository.getPostsByUserId(
       user.id,
-      pageSize,
-      pageNumber,
+      requestDto.take + 1,
+      cursor,
     );
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getAllPostList(
-    pageSize: number,
-    pageNumber: number,
-    keyword?: string,
+    user: AuthorizedUserDto,
+    requestDto: getAllPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    const posts = keyword
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+    const posts = requestDto.keyword
       ? await this.postRepository.getAllPostsWithKeyword(
-          keyword,
-          pageSize,
-          pageNumber,
+          requestDto.keyword,
+          requestDto.take + 1,
+          cursor,
         )
-      : await this.postRepository.getAllPosts(pageSize, pageNumber);
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
+      : await this.postRepository.getAllPosts(requestDto.take + 1, cursor);
 
-    return postList;
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getHotPostList(
-    pageSize: number,
-    pageNumber: number,
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
-    const posts = await this.postRepository.getHotPosts(pageSize, pageNumber);
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
 
-    return postList;
+    const posts = await this.postRepository.getHotPosts(
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async getScrapPostList(
     user: AuthorizedUserDto,
-    pageSize: number,
-    pageNumber: number,
+    requestDto: GetPostListRequestDto,
   ): Promise<GetPostListResponseDto> {
     const postIds = await this.postScrapRepository.getScrapPostIdsWithUserId(
       user.id,
     );
-    const posts = await this.postRepository.getScrapPostsByPostIds(
-      postIds,
-      pageSize,
-      pageNumber,
-    );
-    const postList = new GetPostListResponseDto(posts);
-    this.makeThumbnailDirUrlInPostList(postList);
 
-    return postList;
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const posts = await this.postRepository.getPostsByPostIds(
+      postIds,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
+  }
+
+  async getReactedPostList(
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    const reactionList = await this.postReactionRepository.find({
+      where: { userId: user.id },
+    });
+    const postIds = reactionList.map((reaction) => reaction.postId);
+
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const posts = await this.postRepository.getPostsByPostIds(
+      postIds,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
   }
 
   async reactPost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
     requestDto: ReactPostRequestDto,
@@ -411,6 +528,10 @@ export class PostService {
     const post = await this.postRepository.isExistingPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot react my post!');
     }
 
     const ReactionColumn = [
@@ -421,98 +542,88 @@ export class PostService {
       'funnyReactionCount',
     ];
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const existingReaction = await transactionManager.findOne(
+      PostReactionEntity,
+      { where: { userId: user.id, postId: postId } },
+    );
 
-    try {
-      const existingReaction = await queryRunner.manager.findOne(
-        PostReactionEntity,
-        { where: { userId: user.id, postId: postId } },
+    if (!existingReaction) {
+      const reaction = transactionManager.create(PostReactionEntity, {
+        userId: user.id,
+        postId: postId,
+        reaction: requestDto.reaction,
+      });
+      await transactionManager.save(reaction);
+
+      const updateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[requestDto.reaction],
+        1,
       );
-
-      if (!existingReaction) {
-        const reaction = queryRunner.manager.create(PostReactionEntity, {
-          userId: user.id,
-          postId: postId,
-          reaction: requestDto.reaction,
-        });
-        await queryRunner.manager.save(reaction);
-
-        const updateResult = await queryRunner.manager.increment(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[requestDto.reaction],
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('React Failed!');
-        }
-
-        const allReactionCountUpdateResult =
-          await queryRunner.manager.increment(
-            PostEntity,
-            { id: postId },
-            'allReactionCount',
-            1,
-          );
-        if (!allReactionCountUpdateResult.affected) {
-          throw new InternalServerErrorException('React Failed!');
-        }
-
-        if (post.allReactionCount + 1 >= 10) {
-          await this.userService.changePoint(
-            post.userId,
-            10,
-            'Hot post selected',
-          );
-          await this.noticeService.emitNotice(
-            post.userId,
-            'Your Post is selected to Hot Board!',
-          );
-        }
-      } else {
-        if (existingReaction.reaction === requestDto.reaction) {
-          throw new BadRequestException('Same Reaction!');
-        }
-
-        const decreasingUpdateResult = await queryRunner.manager.decrement(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[existingReaction.reaction],
-          1,
-        );
-        if (!decreasingUpdateResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
-
-        const updateReactionResult = await queryRunner.manager.update(
-          PostReactionEntity,
-          { id: existingReaction.id },
-          { reaction: requestDto.reaction },
-        );
-        if (!updateReactionResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
-
-        const increasingUpdateResult = await queryRunner.manager.increment(
-          PostEntity,
-          { id: postId },
-          ReactionColumn[requestDto.reaction],
-          1,
-        );
-        if (!increasingUpdateResult.affected) {
-          throw new InternalServerErrorException('Reaction Change Failed!');
-        }
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('React Failed!');
       }
 
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      const allReactionCountUpdateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        'allReactionCount',
+        1,
+      );
+      if (!allReactionCountUpdateResult.affected) {
+        throw new InternalServerErrorException('React Failed!');
+      }
+
+      if (post.allReactionCount + 1 >= 10) {
+        await this.pointService.changePoint(
+          post.userId,
+          100,
+          'Hot post selected',
+          transactionManager,
+        );
+        await this.noticeService.emitNotice(
+          post.userId,
+          'Your Post is selected to Hot Board!',
+          Notice.hotPost,
+          post.id,
+        );
+      }
+    } else {
+      if (existingReaction.reaction === requestDto.reaction) {
+        throw new BadRequestException('Same Reaction!');
+      }
+
+      const decreasingUpdateResult = await transactionManager.decrement(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[existingReaction.reaction],
+        1,
+      );
+      if (!decreasingUpdateResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
+
+      const updateReactionResult = await transactionManager.update(
+        PostReactionEntity,
+        { id: existingReaction.id },
+        { reaction: requestDto.reaction },
+      );
+      if (!updateReactionResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
+
+      const increasingUpdateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        ReactionColumn[requestDto.reaction],
+        1,
+      );
+      if (!increasingUpdateResult.affected) {
+        throw new InternalServerErrorException('Reaction Change Failed!');
+      }
     }
+
     return new ReactPostResponseDto(requestDto.reaction);
   }
 
@@ -521,16 +632,14 @@ export class PostService {
   }
 
   makeThumbnailDirUrlInPostList(
-    postList: GetPostListResponseDto | GetPostListWithBoardResponseDto,
+    postList: PostPreview[] | PostPreviewWithBoardName[],
   ): void {
-    postList.posts.map(
-      (postPreview: PostPreviewWithBoardName | PostPreview) => {
-        const imgDir = postPreview.thumbnailDir;
-        if (imgDir) {
-          postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
-        }
-      },
-    );
+    postList.map((postPreview: PostPreviewWithBoardName | PostPreview) => {
+      const imgDir = postPreview.thumbnailDir;
+      if (imgDir) {
+        postPreview.thumbnailDir = this.fileService.makeUrlByFileDir(imgDir);
+      }
+    });
   }
 
   makeImgDirUrlInPost(post: GetPostResponseDto): void {

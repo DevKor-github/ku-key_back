@@ -12,10 +12,12 @@ export class CreateInstitutionRequestDto {
   @ApiProperty({ description: '카테고리' })
   category: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty({ description: '로고 이미지 경로' })
-  imgDir: string;
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: '로고 이미지 파일',
+  })
+  logoImage: any;
 
   @IsString()
   @IsNotEmpty()

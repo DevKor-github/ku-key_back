@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { KuVerificationEntity } from 'src/entities/ku-verification.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -28,16 +28,17 @@ export class KuVerificationRepository extends Repository<KuVerificationEntity> {
   }
 
   async createVerificationRequest(
+    transactionManager: EntityManager,
     imgDir: string,
     studentNumber: number,
     user: UserEntity,
   ): Promise<KuVerificationEntity> {
-    const newRequest = this.create({
+    const newRequest = transactionManager.create(KuVerificationEntity, {
       imgDir: imgDir,
       studentNumber: studentNumber,
       user: user,
     });
-    return await this.save(newRequest);
+    return await transactionManager.save(newRequest);
   }
 
   async getRequests(): Promise<KuVerificationEntity[]> {

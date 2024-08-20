@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class CreateCalendarDataRequestDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
@@ -7,8 +8,16 @@ export class CreateCalendarDataRequestDto {
   })
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: '날짜 (AAAA-BB-CC 형식)' })
-  date: string;
+  @ApiProperty({ description: '시작 날짜 (AAAA-BB-CC 형식)' })
+  startDate: string;
+
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: '날짜 형식이 잘못되었습니다.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '종료 날짜 (AAAA-BB-CC 형식)' })
+  endDate: string;
 
   @IsString()
   @IsNotEmpty()
@@ -19,4 +28,9 @@ export class CreateCalendarDataRequestDto {
   @IsNotEmpty()
   @ApiProperty({ description: '행사/일정 설명' })
   description: string;
+
+  @IsNotEmpty()
+  @ToBoolean()
+  @ApiProperty({ description: '학사 일정 여부' })
+  isAcademic: boolean;
 }

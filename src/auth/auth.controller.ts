@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -23,7 +24,6 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SignUpRequestDto } from './dto/sign-up-request.dto';
 ('./guards/jwt-auth.guard');
-import { AdminAuthGuard } from './guards/admin-auth.guard';
 import { VerifyScreenshotRequestDto } from './dto/verify-screenshot-request.dto';
 import { VerifyScreenshotResponseDto } from './dto/verify-screenshot-response.dto';
 import { GetScreenshotVerificationsResponseDto } from './dto/get-screenshot-verifications-request.dto';
@@ -49,8 +49,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AdminRequestDto } from './dto/admin-request.dto';
 import { JwtTokenDto } from './dto/jwtToken.dto';
+import { RolesGuard } from './guards/role.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/role.enum';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -64,7 +69,7 @@ export class AuthController {
   @ApiOperation({
     summary: '로그인',
     description: `로그인하여 JWT Token을 발급받습니다.
-      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 30일, 아닐 경우 7일입니다.`,
+      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 14일, 아닐 경우 2일입니다.`,
   })
   @ApiBody({
     type: LoginRequestDto,
@@ -168,8 +173,9 @@ export class AuthController {
     type: SignUpResponseDto,
   })
   @Post('sign-up')
-  @UseInterceptors(FileInterceptor('screenshot'))
+  @UseInterceptors(FileInterceptor('screenshot'), TransactionInterceptor)
   async createUserandScreenshotRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
@@ -177,32 +183,32 @@ export class AuthController {
       throw new BadRequestException('screenshot should be uploaded');
     }
     return await this.authService.createUserandScreenshotRequest(
+      transactionManager,
       screenshot,
       body,
     );
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @ApiOperation({
     summary: '학교인증 요청 목록 조회',
     description: '승인 대기 중인 학교 인증 요청 목록을 조회합니다.',
-  })
-  @ApiBody({
-    type: AdminRequestDto,
   })
   @ApiResponse({
     status: 201,
     description: '학교인증 요청 조회 성공',
     type: [GetScreenshotVerificationsResponseDto],
   })
-  @Post('admin/requests')
+  @Get('admin/request')
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {
     return this.authService.getScreenshotVerifyRequests();
   }
 
-  @UseGuards(AdminAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
   @ApiOperation({
     summary: '학교인증 요청 승인/거절',
     description: '학교 인증 요청을 승인 혹은 거절합니다.',

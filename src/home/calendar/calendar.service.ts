@@ -5,14 +5,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
-import { GetCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
-import { CalendarEntity } from 'src/entities/calendar.entity';
+import {
+  GetDailyCalendarDataResponseDto,
+  GetMonthlyCalendarDataResponseDto,
+} from './dto/get-calendar-data-response-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
-import { Between } from 'typeorm';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
+import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
 
 @Injectable()
 export class CalendarService {
@@ -21,30 +23,32 @@ export class CalendarService {
     private readonly calendarRepository: CalendarRepository,
   ) {}
 
-  async getCalendarData(
+  async getMonthlyCalendarData(
     year: number,
     month: number,
-  ): Promise<GetCalendarDataResponseDto[]> {
-    const monthDays = this.getDaysInMonth(year, month);
-    // 시작 - 끝 날짜 생성, month = 7로 받았을 경우 '07'로 입력해주기 위해 padStart 사용
-    const startDate = new Date(`${year}-${String(month).padStart(2, '0')}-01`);
-    const endDate = new Date(
-      `${year}-${String(month).padStart(2, '0')}-${String(monthDays).padStart(2, '0')}`,
+  ): Promise<GetDailyCalendarDataResponseDto[]> {
+    const { startDate, endDate } = this.getStartAndEndDate(year, month);
+
+    // 해당 월에 걸쳐있는 모든 이벤트를 가져옴
+    const monthEvents = await this.calendarRepository.getMonthEvents(
+      startDate,
+      endDate,
     );
-    // 시작 - 끝 날짜에 대한 이벤트들을 찾아서 각 날짜별로 묶어줌
-    const monthEvents = await this.calendarRepository.find({
-      where: { date: Between(startDate, endDate) },
-    });
-    const eventByDates = this.groupEventsByDate(monthEvents);
-    const monthCalendarData: GetCalendarDataResponseDto[] = [];
 
-    for (let day = 1; day <= monthDays; day++) {
-      const currentDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      // 이벤트가 있으면 배열 형태로, 없다면 빈 배열
-      const dayEvents = eventByDates.get(currentDate) || [];
+    const monthCalendarData: GetDailyCalendarDataResponseDto[] = [];
 
-      const dayCalendarData = new GetCalendarDataResponseDto(
-        new Date(currentDate),
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(
+        startDate.getTime() + i * 24 * 60 * 60 * 1000,
+      );
+      // 현재 날짜에 해당하는 이벤트 필터링
+      const dayEvents = monthEvents.filter(
+        (event) =>
+          currentDate >= event.startDate && currentDate <= event.endDate,
+      );
+
+      const dayCalendarData = new GetDailyCalendarDataResponseDto(
+        currentDate,
         dayEvents,
       );
       monthCalendarData.push(dayCalendarData);
@@ -53,14 +57,64 @@ export class CalendarService {
     return monthCalendarData;
   }
 
+  async getYearlyCalendarData(year: number) {
+    const allCalendarData: GetMonthlyCalendarDataResponseDto[] = [];
+    for (let month = 1; month <= 12; month++) {
+      const monthCalendarData = await this.getMonthlyCalendarData(year, month);
+      const filteredData = monthCalendarData.filter(
+        (dayCalendarData) =>
+          dayCalendarData.date.getMonth() === month - 1 &&
+          dayCalendarData.eventCount !== 0,
+      );
+      allCalendarData.push(
+        new GetMonthlyCalendarDataResponseDto(month, filteredData),
+      );
+    }
+    return allCalendarData;
+  }
+
+  async getAcademicScheduleData(
+    year: number,
+    semester: number,
+  ): Promise<GetAcademicScheduleDataResponseDto[]> {
+    const startMonth = semester === 1 ? 2 : 8;
+    const endMonth = semester === 1 ? 8 : 14; // 13, 14는 다음해 1, 2월로 처리
+    const academicScheduleData: GetAcademicScheduleDataResponseDto[] = [];
+
+    for (let month = startMonth; month <= endMonth; month++) {
+      const currentYear = month > 12 ? year + 1 : year;
+      const currentMonth = month > 12 ? month - 12 : month;
+      const { startDate, endDate } = this.getStartAndEndDate(
+        currentYear,
+        currentMonth,
+      );
+      const monthData = await this.calendarRepository.getMonthEvents(
+        startDate,
+        endDate,
+      );
+      // isAcademic이 true인 것만 반환
+      const filteredData = monthData.filter(
+        (data) =>
+          data.endDate.getMonth() === currentMonth - 1 &&
+          data.isAcademic === true,
+      );
+      academicScheduleData.push(
+        new GetAcademicScheduleDataResponseDto(currentMonth, filteredData),
+      );
+    }
+    return academicScheduleData;
+  }
+
   async createCalendarData(
     requestDto: CreateCalendarDataRequestDto,
   ): Promise<CreateCalendarDataResponseDto> {
-    const { date, title, description } = requestDto;
+    const { startDate, endDate, title, description, isAcademic } = requestDto;
     const calendarData = await this.calendarRepository.createCalendarData(
-      date,
+      startDate,
+      endDate,
       title,
       description,
+      isAcademic,
     );
 
     if (!calendarData) {
@@ -82,16 +136,10 @@ export class CalendarService {
       throw new NotFoundException('행사/일정 정보가 없습니다.');
     }
 
-    const isUpdated = await this.calendarRepository.updateCalendarData(
+    return await this.calendarRepository.updateCalendarData(
       calendarId,
       requestDto,
     );
-
-    if (!isUpdated) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
-    }
-
-    return new UpdateCalendarDataResponseDto(true);
   }
 
   async deleteCalendarData(
@@ -115,52 +163,23 @@ export class CalendarService {
     return new DeleteCalendarDataResponseDto(true);
   }
 
-  // 월-날짜 매핑 함수
-  private getDaysInMonth(year: number, month: number): number {
-    const monthDays = {
-      1: 31,
-      2: 28,
-      3: 31,
-      4: 30,
-      5: 31,
-      6: 30,
-      7: 31,
-      8: 31,
-      9: 30,
-      10: 31,
-      11: 30,
-      12: 31,
-    };
+  // 연도, 월 정보를 받아 캘린더의 시작 - 끝 날짜를 반환하는 함수
+  private getStartAndEndDate(
+    year: number,
+    month: number,
+  ): { startDate: Date; endDate: Date } {
+    const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1));
+    const lastDayOfMonth = new Date(Date.UTC(year, month, 0));
 
-    if (month < 1 || month > 12) {
-      throw new Error('Invalid month');
-    }
+    const daysFromPrevMonth = firstDayOfMonth.getDay();
+    const daysFromNextMonth = 6 - lastDayOfMonth.getDay();
+    const startDate = new Date(
+      Date.UTC(year, month - 1, -daysFromPrevMonth + 1),
+    );
+    const endDate = new Date(
+      Date.UTC(year, month - 1, lastDayOfMonth.getDate() + daysFromNextMonth),
+    );
 
-    if (month === 2 && this.isLeapYear(year)) {
-      return 29;
-    }
-
-    return monthDays[month];
-  }
-
-  // 윤년인지 계산하는 함수
-  private isLeapYear(year: number): boolean {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  }
-
-  // 날짜별 이벤트를 묶어주는 함수
-  private groupEventsByDate(
-    events: CalendarEntity[],
-  ): Map<string, CalendarEntity[]> {
-    const eventMap = new Map<string, CalendarEntity[]>();
-    for (const event of events) {
-      const dateKey = event.date.toISOString().split('T')[0];
-      if (!eventMap.has(dateKey)) {
-        eventMap.set(dateKey, []);
-      }
-      eventMap.get(dateKey)!.push(event);
-    }
-
-    return eventMap;
+    return { startDate, endDate };
   }
 }
