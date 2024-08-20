@@ -1,12 +1,12 @@
 import { ConflictException, Injectable } from '@nestjs/common';
+import { PointService } from './../user/point.service';
 import { AttendanceCheckEntity } from 'src/entities/attendance-check.entity';
 import { EntityManager } from 'typeorm';
 import { TakeAttendanceResponseDto } from './dto/take-attendance.dto';
-import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AttendanceCheckService {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly pointService: PointService) {}
 
   async takeAttendance(
     transactionManager: EntityManager,
@@ -35,7 +35,7 @@ export class AttendanceCheckService {
       userId,
     });
 
-    await this.userService.changePoint(
+    await this.pointService.changePoint(
       userId,
       10,
       'Attendance Check Complete!',
