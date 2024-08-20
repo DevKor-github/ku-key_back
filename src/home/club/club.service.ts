@@ -1,5 +1,6 @@
 import { ClubLikeRepository } from './club-like.repository';
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,6 +14,7 @@ import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubRequestDto } from './dto/get-club-request';
+import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto';
 
 @Injectable()
 export class ClubService {
@@ -29,6 +31,7 @@ export class ClubService {
     // 카테고리가 있는 경우 카테고리로 필터링
     const { sortBy, wishList, category, keyword, isLogin } = requestDto;
 
+    // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
     if (!user && isLogin) {
       throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
     }
@@ -155,9 +158,15 @@ export class ClubService {
 
   async getRecommendClubList(
     user: AuthorizedUserDto | null,
+    requestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
+    const { isLogin } = requestDto;
+    // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
+    if (!user && isLogin) {
+      throw new BadRequestException('액세스 토큰이 만료되었습니다');
+    }
     // 비로그인 or 미인증 유저의 경우 랜덤으로 반환
-    if (!user) {
+    if (!user || !isLogin) {
       const randomClubs = await this.clubRepository.findClubsByRandom();
       return randomClubs.map((club) => {
         return new GetRecommendClubResponseDto(club);
