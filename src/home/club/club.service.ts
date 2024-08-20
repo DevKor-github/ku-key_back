@@ -8,7 +8,7 @@ import {
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
@@ -72,58 +72,46 @@ export class ClubService {
   }
 
   async toggleLikeClub(
+    transactionManager: EntityManager,
     userId: number,
     clubId: number,
   ): Promise<GetClubResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const club = await transactionManager.findOne(ClubEntity, {
+      where: { id: clubId },
+    });
 
-    try {
-      const club = await queryRunner.manager.findOne(ClubEntity, {
-        where: { id: clubId },
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+
+    const clubLike = await transactionManager.findOne(ClubLikeEntity, {
+      where: {
+        club: { id: clubId },
+        user: { id: userId },
+      },
+    });
+
+    if (!clubLike) {
+      const newClubLike = transactionManager.create(ClubLikeEntity, {
+        club: { id: clubId },
+        user: { id: userId },
       });
 
-      if (!club) {
-        throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
-      }
-
-      const clubLike = await queryRunner.manager.findOne(ClubLikeEntity, {
-        where: {
-          club: { id: clubId },
-          user: { id: userId },
-        },
+      await transactionManager.update(ClubEntity, clubId, {
+        allLikes: () => 'allLikes + 1',
       });
+      club.allLikes++;
+      await transactionManager.save(newClubLike);
 
-      if (!clubLike) {
-        const newClubLike = queryRunner.manager.create(ClubLikeEntity, {
-          club: { id: clubId },
-          user: { id: userId },
-        });
+      return new GetClubResponseDto(club, true);
+    } else {
+      await transactionManager.delete(ClubLikeEntity, { id: clubLike.id });
+      await transactionManager.update(ClubEntity, clubId, {
+        allLikes: () => 'allLikes - 1',
+      });
+      club.allLikes--;
 
-        await queryRunner.manager.update(ClubEntity, clubId, {
-          allLikes: () => 'allLikes + 1',
-        });
-        club.allLikes++;
-        await queryRunner.manager.save(newClubLike);
-        await queryRunner.commitTransaction();
-
-        return new GetClubResponseDto(club, true);
-      } else {
-        await queryRunner.manager.delete(ClubLikeEntity, { id: clubLike.id });
-        await queryRunner.manager.update(ClubEntity, clubId, {
-          allLikes: () => 'allLikes - 1',
-        });
-        club.allLikes--;
-        await queryRunner.commitTransaction();
-
-        return new GetClubResponseDto(club, false);
-      }
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+      return new GetClubResponseDto(club, false);
     }
   }
 

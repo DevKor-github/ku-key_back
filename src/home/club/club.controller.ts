@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ClubService } from './club.service';
 import {
   ApiBearerAuth,
@@ -18,6 +26,9 @@ import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.d
 import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-jwt-auth.guard';
 import { GetClubRequestDto } from './dto/get-club-request';
 import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @Controller('club')
 @ApiTags('club')
@@ -70,6 +81,7 @@ export class ClubController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
   @Post('/like/:clubId')
   @ApiOperation({
     summary: '동아리 좋아요 등록/해제',
@@ -86,11 +98,16 @@ export class ClubController {
     type: GetClubResponseDto,
   })
   async toggleLikeClub(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('clubId') clubId: number,
   ): Promise<GetClubResponseDto> {
     const userId = user.id;
-    return await this.clubService.toggleLikeClub(userId, clubId);
+    return await this.clubService.toggleLikeClub(
+      transactionManager,
+      userId,
+      clubId,
+    );
   }
 
   @Get('hot')
