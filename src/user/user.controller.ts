@@ -33,9 +33,14 @@ import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PointService } from './point.service';
 import { PurchaseItemResponseDto } from './dto/purchase-item-response-dto';
+import {
+  LanguageRequestDto,
+  LanguageResponseDto,
+} from './dto/user-language.dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 export class UserController {
   constructor(
@@ -43,7 +48,6 @@ export class UserController {
     private readonly pointService: PointService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '프로필 설정',
     description: '프로필을 설정(변경) 합니다',
@@ -65,7 +69,6 @@ export class UserController {
     return await this.userService.setProfile(id, profileDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '교환 남은 일자 설정',
     description: '교환학생 남은 일자를 설정(변경) 합니다',
@@ -96,13 +99,54 @@ export class UserController {
     description: '프로필 조회 성공',
     type: GetProfileResponseDto,
   })
-  @UseGuards(JwtAuthGuard)
   @Get('/profile')
   async getProfile(
     @User() user: AuthorizedUserDto,
   ): Promise<GetProfileResponseDto> {
     const id = user.id;
     return await this.userService.getProfile(id);
+  }
+
+  @ApiOperation({
+    summary: '언어 추가',
+    description: '언어를 추가 합니다',
+  })
+  @ApiBody({
+    type: LanguageRequestDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: '언어 추가 성공',
+    type: LanguageResponseDto,
+  })
+  @Post('/language')
+  async appendLanguage(
+    @Body() requestDto: LanguageRequestDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<LanguageResponseDto> {
+    const id = user.id;
+    return await this.userService.appendLanguage(id, requestDto.language);
+  }
+
+  @ApiOperation({
+    summary: '언어 삭제',
+    description: '언어를 삭제 합니다',
+  })
+  @ApiBody({
+    type: LanguageRequestDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '언어 삭제 성공',
+    type: LanguageResponseDto,
+  })
+  @Delete('/language')
+  async deleteLanguage(
+    @Body() requestDto: LanguageRequestDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<LanguageResponseDto> {
+    const id = user.id;
+    return await this.userService.deleteLanguage(id, requestDto.language);
   }
 
   @ApiOperation({
@@ -114,7 +158,6 @@ export class UserController {
     description: '포인트 내역 조회 성공',
     type: [GetPointHistoryResponseDto],
   })
-  @UseGuards(JwtAuthGuard)
   @Get('point-history')
   async getPointHistory(
     @User() user: AuthorizedUserDto,
@@ -132,7 +175,6 @@ export class UserController {
     description: '아이템 구매 및 적용 성공',
     type: PurchaseItemResponseDto,
   })
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
   @Post('purchase-item')
   async purchaseItem(
@@ -156,7 +198,6 @@ export class UserController {
     description: '회원탈퇴 성공',
     type: DeleteUserResponseDto,
   })
-  @UseGuards(JwtAuthGuard)
   @Delete()
   async deleteUser(
     @User() user: AuthorizedUserDto,

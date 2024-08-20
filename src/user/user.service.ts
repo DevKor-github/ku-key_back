@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -21,6 +22,9 @@ import { EntityManager, Repository } from 'typeorm';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
 import { CharacterEntity } from 'src/entities/character.entity';
 import { CharacterType } from 'src/enums/character-type.enum';
+import { Language } from 'src/enums/language';
+import { UserLanguageEntity } from 'src/entities/user-language.entity';
+import { LanguageResponseDto } from './dto/user-language.dto';
 
 @Injectable()
 export class UserService {
@@ -29,6 +33,8 @@ export class UserService {
     private readonly userRepository: UserRepository,
     @InjectRepository(CharacterEntity)
     private readonly characterRepository: Repository<CharacterEntity>,
+    @InjectRepository(UserLanguageEntity)
+    private readonly userLanguageRepository: Repository<UserLanguageEntity>,
   ) {}
 
   async createUser(
@@ -139,7 +145,10 @@ export class UserService {
   }
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
-    const user = await this.userRepository.findUserById(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: { userLanguages: true },
+    });
     const character = await this.characterRepository.findOne({
       where: { userId: id },
     });
@@ -298,5 +307,89 @@ export class UserService {
     expireDate.setDate(expireDate.getDate() + 3);
 
     return expireDate;
+  }
+
+  async appendLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<LanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    if (user.userLanguages.length >= 5)
+      throw new BadRequestException('Can Only append up to 5 language!');
+
+    if (
+      user.userLanguages.some(
+        (userLanguage) => userLanguage.language === language,
+      )
+    )
+      throw new ConflictException('Existing Language!');
+
+    const newLanguage = this.userLanguageRepository.create({
+      userId,
+      language,
+    });
+    await this.userLanguageRepository.save(newLanguage);
+
+    const allLanguage = user.userLanguages.map(
+      (userLanguage) => userLanguage.language,
+    );
+    allLanguage.push(language);
+
+    const result: LanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
+  }
+
+  async deleteLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<LanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    const existingLanguage = user.userLanguages.find(
+      (userLanguage) => userLanguage.language === language,
+    );
+    if (!existingLanguage)
+      throw new NotFoundException(`There's no ${language}`);
+
+    if (
+      !(
+        await this.userLanguageRepository.delete({
+          id: existingLanguage.id,
+        })
+      ).affected
+    )
+      throw new InternalServerErrorException('Delete failed!');
+
+    const allLanguage = user.userLanguages
+      .filter((userLanguage) => userLanguage.language !== language)
+      .map((userLanguage) => userLanguage.language);
+
+    const result: LanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
   }
 }

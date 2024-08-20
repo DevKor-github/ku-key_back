@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CharacterEntity } from 'src/entities/character.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { CharacterType } from 'src/enums/character-type.enum';
+import { Language } from 'src/enums/language';
 
 export class GetProfileResponseDto {
   @ApiProperty({ description: '본명' })
@@ -25,6 +26,13 @@ export class GetProfileResponseDto {
   @ApiProperty({ description: '사용 가능한 포인트' })
   point: number;
 
+  @ApiProperty({
+    description: '사용 가능 언어 목록',
+    isArray: true,
+    enum: Language,
+  })
+  languages: Language[];
+
   @ApiProperty({ description: '캐릭터 레벨' })
   level: number;
 
@@ -39,6 +47,9 @@ export class GetProfileResponseDto {
     this.startDay = user.startDay;
     this.endDay = user.endDay;
     this.point = user.point;
+    this.languages = user.userLanguages.map(
+      (userLanguage) => userLanguage.language,
+    );
     this.level = character.level;
     this.type = character.type;
   }

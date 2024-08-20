@@ -7,10 +7,16 @@ import { UserRepository } from './user.repository';
 import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { CharacterEntity } from 'src/entities/character.entity';
 import { PointService } from './point.service';
+import { UserLanguageEntity } from 'src/entities/user-language.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, PointHistoryEntity, CharacterEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      PointHistoryEntity,
+      CharacterEntity,
+      UserLanguageEntity,
+    ]),
   ],
   controllers: [UserController],
   providers: [UserService, PointService, UserRepository],

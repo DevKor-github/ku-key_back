@@ -24,6 +24,7 @@ import { NoticeEntity } from './notice.entity';
 import { AttendanceCheckEntity } from './attendance-check.entity';
 import { Role } from 'src/enums/role.enum';
 import { CharacterEntity } from './character.entity';
+import { UserLanguageEntity } from './user-language.entity';
 
 @Entity('user')
 export class UserEntity extends CommonEntity {
@@ -170,4 +171,11 @@ export class UserEntity extends CommonEntity {
     { cascade: true },
   )
   attendanceChecks: AttendanceCheckEntity[];
+
+  @OneToMany(
+    () => UserLanguageEntity,
+    (userLanguageEntity) => userLanguageEntity.user,
+    { cascade: true },
+  )
+  userLanguages: UserLanguageEntity[];
 }
