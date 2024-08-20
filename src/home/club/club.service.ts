@@ -1,14 +1,18 @@
 import { ClubLikeRepository } from './club-like.repository';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
-import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 import { DataSource } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetClubRequestDto } from './dto/get-club-request';
 
 @Injectable()
 export class ClubService {
@@ -20,10 +24,14 @@ export class ClubService {
 
   async getClubList(
     user: AuthorizedUserDto | null,
-    clubSearchQueryDto: ClubSearchQueryDto,
+    requestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
-    const { sortBy, wishList, category, keyword } = clubSearchQueryDto;
+    const { sortBy, wishList, category, keyword, isLogin } = requestDto;
+
+    if (!user && isLogin) {
+      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
+    }
 
     const clubs = await this.clubRepository.findClubsByFiltering(
       category,
@@ -42,13 +50,13 @@ export class ClubService {
     // 현재 접속 중인 유저의 각 동아리에 대한 좋아요 여부 함께 반환. 유저 존재하지 않을 시 false
     let clubList = clubs.map((club) => {
       const isLiked = club.clubLikes.some((clubLike) =>
-        user && clubLike.user ? clubLike.user.id === user.id : false,
+        user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
       );
       return new GetClubResponseDto(club, isLiked);
     });
 
     // 내가 좋아요를 누른 동아리만 보기 (유저 존재한다면)
-    if (user && wishList) {
+    if (user && isLogin && wishList) {
       clubList = clubList.filter((club) => club.isLiked === true);
     }
 

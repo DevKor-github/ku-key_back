@@ -13,10 +13,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
-import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-jwt-auth.guard';
+import { GetClubRequestDto } from './dto/get-club-request';
 
 @Controller('club')
 @ApiTags('club')
@@ -58,9 +58,9 @@ export class ClubController {
   })
   async getClubList(
     @User() user: AuthorizedUserDto | null,
-    @Query() clubSearchQueryDto: ClubSearchQueryDto,
+    @Query() getClubRequestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
-    return await this.clubService.getClubList(user, clubSearchQueryDto);
+    return await this.clubService.getClubList(user, getClubRequestDto);
   }
 
   @UseGuards(JwtAuthGuard)
