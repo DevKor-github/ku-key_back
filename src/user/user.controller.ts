@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -26,6 +27,12 @@ import {
 } from '@nestjs/swagger';
 import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
+import { PurchaseItemRequestDto } from './dto/purchase-item-request.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
+import { PointService } from './point.service';
+import { PurchaseItemResponseDto } from './dto/purchase-item-response-dto';
 import {
   LanguageRequestDto,
   LanguageResponseDto,
@@ -35,7 +42,10 @@ import {
 @ApiBearerAuth('accessToken')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly pointService: PointService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
@@ -157,7 +167,32 @@ export class UserController {
   async getPointHistory(
     @User() user: AuthorizedUserDto,
   ): Promise<GetPointHistoryResponseDto[]> {
-    return await this.userService.getPointHistory(user);
+    return await this.pointService.getPointHistory(user);
+  }
+
+  @ApiOperation({
+    summary: '아이템 구매',
+    description: '포인트 샵에서 아이템을 구매합니다.',
+  })
+  @ApiBody({ type: PurchaseItemRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: '아이템 구매 및 적용 성공',
+    type: PurchaseItemResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
+  @Post('purchase-item')
+  async purchaseItem(
+    @TransactionManager() transactionManager: EntityManager,
+    @User() user: AuthorizedUserDto,
+    @Body() requestDto: PurchaseItemRequestDto,
+  ): Promise<PurchaseItemResponseDto> {
+    return await this.pointService.purchaseItem(
+      transactionManager,
+      user.id,
+      requestDto,
+    );
   }
 
   @ApiOperation({

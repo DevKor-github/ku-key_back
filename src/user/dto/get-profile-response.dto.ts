@@ -1,40 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { CharacterEntity } from 'src/entities/character.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { CharacterType } from 'src/enums/character-type.enum';
 import { Language } from 'src/enums/language';
 
 export class GetProfileResponseDto {
-  @IsNotEmpty()
-  @IsString()
   @ApiProperty({ description: '본명' })
   name: string;
 
-  @IsNotEmpty()
-  @IsString()
   @ApiProperty({ description: '국적' })
   country: string;
 
-  @IsNotEmpty()
-  @IsString()
   @ApiProperty({ description: '모교' })
   homeUniversity: string;
 
-  @IsNotEmpty()
-  @IsString()
   @ApiProperty({ description: '전공' })
   major: string;
 
-  @IsNotEmpty()
-  @IsDate()
   @ApiProperty({ description: '교환학생 시작 날짜', example: 'yyyy-mm-dd' })
   startDay: Date;
 
-  @IsNotEmpty()
-  @IsDate()
   @ApiProperty({ description: '교환학생 끝 날짜', example: 'yyyy-mm-dd' })
   endDay: Date;
 
-  @IsNotEmpty()
-  @IsNumber()
   @ApiProperty({ description: '사용 가능한 포인트' })
   point: number;
 
@@ -44,4 +32,25 @@ export class GetProfileResponseDto {
     enum: Language,
   })
   languages: Language[];
+
+  @ApiProperty({ description: '캐릭터 레벨' })
+  level: number;
+
+  @ApiProperty({ description: '캐릭터 타입' })
+  type: CharacterType;
+
+  constructor(user: UserEntity, character: CharacterEntity) {
+    this.name = user.name;
+    this.country = user.country;
+    this.homeUniversity = user.homeUniversity;
+    this.major = user.major;
+    this.startDay = user.startDay;
+    this.endDay = user.endDay;
+    this.point = user.point;
+    this.languages = user.userLanguages.map(
+      (userLanguage) => userLanguage.language,
+    );
+    this.level = character.level;
+    this.type = character.type;
+  }
 }

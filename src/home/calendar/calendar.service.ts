@@ -82,9 +82,11 @@ export class CalendarService {
     const academicScheduleData: GetAcademicScheduleDataResponseDto[] = [];
 
     for (let month = startMonth; month <= endMonth; month++) {
+      const currentYear = month > 12 ? year + 1 : year;
+      const currentMonth = month > 12 ? month - 12 : month;
       const { startDate, endDate } = this.getStartAndEndDate(
-        month > 12 ? year + 1 : year,
-        month > 12 ? month - 12 : month,
+        currentYear,
+        currentMonth,
       );
       const monthData = await this.calendarRepository.getMonthEvents(
         startDate,
@@ -93,13 +95,11 @@ export class CalendarService {
       // isAcademic이 true인 것만 반환
       const filteredData = monthData.filter(
         (data) =>
-          data.endDate.getMonth() === month - 1 && data.isAcademic === true,
+          data.endDate.getMonth() === currentMonth - 1 &&
+          data.isAcademic === true,
       );
       academicScheduleData.push(
-        new GetAcademicScheduleDataResponseDto(
-          month > 12 ? month - 12 : month,
-          filteredData,
-        ),
+        new GetAcademicScheduleDataResponseDto(currentMonth, filteredData),
       );
     }
     return academicScheduleData;
