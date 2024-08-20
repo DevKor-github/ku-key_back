@@ -317,4 +317,19 @@ export class CourseReviewService {
     }
     return new CourseReviewResponseDto(courseReview, user.username);
   }
+
+  async checkCourseReviewSubmission(
+    user: AuthorizedUserDto,
+    getCourseReviewRequestDto: GetCourseReviewsRequestDto,
+  ): Promise<boolean> {
+    const courseReview = await this.courseReviewRepository.findOne({
+      where: {
+        userId: user.id,
+        courseCode: getCourseReviewRequestDto.courseCode,
+        professorName: getCourseReviewRequestDto.professorName,
+      },
+    });
+
+    return !!courseReview;
+  }
 }
