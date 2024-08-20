@@ -33,4 +33,10 @@ export class ClubEntity extends CommonEntity {
 
   @Column({ type: 'varchar', nullable: false })
   imageUrl: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  instagramLink: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  youtubeLink: string;
 }
