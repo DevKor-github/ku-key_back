@@ -11,6 +11,7 @@ export class ClubRepository extends Repository<ClubEntity> {
   async findClubsByFiltering(
     category?: string,
     keyword?: string,
+    sortBy?: string,
   ): Promise<ClubEntity[]> {
     const queryBuilder = this.createQueryBuilder('club');
 
@@ -25,6 +26,10 @@ export class ClubRepository extends Repository<ClubEntity> {
           keyword: `${keyword}%`,
         })
         .orWhere('club.summary LIKE :keyword', { keyword: `%${keyword}%` });
+    }
+
+    if (sortBy === 'like') {
+      queryBuilder.orderBy({ 'club.allLikes': 'DESC' });
     }
 
     // 찜 여부를 함께 반환

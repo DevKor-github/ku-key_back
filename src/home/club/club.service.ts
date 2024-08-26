@@ -37,6 +37,7 @@ export class ClubService {
     const clubs = await this.clubRepository.findClubsByFiltering(
       category,
       keyword,
+      sortBy,
     );
 
     if (!clubs) {
@@ -60,12 +61,6 @@ export class ClubService {
     if (user && isLogin && wishList) {
       clubList = clubList.filter((club) => club.isLiked === true);
     }
-
-    // 좋아요 순으로 정렬
-    if (sortBy === 'like') {
-      clubList = clubList.sort((a, b) => b.likeCount - a.likeCount);
-    }
-
     return clubList;
   }
 
