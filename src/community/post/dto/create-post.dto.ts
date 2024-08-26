@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class CreatePostRequestDto {
   @IsNotEmpty()
@@ -13,7 +14,7 @@ export class CreatePostRequestDto {
   content: string;
 
   @IsNotEmpty()
-  @IsBoolean()
+  @ToBoolean()
   @ApiProperty({ description: '익명 여부' })
   isAnonymous: boolean;
 

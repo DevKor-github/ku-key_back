@@ -22,7 +22,7 @@ export class ClubEntity extends CommonEntity {
   @Column({ type: 'varchar', nullable: false })
   recruitmentPeriod: string;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'text', nullable: false })
   description: string;
 
   @OneToMany(() => ClubLikeEntity, (clubLike) => clubLike.club)

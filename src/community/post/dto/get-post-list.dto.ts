@@ -1,36 +1,25 @@
 import { PostEntity } from 'src/entities/post.entity';
-import {
-  GetPostListWithBoardRequestDto,
-  PostPreview,
-} from './get-post-list-with-board.dto';
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { IsOptional, IsString, MinLength } from 'class-validator';
+import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { PostPreviewWithBoardName } from './post-preview.dto';
 
-export class PostPreviewWithBoardName extends PostPreview {
-  constructor(postEntity: PostEntity) {
-    super(postEntity);
-    this.boardName = postEntity.board.name;
-  }
-
-  @ApiProperty({ description: '게시판 이름' })
-  boardName: string;
-}
-
-export class GetPostListResponseDto {
-  constructor(postEntities: PostEntity[]) {
-    this.posts = postEntities.map(
-      (postEntity) => new PostPreviewWithBoardName(postEntity),
+export class GetPostListResponseDto extends CursorPageResponseDto<PostPreviewWithBoardName> {
+  constructor(postEntities: PostEntity[], userId: number) {
+    super();
+    this.data = postEntities.map(
+      (postEntity) => new PostPreviewWithBoardName(postEntity, userId),
     );
   }
-  @ApiProperty({ description: '게시글 목록', type: [PostPreviewWithBoardName] })
-  posts: PostPreviewWithBoardName[];
 }
 
-export class GetPostListRequestDto extends PickType(
-  GetPostListWithBoardRequestDto,
-  ['pageSize', 'pageNumber'],
-) {}
+export class GetPostListRequestDto extends CursorPageOptionsDto {}
 
-export class getAllPostListRequestDto extends PickType(
-  GetPostListWithBoardRequestDto,
-  ['keyword', 'pageSize', 'pageNumber'],
-) {}
+export class getAllPostListRequestDto extends CursorPageOptionsDto {
+  @ApiProperty({ description: '검색어, 없으면 전체 조회', required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  keyword?: string;
+}

@@ -13,8 +13,9 @@ import { TimetableService } from 'src/timetable/timetable.service';
 import { DeleteScheduleResponseDto } from './dto/delete-schedule-response.dto';
 import { UpdateScheduleRequestDto } from './dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isConflictingTime } from 'src/utils/time-utils';
 
 @Injectable()
 export class ScheduleService {
@@ -23,60 +24,47 @@ export class ScheduleService {
     private readonly scheduleRepository: Repository<ScheduleEntity>,
     @Inject(forwardRef(() => TimetableService))
     private readonly timetableService: TimetableService,
-    private readonly dataSource: DataSource,
   ) {}
 
   async getScheduleByTimetableId(
     timetableId: number,
   ): Promise<ScheduleEntity[]> {
-    try {
-      return await this.scheduleRepository.find({ where: { timetableId } });
-    } catch (error) {
-      console.error('Fail to get schedule by timetable id', error);
-      throw error;
-    }
+    return await this.scheduleRepository.find({ where: { timetableId } });
   }
 
   async createSchedule(
     createScheduleRequestDto: CreateScheduleRequestDto,
     user: AuthorizedUserDto,
   ): Promise<ScheduleEntity> {
-    try {
-      const timetable =
-        await this.timetableService.getSimpleTimetableByTimetableId(
-          createScheduleRequestDto.timetableId,
-          user.id,
-        );
-      if (!timetable) {
-        throw new NotFoundException('Timetable not found');
-      }
-
-      if (
-        createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
-      ) {
-        throw new BadRequestException(
-          'Start time must be earlier than end time',
-        );
-      }
-
-      // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
-      const isConflict = await this.checkTimeConflict(createScheduleRequestDto);
-
-      if (isConflict) {
-        throw new ConflictException(
-          'Schedule conflicts with existing courses and schedules',
-        );
-      }
-
-      const newSchedule = this.scheduleRepository.create({
-        ...createScheduleRequestDto,
-      });
-
-      return await this.scheduleRepository.save(newSchedule);
-    } catch (error) {
-      console.error('Fail to create schedule to timetable', error);
-      throw error;
+    const timetable =
+      await this.timetableService.getSimpleTimetableByTimetableId(
+        createScheduleRequestDto.timetableId,
+        user.id,
+      );
+    if (!timetable) {
+      throw new NotFoundException('Timetable not found');
     }
+
+    if (
+      createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
+    ) {
+      throw new BadRequestException('Start time must be earlier than end time');
+    }
+
+    // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
+    const isConflict = await this.checkTimeConflict(createScheduleRequestDto);
+
+    if (isConflict) {
+      throw new ConflictException(
+        'Schedule conflicts with existing courses and schedules',
+      );
+    }
+
+    const newSchedule = this.scheduleRepository.create({
+      ...createScheduleRequestDto,
+    });
+
+    return await this.scheduleRepository.save(newSchedule);
   }
 
   async updateSchedule(
@@ -141,22 +129,17 @@ export class ScheduleService {
     scheduleId: number,
     user: AuthorizedUserDto,
   ): Promise<DeleteScheduleResponseDto> {
-    try {
-      const schedule = await this.scheduleRepository.findOne({
-        where: { id: scheduleId, timetable: { userId: user.id } },
-        relations: ['timetable'],
-      });
+    const schedule = await this.scheduleRepository.findOne({
+      where: { id: scheduleId, timetable: { userId: user.id } },
+      relations: ['timetable'],
+    });
 
-      if (!schedule) {
-        throw new NotFoundException('Schedule not found');
-      }
-
-      await this.scheduleRepository.softDelete(scheduleId);
-      return { deleted: true };
-    } catch (error) {
-      console.error('Fail to delete schedule', error);
-      throw error;
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found');
     }
+
+    await this.scheduleRepository.softDelete(scheduleId);
+    return new DeleteScheduleResponseDto(true);
   }
 
   async checkTimeConflict(
@@ -171,7 +154,7 @@ export class ScheduleService {
     for (const existingInfo of existingCourseInfo) {
       if (
         existingInfo.day === schedule.day &&
-        this.isConflictingTime(
+        isConflictingTime(
           existingInfo.startTime,
           existingInfo.endTime,
           schedule.startTime,
@@ -193,7 +176,7 @@ export class ScheduleService {
 
       if (
         existingInfo.day === schedule.day &&
-        this.isConflictingTime(
+        isConflictingTime(
           existingInfo.startTime,
           existingInfo.endTime,
           schedule.startTime,
@@ -238,29 +221,5 @@ export class ScheduleService {
       startTime: schedule.startTime,
       endTime: schedule.endTime,
     }));
-  }
-  // 문자열 시간을 숫자로 변환 (HH:MM:SS -> seconds)
-  private timeToNumber = (time: string): number => {
-    const [hours, minutes, seconds] = time.split(':').map(Number);
-    return hours * 3600 + minutes * 60 + seconds;
-  };
-
-  private isConflictingTime(
-    existingStartTime: string,
-    existingEndTime: string,
-    newStartTime: string,
-    newEndTime: string,
-  ): boolean {
-    const existingStart = this.timeToNumber(existingStartTime);
-    const existingEnd = this.timeToNumber(existingEndTime);
-    const newStart = this.timeToNumber(newStartTime);
-    const newEnd = this.timeToNumber(newEndTime);
-
-    // 시간이 겹치는지 확인
-    return (
-      (newStart >= existingStart && newStart < existingEnd) ||
-      (newEnd > existingStart && newEnd <= existingEnd) ||
-      (newStart <= existingStart && newEnd >= existingEnd)
-    );
   }
 }

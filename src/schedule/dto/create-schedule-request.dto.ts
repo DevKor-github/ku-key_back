@@ -6,19 +6,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { DayType } from 'src/common/types/day-type.utils';
 import { IsTime } from 'src/decorators/time.decorator';
-
-const DayType = {
-  Mon: 'Mon',
-  Tue: 'Tue',
-  Wed: 'Wed',
-  Thu: 'Thu',
-  Fri: 'Fri',
-  Sat: 'Sat',
-  Sun: 'Sun',
-} as const;
-
-export type DayType = (typeof DayType)[keyof typeof DayType];
 
 export class CreateScheduleRequestDto {
   @ApiProperty({ description: '시간표 ID' })

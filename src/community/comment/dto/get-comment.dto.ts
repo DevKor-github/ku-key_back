@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { CommunityUser } from 'src/community/post/dto/community-user.dto';
 import { CommentEntity } from 'src/entities/comment.entity';
 
 export class GetCommentResponseDto {
@@ -14,23 +15,15 @@ export class GetCommentResponseDto {
       this.updatedAt = commentEntity.updatedAt;
       this.isMyComment = commentEntity.userId === userId;
       this.content = commentEntity.content;
-      this.username =
-        commentEntity.user == null || commentEntity.user.deletedAt
-          ? 'Deleted'
-          : commentEntity.isAnonymous
-            ? anonymousNumber === 0
-              ? 'Author'
-              : `Anonymous ${anonymousNumber}`
-            : commentEntity.user.username.substring(
-                0,
-                Math.floor(commentEntity.user.username.length / 2),
-              ) +
-              '*'.repeat(
-                commentEntity.user.username.length -
-                  Math.floor(commentEntity.user.username.length / 2),
-              );
-
+      this.user = new CommunityUser(
+        commentEntity.user,
+        commentEntity.isAnonymous,
+        anonymousNumber,
+      );
       this.likeCount = commentEntity.likeCount;
+      this.myLike = commentEntity.commentLikes.some(
+        (commentLike) => commentLike.userId === userId,
+      );
     }
   }
   @ApiProperty({ description: '댓글 고유 ID' })
@@ -52,8 +45,40 @@ export class GetCommentResponseDto {
   content?: string;
 
   @ApiProperty({ description: '댓글을 작성한 사용자' })
-  username?: string | null;
+  user: CommunityUser;
 
   @ApiProperty({ description: '좋아요 수' })
   likeCount?: number;
+
+  @ApiProperty({ description: '좋아요 눌렀는지 여부' })
+  myLike: boolean;
+}
+
+export class MyComment extends PickType(GetCommentResponseDto, [
+  'id',
+  'createdAt',
+  'updatedAt',
+  'content',
+  'likeCount',
+]) {
+  constructor(commentEntity: CommentEntity) {
+    super();
+    this.id = commentEntity.id;
+    this.createdAt = commentEntity.createdAt;
+    this.updatedAt = commentEntity.updatedAt;
+    this.content = commentEntity.content;
+    this.likeCount = commentEntity.likeCount;
+    this.postId = commentEntity.postId;
+    this.replyCount = commentEntity.replyComments.length;
+    this.isAnonymous = commentEntity.isAnonymous;
+  }
+
+  @ApiProperty({ description: '댓글을 작성한 게시글 Id' })
+  postId: number;
+
+  @ApiProperty({ description: '답글 수' })
+  replyCount: number;
+
+  @ApiProperty({ description: '익명 설정 여부' })
+  isAnonymous: boolean;
 }
