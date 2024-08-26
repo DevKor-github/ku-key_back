@@ -1,12 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PointService } from './../user/point.service';
 import { AttendanceCheckEntity } from 'src/entities/attendance-check.entity';
-import { EntityManager } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { TakeAttendanceResponseDto } from './dto/take-attendance.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AttendanceCheckService {
-  constructor(private readonly pointService: PointService) {}
+  constructor(
+    private readonly pointService: PointService,
+    @InjectRepository(AttendanceCheckEntity)
+    private readonly attendanceCheckRepository: Repository<AttendanceCheckEntity>,
+  ) {}
 
   async takeAttendance(
     transactionManager: EntityManager,
@@ -45,5 +50,20 @@ export class AttendanceCheckService {
     await transactionManager.save(attendance);
 
     return new TakeAttendanceResponseDto(userId, koreaToday, true);
+  }
+
+  async isTodayAttendanceChecked(userId: number): Promise<boolean> {
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
+    const koreaTime = new Date(Date.now() + offset);
+    const koreaToday = koreaTime.toISOString().split('T')[0];
+
+    const isAlreadyAttended = await this.attendanceCheckRepository.findOne({
+      where: {
+        userId,
+        attendanceDate: koreaToday,
+      },
+    });
+
+    return !!isAlreadyAttended;
   }
 }

@@ -1,4 +1,10 @@
-import { Controller, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AttendanceCheckService } from './attendance-check.service';
 import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -30,5 +36,12 @@ export class AttendanceCheckController {
       transactionManager,
       user.id,
     );
+  }
+
+  @Get()
+  async isTodayAttendanceChecked(
+    @User() user: AuthorizedUserDto,
+  ): Promise<boolean> {
+    return await this.attendanceCheckService.isTodayAttendanceChecked(user.id);
   }
 }
