@@ -60,7 +60,7 @@ jobs:
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.test
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.test
 
-          cat .env.prod
+          cat .env.test
 
       - name: Run Docker for dev server
         run: |
