@@ -1,6 +1,5 @@
 import { ClubLikeRepository } from './club-like.repository';
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -8,7 +7,7 @@ import {
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
-import { DataSource, EntityManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
@@ -21,7 +20,6 @@ export class ClubService {
   constructor(
     private readonly clubRepository: ClubRepository,
     private readonly clubLikeRepository: ClubLikeRepository,
-    private readonly dataSource: DataSource,
   ) {}
 
   async getClubList(
@@ -151,7 +149,7 @@ export class ClubService {
     const { isLogin } = requestDto;
     // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
     if (!user && isLogin) {
-      throw new BadRequestException('액세스 토큰이 만료되었습니다');
+      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
     }
     // 비로그인 or 미인증 유저의 경우 랜덤으로 반환
     if (!user || !isLogin) {
