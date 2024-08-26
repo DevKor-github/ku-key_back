@@ -20,6 +20,17 @@ const AttendanceCheckDocsMap: Record<
       type: TakeAttendanceResponseDto,
     }),
   ],
+  isTodayAttendanceChecked: [
+    ApiOperation({
+      summary: '오늘 출석 체크 여부 확인',
+      description: '오늘 출석을 이미 했는지 확인합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '출석 체크 여부 확인 성공 (했으면 true, 안했으면 false)',
+      type: Boolean,
+    }),
+  ],
 };
 
 export function AttendanceCheckDocs(target: typeof AttendanceCheckController) {
