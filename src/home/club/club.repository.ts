@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ClubCategory } from 'src/common/types/club-category-type';
 import { ClubEntity } from 'src/entities/club.entity';
 import { DataSource, Repository } from 'typeorm';
 
@@ -9,14 +10,14 @@ export class ClubRepository extends Repository<ClubEntity> {
   }
 
   async findClubsByFiltering(
-    category?: string,
+    category?: ClubCategory,
     keyword?: string,
     sortBy?: string,
   ): Promise<ClubEntity[]> {
     const queryBuilder = this.createQueryBuilder('club');
 
     // 카테고리, 키워드로 필터링
-    if (category) {
+    if (category && ClubCategory.includes(category)) {
       queryBuilder.andWhere('club.category = :category', { category });
     }
 

@@ -1,11 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { ClubCategory } from 'src/common/types/club-category-type';
 import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class GetClubRequestDto {
@@ -21,8 +23,9 @@ export class GetClubRequestDto {
 
   @IsOptional()
   @IsString()
-  @ApiPropertyOptional({ description: '카테고리 종류' })
-  category?: string;
+  @IsIn(ClubCategory)
+  @ApiPropertyOptional({ description: '카테고리 종류', enum: ClubCategory })
+  category?: ClubCategory;
 
   @IsOptional()
   @IsString()
