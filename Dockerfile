@@ -26,4 +26,4 @@ RUN npm install --production
 
 EXPOSE 3080
 
-ENTRYPOINT ["npm", "run", "start:test"]
+ENTRYPOINT ["npm", "run", "start:prod"]
