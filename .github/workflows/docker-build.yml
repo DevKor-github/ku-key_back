@@ -5,8 +5,8 @@ on:
     branches: ['develop']
 
 env:
-  DOCKER_IMAGE: ghcr.io/devheun/new-kukey
-  DOCKER_CONTAINER: new-kukey
+  DOCKER_IMAGE: ghcr.io/devheun/ku-key-dev
+  DOCKER_CONTAINER: kukey-dev
 
 jobs:
   build:
@@ -40,11 +40,11 @@ jobs:
     steps:
       - name: setup .env.test
         run: |
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env.test
+          echo "DB_HOST=${{ secrets.DEV_DB_HOST }}" >> .env.test
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env.test
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env.test
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env.test
-          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env.test
+          echo "DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}" >> .env.test
+          echo "DB_USERNAME=${{ secrets.DEV_DB_USERNAME }}" >> .env.test
+          echo "DB_DATABASE=${{ secrets.DEV_DB_DATABASE }}" >> .env.test
           echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.test
           echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.test
           echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env.test
@@ -65,4 +65,4 @@ jobs:
       - name: Run Docker for dev server
         run: |
           sudo docker stop ${{ env.DOCKER_CONTAINER }} && sudo docker rm ${{ env.DOCKER_CONTAINER }} && sudo docker rmi ${{ env.DOCKER_IMAGE }}:latest
-          sudo docker run --env-file ./.env.test --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network bridge -p ${{ secrets.PORT }}:${{ secrets.PORT }} --restart always ${{ env.DOCKER_IMAGE }}:latest
+          sudo docker run --env-file ./.env.test --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network host --restart always ${{ env.DOCKER_IMAGE }}:latest
