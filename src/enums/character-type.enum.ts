@@ -4,4 +4,5 @@ export enum CharacterType {
   character3 = 'character3',
   character4 = 'character4',
   character5 = 'character5',
+  default = 'default',
 }
