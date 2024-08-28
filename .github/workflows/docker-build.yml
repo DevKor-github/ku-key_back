@@ -135,6 +135,21 @@ jobs:
           sudo docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG }}
           sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
 
+          for i in {1..20}; do
+            HEALTH_CHECK=$(curl -v -s -o /dev/null -w '%{http_code}' http://localhost:$NEW_PORT || true)
+            if [ "$HEALTH_CHECK" -eq 200 ]; then
+              echo -e "\n Health Check Success on $HOST \n"
+              break
+            fi
+            echo -e "\n Health Check Try $i/20 failure. Retry 5sec later on $HOST... \n"
+            sleep 5
+          done
+
+          if [ "$HEALTH_CHECK" -ne 200 ]; then
+            docker stop $NEW_SERVICE_NAME && docker rm $NEW_SERVICE_NAME
+            exit 1
+          fi
+
           sudo sed -i "s/server localhost:$CURRENT_PORT;/server localhost:$NEW_PORT;/g" ${{ env.NGINX_CONFIG }}
           sudo nginx -s reload
 
