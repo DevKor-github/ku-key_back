@@ -119,7 +119,7 @@ jobs:
       - name: Run Docker for main server
         run: |
           CURRENT_PORT=$(grep 'server localhost:' ${{ env.NGINX_CONFIG }} | awk '{print $2}' | cut -d ':' -f 2 | sed 's/;//')
-          
+
           if [ "$CURRENT_PORT" = "${{ env.BLUE_PORT }}" ]; then
             NEW_PORT=${{ env.GREEN_PORT }}
           elif [ "$CURRENT_PORT" = "${{ env.GREEN_PORT }}" ]; then
@@ -129,8 +129,8 @@ jobs:
             exit 1
           fi
 
-          NEW_SERVICE_NAME=${{ env.DOCKER_IMAGE_MAIN }}-$NEW_PORT
-          OLD_SERVICE_NAME=${{ env.DOCKER_IMAGE_MAIN }}-$CURRENT_PORT
+          NEW_SERVICE_NAME=${{ env.DOCKER_CONTAINER_MAIN }}-$NEW_PORT
+          OLD_SERVICE_NAME=${{ env.DOCKER_CONTAINER_MAIN }}-$CURRENT_PORT
 
           sudo docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
           sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
