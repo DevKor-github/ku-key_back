@@ -137,7 +137,7 @@ jobs:
 
           sudo sed -i "s/server localhost:$CURRENT_PORT;/server localhost:$NEW_PORT;/g" ${{ env.NGINX_CONFIG }}
           sudo systemctl daemon-reload
-          sudo systemctl restart nginx
+          sudo nginx -s reload
 
           sudo docker stop $OLD_SERVICE_NAME
           sudo docker rm $OLD_SERVICE_NAME
