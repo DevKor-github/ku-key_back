@@ -84,6 +84,13 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
+    env:
+      ACCOUNT: 'ubuntu'
+      DOCKER_TAG: 'latest'
+      BLUE_PORT: '3080'
+      GREEN_PORT: '3081'
+      NGINX_CONFIG: '/etc/nginx/sites-available/default'
+
     steps:
       - name: setup .env.prod
         run: |
@@ -109,7 +116,41 @@ jobs:
 
           cat .env.prod
 
+      - name: Create PEM file
+        run: echo "${{ secrets.KUKEY_PROD_KEY }}" > kukey-prod-key.pem
+
+      - name: Set PEM file permissions
+        run: chmod 400 kukey-prod-key.pem
+
       - name: Run Docker for main server
         run: |
-          sudo docker stop ${{ env.DOCKER_CONTAINER_MAIN }} && sudo docker rm ${{ env.DOCKER_CONTAINER_MAIN }} && sudo docker rmi ${{ env.DOCKER_IMAGE_MAIN }}:latest
-          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p ${{secrets.PORT}}:${{secrets.PORT}} --name ${{ env.DOCKER_CONTAINER_MAIN }} --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:latest
+          CURRENT_PORT=$(ssh -i kukey-prod-key.pem -o StrictHostKeyChecking=no ${{ env.ACCOUNT }}@${{ secrets.HOST }} "grep 'server localhost:' ${{ env.NGINX_CONFIG }} | awk '{print \$2}' | cut -d ':' -f 2 | sed 's/;//'")
+          
+          if [ "$CURRENT_PORT" = "${{ env.BLUE_PORT }}" ]; then
+            NEW_PORT=${{ env.GREEN_PORT }}
+          elif [ "$CURRENT_PORT" = "${{ env.GREEN_PORT }}" ]; then
+            NEW_PORT=${{ env.BLUE_PORT }}
+          else
+            echo "BLUE_PORT or GREEN_PORT is not matched"
+            exit 1
+          fi
+
+          NEW_SERVICE_NAME=${{ env.DOCKER_IMAGE_MAIN }}-$NEW_PORT
+          OLD_SERVICE_NAME=${{ env.DOCKER_IMAGE_MAIN }}-$CURRENT_PORT
+
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}"
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}"
+
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo sed -i 's/server localhost:$CURRENT_PORT;/server localhost:$NEW_PORT;/g' ${{ env.NGINX_CONFIG }}"
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo systemctl restart nginx"
+
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo docker stop $OLD_SERVICE_NAME"
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo docker rm $OLD_SERVICE_NAME"
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo docker rmi $OLD_SERVICE_NAME:${{ env.DOCKER_TAG }}"
+          ssh -i kukey-prod-key.pem ${{ env.ACCOUNT }}@${{ secrets.HOST }} "sudo docker system prune -a -f"
+
+          echo "배포 완료 on ${{ secrets.HOST }}. $NEW_SERVICE_NAME"
+      
+      - name: Clean up
+        run: rm kukey-prod-key.pem
+        if: always()
