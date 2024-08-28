@@ -132,7 +132,7 @@ jobs:
           NEW_SERVICE_NAME=${{ env.DOCKER_CONTAINER_MAIN }}-$NEW_PORT
           OLD_SERVICE_NAME=${{ env.DOCKER_CONTAINER_MAIN }}-$CURRENT_PORT
 
-          sudo docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
+          sudo docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG }}
           sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
 
           sudo sed -i 's/server localhost:$CURRENT_PORT;/server localhost:$NEW_PORT;/g' ${{ env.NGINX_CONFIG }}
@@ -140,7 +140,7 @@ jobs:
 
           sudo docker stop $OLD_SERVICE_NAME
           sudo docker rm $OLD_SERVICE_NAME
-          sudo docker rmi $OLD_SERVICE_NAME:${{ env.DOCKER_TAG }}
+          sudo docker images --format \"{{.ID}} {{.Repository}}:{{.Tag}}\" | grep -v ':latest' | awk '{print \$1}' | xargs -r docker rmi         
           sudo docker system prune -a -f
 
           echo "배포 완료 on ${{ secrets.HOST }}. $NEW_SERVICE_NAME"
