@@ -49,7 +49,7 @@ jobs:
   deploy_develop:
     needs: build
     if: github.ref == 'refs/heads/develop'
-    runs-on: self-hosted
+    runs-on: ['self-hosted', 'dev']
     steps:
       - name: setup .env.test
         run: |
@@ -83,7 +83,7 @@ jobs:
   deploy_main:
     needs: build
     if: github.ref == 'refs/heads/main'
-    runs-on: self-hosted
+    runs-on: ['self-hosted', 'prod']
     steps:
       - name: setup .env.prod
         run: |
