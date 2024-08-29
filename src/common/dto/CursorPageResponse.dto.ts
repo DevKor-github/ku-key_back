@@ -1,11 +1,17 @@
 import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import { MyComment } from 'src/community/comment/dto/get-comment.dto';
 import {
   PostPreview,
   PostPreviewWithBoardName,
 } from 'src/community/post/dto/post-preview.dto';
 import { GetNoticeResponseDto } from 'src/notice/dto/get-notice.dto';
 
-@ApiExtraModels(GetNoticeResponseDto, PostPreview, PostPreviewWithBoardName)
+@ApiExtraModels(
+  GetNoticeResponseDto,
+  PostPreview,
+  PostPreviewWithBoardName,
+  MyComment,
+)
 export class CursorPageMetaResponseDto {
   @ApiProperty({ description: '다음 페이지 존재 여부' })
   hasNextData: boolean;
@@ -24,6 +30,7 @@ export class CursorPageResponseDto<T> {
         { $ref: getSchemaPath(GetNoticeResponseDto) },
         { $ref: getSchemaPath(PostPreview) },
         { $ref: getSchemaPath(PostPreviewWithBoardName) },
+        { $ref: getSchemaPath(MyComment) },
       ],
     },
   })

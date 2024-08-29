@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
@@ -16,23 +18,29 @@ import {
   SetProfileRequestDto,
 } from './dto/set-profile-request.dto';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, EntityManager, Repository } from 'typeorm';
-import { PointHistoryEntity } from 'src/entities/point-history.entity';
-import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { GetPointHistoryResponseDto } from './dto/get-point-history.dto';
+import { EntityManager, Repository } from 'typeorm';
 import { DeleteUserResponseDto } from './dto/delete-user.dto';
+import { CharacterEntity } from 'src/entities/character.entity';
+import { CharacterType } from 'src/enums/character-type.enum';
+import { Language } from 'src/enums/language';
+import { UserLanguageEntity } from 'src/entities/user-language.entity';
+import { LanguageResponseDto } from './dto/user-language.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-    private readonly dataSource: DataSource,
-    @InjectRepository(PointHistoryEntity)
-    private readonly pointHistoryRepository: Repository<PointHistoryEntity>,
+    @InjectRepository(CharacterEntity)
+    private readonly characterRepository: Repository<CharacterEntity>,
+    @InjectRepository(UserLanguageEntity)
+    private readonly userLanguageRepository: Repository<UserLanguageEntity>,
   ) {}
 
-  async createUser(createUserDto: CreateUserRequestDto): Promise<UserEntity> {
+  async createUser(
+    transactionManager: EntityManager,
+    createUserDto: CreateUserRequestDto,
+  ): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findUserByEmail(
       createUserDto.email,
     );
@@ -48,11 +56,15 @@ export class UserService {
     }
 
     const hashedPassword = await hash(createUserDto.password, 10);
+    const defaultExpireDate = this.generateDefaultExpiredate();
 
-    return await this.userRepository.createUser({
+    const user = transactionManager.create(UserEntity, {
       ...createUserDto,
       password: hashedPassword,
+      viewableUntil: defaultExpireDate,
     });
+
+    return await transactionManager.save(user);
   }
 
   async hardDeleteUser(userId: number): Promise<boolean> {
@@ -133,17 +145,14 @@ export class UserService {
   }
 
   async getProfile(id: number): Promise<GetProfileResponseDto> {
-    const user = await this.userRepository.findUserById(id);
-    const profile: GetProfileResponseDto = {
-      name: user.name,
-      country: user.country,
-      homeUniversity: user.homeUniversity,
-      major: user.major,
-      startDay: user.startDay,
-      endDay: user.endDay,
-      point: user.point,
-    };
-    return profile;
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: { userLanguages: true },
+    });
+    const character = await this.characterRepository.findOne({
+      where: { userId: id },
+    });
+    return new GetProfileResponseDto(user, character);
   }
 
   async checkUserVerified(userId: number): Promise<boolean> {
@@ -189,45 +198,203 @@ export class UserService {
     return await this.userRepository.updatePassword(userId, hashedPassword);
   }
 
-  async changePoint(
-    userId: number,
-    changePoint: number,
-    history: string,
-    transactionManager: EntityManager,
-  ): Promise<number> {
-    const user = await transactionManager.findOne(UserEntity, {
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new BadRequestException('Wrong userId!');
-    }
-    const originPoint = user.point;
-    if (originPoint + changePoint < 0) {
-      throw new BadRequestException("Don't have enough point!");
-    }
-
-    user.point = originPoint + changePoint;
-    await transactionManager.save(user);
-
-    const newHistory = transactionManager.create(PointHistoryEntity, {
-      userId: userId,
-      history: history,
-      changePoint: changePoint,
-      resultPoint: user.point,
-    });
-    await transactionManager.save(newHistory);
-    return user.point;
+  async isPasswordMatched(userId: number, password: string): Promise<boolean> {
+    const user = await this.userRepository.findUserById(userId);
+    return await compare(password, user.password);
   }
 
-  async getPointHistory(
-    user: AuthorizedUserDto,
-  ): Promise<GetPointHistoryResponseDto[]> {
-    const histories = await this.pointHistoryRepository.find({
-      where: { userId: user.id },
-      order: { createdAt: 'DESC' },
+  async createUserCharacter(
+    tranasactionManager: EntityManager,
+    userId: number,
+  ): Promise<CharacterEntity> {
+    const existingCharacter = await this.characterRepository.findOne({
+      where: { userId: userId },
+    });
+    if (existingCharacter) {
+      throw new ConflictException('이미 캐릭터가 존재합니다.');
+    }
+    const character = tranasactionManager.create(CharacterEntity, {
+      userId: userId,
+      level: 1,
+      type: this.getRandomCharacterType(),
     });
 
-    return histories.map((history) => new GetPointHistoryResponseDto(history));
+    return await tranasactionManager.save(character);
+  }
+
+  async updateViewableUntil(
+    transactionManager: EntityManager,
+    user: UserEntity,
+    daysToAdd: number,
+  ): Promise<Date> {
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
+    const koreaTime = new Date(Date.now() + offset); // 현재 시간
+    let newExpireDate: Date;
+
+    if (user.viewableUntil < koreaTime) {
+      newExpireDate = koreaTime;
+    } else {
+      newExpireDate = user.viewableUntil;
+    }
+    newExpireDate.setDate(newExpireDate.getDate() + daysToAdd);
+
+    const updated = await transactionManager.update(
+      UserEntity,
+      { id: user.id },
+      { viewableUntil: newExpireDate },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return newExpireDate;
+  }
+
+  async upgradeUserCharacter(
+    transactionManager: EntityManager,
+    userCharacter: CharacterEntity,
+  ): Promise<number> {
+    if (userCharacter.level === 6) {
+      throw new BadRequestException('최대 레벨입니다.');
+    }
+
+    const updated = await transactionManager.update(
+      CharacterEntity,
+      { id: userCharacter.id },
+      { level: userCharacter.level + 1 },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return userCharacter.level + 1;
+  }
+
+  async changeUserCharacterType(
+    transactionManager: EntityManager,
+    userCharacter: CharacterEntity,
+  ): Promise<CharacterType> {
+    const newType = this.getRandomCharacterType(userCharacter.type);
+
+    const updated = await transactionManager.update(
+      CharacterEntity,
+      { id: userCharacter.id },
+      { type: newType },
+    );
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return newType;
+  }
+
+  private getRandomCharacterType(existingType?: CharacterType): CharacterType {
+    const characterTypes = Object.values(CharacterType);
+    if (existingType) {
+      // 기존 타입을 제외한 나머지에서 랜덤 선택
+      const availableTypes = characterTypes.filter(
+        (type) => type !== existingType,
+      );
+      const randomIndex = Math.floor(Math.random() * availableTypes.length);
+      return availableTypes[randomIndex];
+    } else {
+      const randomIndex = Math.floor(Math.random() * characterTypes.length);
+      return characterTypes[randomIndex];
+    }
+  }
+
+  private generateDefaultExpiredate(): Date {
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
+    const expireDate = new Date(Date.now() + offset);
+    expireDate.setDate(expireDate.getDate() + 3);
+
+    return expireDate;
+  }
+
+  async appendLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<LanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    if (user.userLanguages.length >= 5)
+      throw new BadRequestException('Can Only append up to 5 language!');
+
+    if (
+      user.userLanguages.some(
+        (userLanguage) => userLanguage.language === language,
+      )
+    )
+      throw new ConflictException('Existing Language!');
+
+    const newLanguage = this.userLanguageRepository.create({
+      userId,
+      language,
+    });
+    await this.userLanguageRepository.save(newLanguage);
+
+    const allLanguage = user.userLanguages.map(
+      (userLanguage) => userLanguage.language,
+    );
+    allLanguage.push(language);
+
+    const result: LanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
+  }
+
+  async deleteLanguage(
+    userId: number,
+    language: Language,
+  ): Promise<LanguageResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: {
+        userLanguages: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('Wrong userId!');
+
+    const existingLanguage = user.userLanguages.find(
+      (userLanguage) => userLanguage.language === language,
+    );
+    if (!existingLanguage)
+      throw new NotFoundException(`There's no ${language}`);
+
+    if (
+      !(
+        await this.userLanguageRepository.delete({
+          id: existingLanguage.id,
+        })
+      ).affected
+    )
+      throw new InternalServerErrorException('Delete failed!');
+
+    const allLanguage = user.userLanguages
+      .filter((userLanguage) => userLanguage.language !== language)
+      .map((userLanguage) => userLanguage.language);
+
+    const result: LanguageResponseDto = {
+      languages: allLanguage,
+    };
+
+    return result;
   }
 }

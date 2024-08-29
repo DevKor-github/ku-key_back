@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClubEntity } from 'src/entities/club.entity';
 
 export class GetClubResponseDto {
@@ -26,6 +26,12 @@ export class GetClubResponseDto {
   @ApiProperty({ description: '좋아요 개수' })
   likeCount: number;
 
+  @ApiPropertyOptional({ description: '인스타그램 링크' })
+  instagramLink: string;
+
+  @ApiPropertyOptional({ description: '유튜브 링크' })
+  youtubeLink: string;
+
   @ApiProperty({ description: '좋아요 여부' })
   isLiked: boolean;
 
@@ -38,6 +44,8 @@ export class GetClubResponseDto {
     this.description = club.description;
     this.imageUrl = club.imageUrl;
     this.likeCount = club.allLikes;
+    this.instagramLink = club.instagramLink;
+    this.youtubeLink = club.youtubeLink;
     this.isLiked = isLiked;
   }
 }

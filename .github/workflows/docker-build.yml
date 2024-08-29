@@ -2,11 +2,13 @@ name: docker-build
 
 on:
   push:
-    branches: ['develop']
+    branches: ['develop', 'main']
 
 env:
-  DOCKER_IMAGE: ghcr.io/devheun/new-kukey
-  DOCKER_CONTAINER: new-kukey
+  DOCKER_IMAGE_MAIN: ghcr.io/devheun/ku-key-prod
+  DOCKER_CONTAINER_MAIN: kukey-prod
+  DOCKER_IMAGE: ghcr.io/devheun/ku-key-dev
+  DOCKER_CONTAINER: kukey-dev
 
 jobs:
   build:
@@ -26,16 +28,61 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: build and push image
-        id: docker_build
+      - name: build and push image for main
+        if: github.ref == 'refs/heads/main'
+        id: docker_build_main
+        uses: docker/build-push-action@v3
+        with:
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_MAIN }}:latest
+
+      - name: build and push image for develop
+        if: github.ref == 'refs/heads/develop'
+        id: docker_build_develop
         uses: docker/build-push-action@v3
         with:
           platforms: linux/amd64
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:latest
 
-  deploy:
+  deploy_develop:
     needs: build
+    if: github.ref == 'refs/heads/develop'
+    runs-on: self-hosted
+    steps:
+      - name: setup .env.test
+        run: |
+          echo "DB_HOST=${{ secrets.DEV_DB_HOST }}" >> .env.test
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env.test
+          echo "DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}" >> .env.test
+          echo "DB_USERNAME=${{ secrets.DEV_DB_USERNAME }}" >> .env.test
+          echo "DB_DATABASE=${{ secrets.DEV_DB_DATABASE }}" >> .env.test
+          echo "JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}" >> .env.test
+          echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env.test
+          echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env.test
+          echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}" >> .env.test
+          echo "ADMIN_ID=${{ secrets.ADMIN_ID }}" >> .env.test
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env.test
+          echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> .env.test
+          echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> .env.test
+          echo "AWS_BUCKET_REGION=${{ secrets.AWS_BUCKET_REGION }}" >> .env.test
+          echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env.test
+          echo "DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}" >> .env.test
+          echo "PORT=${{ secrets.PORT }}" >> .env.test
+          echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.test
+          echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.test
+
+          cat .env.test
+
+      - name: Run Docker for dev server
+        run: |
+          sudo docker stop ${{ env.DOCKER_CONTAINER }} && sudo docker rm ${{ env.DOCKER_CONTAINER }} && sudo docker rmi ${{ env.DOCKER_IMAGE }}:latest
+          sudo docker run --env-file ./.env.test --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network host --restart always ${{ env.DOCKER_IMAGE }}:latest
+
+  deploy_main:
+    needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
       - name: setup .env.prod
@@ -62,7 +109,7 @@ jobs:
 
           cat .env.prod
 
-      - name: Run Docker
+      - name: Run Docker for main server
         run: |
-          sudo docker stop ${{ env.DOCKER_CONTAINER }} && sudo docker rm ${{ env.DOCKER_CONTAINER }} && sudo docker rmi ${{ env.DOCKER_IMAGE }}:latest
-          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network bridge -p ${{ secrets.PORT }}:${{ secrets.PORT }} --restart always ${{ env.DOCKER_IMAGE }}:latest
+          sudo docker stop ${{ env.DOCKER_CONTAINER_MAIN }} && sudo docker rm ${{ env.DOCKER_CONTAINER_MAIN }} && sudo docker rmi ${{ env.DOCKER_IMAGE_MAIN }}:latest
+          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p ${{secrets.PORT}}:${{secrets.PORT}} --name ${{ env.DOCKER_CONTAINER_MAIN }} --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:latest

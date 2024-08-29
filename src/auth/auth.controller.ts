@@ -53,6 +53,10 @@ import { JwtTokenDto } from './dto/jwtToken.dto';
 import { RolesGuard } from './guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
+import { PasswordDto } from './dto/password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -66,7 +70,7 @@ export class AuthController {
   @ApiOperation({
     summary: '로그인',
     description: `로그인하여 JWT Token을 발급받습니다.
-      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 30일, 아닐 경우 7일입니다.`,
+      Access Token의 만료기간은 5분이고 Refresh Token의 만료기간은 로그인 유지가 참일 경우 14일, 아닐 경우 2일입니다.`,
   })
   @ApiBody({
     type: LoginRequestDto,
@@ -170,8 +174,9 @@ export class AuthController {
     type: SignUpResponseDto,
   })
   @Post('sign-up')
-  @UseInterceptors(FileInterceptor('screenshot'))
+  @UseInterceptors(FileInterceptor('screenshot'), TransactionInterceptor)
   async createUserandScreenshotRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
@@ -179,6 +184,7 @@ export class AuthController {
       throw new BadRequestException('screenshot should be uploaded');
     }
     return await this.authService.createUserandScreenshotRequest(
+      transactionManager,
       screenshot,
       body,
     );
@@ -351,5 +357,26 @@ export class AuthController {
     @Body() body: SendTempPasswordRequestDto,
   ): Promise<SendTempPasswordResponseDto> {
     return await this.authService.sendTemporaryPassword(body.email);
+  }
+
+  @ApiOperation({
+    summary: '비밀번호 확인',
+    description: '저장된 비밀번호가 맞는지 확인합니다.',
+  })
+  @ApiBody({
+    type: PasswordDto,
+  })
+  @ApiResponse({
+    description: '비밀번호 일치 여부',
+    type: Boolean,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @Post('password')
+  async checkPasswordMatch(
+    @User() user: AuthorizedUserDto,
+    @Body() body: PasswordDto,
+  ): Promise<boolean> {
+    return await this.userService.isPasswordMatched(user.id, body.password);
   }
 }

@@ -1,33 +1,43 @@
 import { ClubLikeRepository } from './club-like.repository';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
-import { ClubSearchQueryDto } from './dto/club-search-query.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
-import { DataSource } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { ClubEntity } from 'src/entities/club.entity';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { GetClubRequestDto } from './dto/get-club-request';
+import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto';
 
 @Injectable()
 export class ClubService {
   constructor(
     private readonly clubRepository: ClubRepository,
     private readonly clubLikeRepository: ClubLikeRepository,
-    private readonly dataSource: DataSource,
   ) {}
 
   async getClubList(
     user: AuthorizedUserDto | null,
-    clubSearchQueryDto: ClubSearchQueryDto,
+    requestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
     // 카테고리가 있는 경우 카테고리로 필터링
-    const { sortBy, wishList, category, keyword } = clubSearchQueryDto;
+    const { sortBy, wishList, category, keyword, isLogin } = requestDto;
+
+    // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
+    if (!user && isLogin) {
+      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
+    }
 
     const clubs = await this.clubRepository.findClubsByFiltering(
       category,
       keyword,
+      sortBy,
     );
 
     if (!clubs) {
@@ -42,77 +52,59 @@ export class ClubService {
     // 현재 접속 중인 유저의 각 동아리에 대한 좋아요 여부 함께 반환. 유저 존재하지 않을 시 false
     let clubList = clubs.map((club) => {
       const isLiked = club.clubLikes.some((clubLike) =>
-        user && clubLike.user ? clubLike.user.id === user.id : false,
+        user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
       );
       return new GetClubResponseDto(club, isLiked);
     });
 
     // 내가 좋아요를 누른 동아리만 보기 (유저 존재한다면)
-    if (user && wishList) {
+    if (user && isLogin && wishList) {
       clubList = clubList.filter((club) => club.isLiked === true);
     }
-
-    // 좋아요 순으로 정렬
-    if (sortBy === 'like') {
-      clubList = clubList.sort((a, b) => b.likeCount - a.likeCount);
-    }
-
     return clubList;
   }
 
   async toggleLikeClub(
+    transactionManager: EntityManager,
     userId: number,
     clubId: number,
   ): Promise<GetClubResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const club = await transactionManager.findOne(ClubEntity, {
+      where: { id: clubId },
+    });
 
-    try {
-      const club = await queryRunner.manager.findOne(ClubEntity, {
-        where: { id: clubId },
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+
+    const clubLike = await transactionManager.findOne(ClubLikeEntity, {
+      where: {
+        club: { id: clubId },
+        user: { id: userId },
+      },
+    });
+
+    if (!clubLike) {
+      const newClubLike = transactionManager.create(ClubLikeEntity, {
+        club: { id: clubId },
+        user: { id: userId },
       });
 
-      if (!club) {
-        throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
-      }
-
-      const clubLike = await queryRunner.manager.findOne(ClubLikeEntity, {
-        where: {
-          club: { id: clubId },
-          user: { id: userId },
-        },
+      await transactionManager.update(ClubEntity, clubId, {
+        allLikes: () => 'allLikes + 1',
       });
+      club.allLikes++;
+      await transactionManager.save(newClubLike);
 
-      if (!clubLike) {
-        const newClubLike = queryRunner.manager.create(ClubLikeEntity, {
-          club: { id: clubId },
-          user: { id: userId },
-        });
+      return new GetClubResponseDto(club, true);
+    } else {
+      await transactionManager.delete(ClubLikeEntity, { id: clubLike.id });
+      await transactionManager.update(ClubEntity, clubId, {
+        allLikes: () => 'allLikes - 1',
+      });
+      club.allLikes--;
 
-        await queryRunner.manager.update(ClubEntity, clubId, {
-          allLikes: () => 'allLikes + 1',
-        });
-        club.allLikes++;
-        await queryRunner.manager.save(newClubLike);
-        await queryRunner.commitTransaction();
-
-        return new GetClubResponseDto(club, true);
-      } else {
-        await queryRunner.manager.delete(ClubLikeEntity, { id: clubLike.id });
-        await queryRunner.manager.update(ClubEntity, clubId, {
-          allLikes: () => 'allLikes - 1',
-        });
-        club.allLikes--;
-        await queryRunner.commitTransaction();
-
-        return new GetClubResponseDto(club, false);
-      }
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+      return new GetClubResponseDto(club, false);
     }
   }
 
@@ -147,9 +139,15 @@ export class ClubService {
 
   async getRecommendClubList(
     user: AuthorizedUserDto | null,
+    requestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
+    const { isLogin } = requestDto;
+    // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
+    if (!user && isLogin) {
+      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
+    }
     // 비로그인 or 미인증 유저의 경우 랜덤으로 반환
-    if (!user) {
+    if (!user || !isLogin) {
       const randomClubs = await this.clubRepository.findClubsByRandom();
       return randomClubs.map((club) => {
         return new GetRecommendClubResponseDto(club);

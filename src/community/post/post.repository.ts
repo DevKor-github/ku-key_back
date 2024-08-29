@@ -25,7 +25,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'postScraps'],
+      relations: ['postImages', 'user.character', 'postScraps'],
       take: take,
     });
     return posts;
@@ -53,7 +53,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'postScraps'],
+      relations: ['postImages', 'user.character', 'postScraps'],
       take: take,
     });
     return posts;
@@ -67,7 +67,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board', 'postScraps'],
+      relations: ['postImages', 'user.character', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -86,7 +86,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board', 'postScraps'],
+      relations: ['postImages', 'user.character', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -101,7 +101,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board', 'postScraps'],
+      relations: ['postImages', 'user.character', 'board', 'postScraps'],
       take: take,
     });
     return posts;
@@ -138,9 +138,9 @@ export class PostRepository extends Repository<PostEntity> {
       where: { id: postId },
       withDeleted: true,
       relations: [
-        'user',
+        'user.character',
         'postImages',
-        'comments.user',
+        'comments.user.character',
         'comments.commentLikes',
         'commentAnonymousNumbers',
         'postScraps',
@@ -160,13 +160,13 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board', 'postScraps'],
+      relations: ['postImages', 'user.character', 'board', 'postScraps'],
       take: take,
     });
     return posts;
   }
 
-  async getScrapPostsByPostIds(
+  async getPostsByPostIds(
     postIds: number[],
     take: number,
     cursor: Date,
@@ -176,7 +176,7 @@ export class PostRepository extends Repository<PostEntity> {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['postImages', 'user', 'board', 'postScraps'],
+      relations: ['postImages', 'user.character', 'board', 'postScraps'],
       take: take,
     });
     return posts;

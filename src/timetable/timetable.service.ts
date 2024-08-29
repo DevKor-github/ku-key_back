@@ -8,7 +8,7 @@ import {
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { GetTimetableByUserIdResponseDto } from './dto/userId-timetable.dto';
 import { CourseService } from 'src/course/course.service';
@@ -21,7 +21,7 @@ import { ColorType } from './dto/update-timetable-color.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { isConflictingTime } from 'src/utils/time-utils';
-import { DayType } from 'src/utils/day-type.utils';
+import { DayType } from 'src/common/types/day-type.utils';
 
 @Injectable()
 export class TimetableService {

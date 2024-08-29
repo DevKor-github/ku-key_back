@@ -1,8 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { ClubCategory } from 'src/common/types/club-category-type';
 import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
-export class ClubSearchQueryDto {
+export class GetClubRequestDto {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: '정렬 방식' })
@@ -15,12 +23,19 @@ export class ClubSearchQueryDto {
 
   @IsOptional()
   @IsString()
-  @ApiPropertyOptional({ description: '카테고리 종류' })
-  category?: string;
+  @IsIn(ClubCategory)
+  @ApiPropertyOptional({ description: '카테고리 종류', enum: ClubCategory })
+  category?: ClubCategory;
 
   @IsOptional()
   @IsString()
   @MinLength(2, { message: 'Keyword 필드는 최소 2자 이상이어야 합니다.' })
   @ApiPropertyOptional({ description: '동아리명 / 동아리 요약 검색어' })
   keyword?: string;
+
+  @IsNotEmpty()
+  @ToBoolean()
+  @IsBoolean()
+  @ApiPropertyOptional({ description: '로그인 여부' })
+  isLogin: boolean;
 }

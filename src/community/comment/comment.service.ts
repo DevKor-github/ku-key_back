@@ -19,6 +19,9 @@ import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-num
 import { InjectRepository } from '@nestjs/typeorm';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 
 @Injectable()
 export class CommentService {
@@ -30,6 +33,32 @@ export class CommentService {
     private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
     private readonly noticeService: NoticeService,
   ) {}
+
+  async getMyCommentList(
+    user: AuthorizedUserDto,
+    requestDto: CursorPageOptionsDto,
+  ): Promise<GetMyCommentListResponseDto> {
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const comments = await this.commentRepository.getCommentsByUserId(
+      user.id,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = comments.length > requestDto.take ? comments.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetMyCommentListResponseDto(comments);
+    result.meta = meta;
+
+    return result;
+  }
 
   async createComment(
     user: AuthorizedUserDto,
@@ -252,8 +281,13 @@ export class CommentService {
     user: AuthorizedUserDto,
     commentId: number,
   ): Promise<LikeCommentResponseDto> {
-    if (!(await this.commentRepository.isExistingCommentId(commentId))) {
+    const comment = await this.commentRepository.isExistingCommentId(commentId);
+    if (!comment) {
       throw new BadRequestException('Wrong CommentId!');
+    }
+
+    if (comment.userId === user.id) {
+      throw new BadRequestException('Cannot like my comment!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();

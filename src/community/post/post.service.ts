@@ -16,7 +16,7 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
@@ -34,20 +34,23 @@ import {
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PointService } from 'src/user/point.service';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postScrapRepository: PostScrapRepository,
+    @InjectRepository(PostReactionEntity)
+    private readonly postReactionRepository: Repository<PostReactionEntity>,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
-    private readonly userService: UserService,
+    private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -104,7 +107,11 @@ export class PostService {
     }
 
     if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
-      await this.cacheManager.set(`${postId}-${user.id}`, new Date());
+      await this.cacheManager.set(
+        `${postId}-${user.id}`,
+        new Date(),
+        1000 * 60 * 30,
+      );
       const isViewsIncreased = await this.postRepository.increaseViews(postId);
       if (!isViewsIncreased) {
         console.log('Views Increase Failed!');
@@ -128,6 +135,10 @@ export class PostService {
       if (!this.fileService.imagefilter(image)) {
         throw new BadRequestException('Only image file can be uploaded!');
       }
+    }
+
+    if (images.length > 5) {
+      throw new BadRequestException('Only up to five images can be uploaded.');
     }
 
     const board = await this.boardService.getBoardById(boardId);
@@ -203,6 +214,12 @@ export class PostService {
         if (!this.fileService.imagefilter(image)) {
           throw new BadRequestException('Only image file can be uploaded!');
         }
+      }
+
+      if (images.length > 5) {
+        throw new BadRequestException(
+          'Only up to five images can be uploaded.',
+        );
       }
     }
 
@@ -290,8 +307,14 @@ export class PostService {
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<ScrapPostResponseDto> {
-    if (!(await this.postRepository.isExistingPostId(postId))) {
+    const post = await this.postRepository.isExistingPostId(postId);
+
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot scrap my post!');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -444,7 +467,39 @@ export class PostService {
     const cursor = new Date('9999-12-31');
     if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
 
-    const posts = await this.postRepository.getScrapPostsByPostIds(
+    const posts = await this.postRepository.getPostsByPostIds(
+      postIds,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
+  }
+
+  async getReactedPostList(
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    const reactionList = await this.postReactionRepository.find({
+      where: { userId: user.id },
+    });
+    const postIds = reactionList.map((reaction) => reaction.postId);
+
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const posts = await this.postRepository.getPostsByPostIds(
       postIds,
       requestDto.take + 1,
       cursor,
@@ -473,6 +528,10 @@ export class PostService {
     const post = await this.postRepository.isExistingPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot react my post!');
     }
 
     const ReactionColumn = [
@@ -517,7 +576,7 @@ export class PostService {
       }
 
       if (post.allReactionCount + 1 >= 10) {
-        await this.userService.changePoint(
+        await this.pointService.changePoint(
           post.userId,
           100,
           'Hot post selected',
