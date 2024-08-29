@@ -64,9 +64,6 @@ export class UserEntity extends CommonEntity {
   @Column('int', { default: 0 })
   point: number;
 
-  @Column('varchar', { default: '기본 이미지 링크' })
-  profileImageDir: string;
-
   @Column('varchar', { nullable: true })
   refreshToken: string | null;
 
