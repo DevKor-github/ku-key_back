@@ -198,6 +198,11 @@ export class UserService {
     return await this.userRepository.updatePassword(userId, hashedPassword);
   }
 
+  async isPasswordMatched(userId: number, password: string): Promise<boolean> {
+    const user = await this.userRepository.findUserById(userId);
+    return await compare(password, user.password);
+  }
+
   async createUserCharacter(
     tranasactionManager: EntityManager,
     userId: number,
