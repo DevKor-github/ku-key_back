@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { filter, map, Observable, Subject } from 'rxjs';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { NoticeEntity } from 'src/entities/notice.entity';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { EntityManager, LessThanOrEqual, Repository } from 'typeorm';
 import { GetNoticeResponseDto } from './dto/get-notice.dto';
 import { Notice } from './enum/notice.enum';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
@@ -32,6 +32,7 @@ export class NoticeService {
     message: string,
     type: Notice,
     handler?: number,
+    transactionManager?: EntityManager,
   ) {
     const notice = this.noticeRepository.create({
       userId: userId,
@@ -40,7 +41,9 @@ export class NoticeService {
     });
     if (handler) notice.handler = handler;
 
-    await this.noticeRepository.save(notice);
+    transactionManager
+      ? await transactionManager.save(notice)
+      : await this.noticeRepository.save(notice);
     this.users$.next({ userId: userId, message: message });
   }
 
