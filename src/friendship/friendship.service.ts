@@ -16,12 +16,12 @@ import { UserService } from 'src/user/user.service';
 import { TimetableService } from 'src/timetable/timetable.service';
 import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
-import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { EntityManager } from 'typeorm';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
+import { SearchUserRequestDto } from './dto/search-user-query.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -72,9 +72,9 @@ export class FriendshipService {
 
   async searchUserForFriendshipRequest(
     myId: number,
-    searchUserQueryDto: SearchUserQueryDto,
+    searchUserRequestDto: SearchUserRequestDto,
   ): Promise<SearchUserResponseDto> {
-    const username = searchUserQueryDto.username;
+    const username = searchUserRequestDto.username;
     let userStatus: Status;
 
     const user = await this.userService.findUserByUsername(username);
