@@ -10,7 +10,7 @@ import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
 import { GetFriendResponseDto } from './dto/get-friend-response.dto';
 import { UpdateFriendshipResponseDto } from './dto/update-friendship-response.dto';
 import { DeleteFriendshipResponseDto } from './dto/delete-friendship-response.dto';
-import { SearchUserResponseDto } from './dto/search-user-response.dto';
+import { SearchUserResponseDto, Status } from './dto/search-user-response.dto';
 import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
 import { TimetableService } from 'src/timetable/timetable.service';
@@ -64,14 +64,7 @@ export class FriendshipService {
         friendship.fromUser.id === userId
           ? friendship.toUser
           : friendship.fromUser;
-      return {
-        friendshipId: friendship.id,
-        userId: friend.id,
-        name: friend.name,
-        username: friend.username,
-        major: friend.major,
-        country: friend.country,
-      };
+      return new GetFriendResponseDto(friendship.id, friend);
     });
 
     return friendList;
@@ -82,7 +75,7 @@ export class FriendshipService {
     searchUserQueryDto: SearchUserQueryDto,
   ): Promise<SearchUserResponseDto> {
     const username = searchUserQueryDto.username;
-    const userInfo = new SearchUserResponseDto();
+    let userStatus: Status;
 
     const user = await this.userService.findUserByUsername(username);
 
@@ -92,7 +85,7 @@ export class FriendshipService {
 
     if (myId == user.id) {
       // 본인을 검색한 경우 status
-      userInfo.status = 'me';
+      userStatus = Status.Me;
     } else {
       const checkFriendship =
         await this.friendshipRepository.findFriendshipBetweenUsers(
@@ -103,22 +96,19 @@ export class FriendshipService {
       // 수락 대기 중 / 수락 보류 중 / 이미 친구 / 아직 친구 신청 x로 status 분리
       if (checkFriendship) {
         if (!checkFriendship.areWeFriend) {
-          userInfo.status =
-            checkFriendship.fromUserId == myId ? 'requested' : 'pending';
+          userStatus =
+            checkFriendship.fromUserId == myId
+              ? Status.Requested
+              : Status.Pending;
         } else {
-          userInfo.status = 'friend';
+          userStatus = Status.Friend;
         }
       } else {
-        userInfo.status = 'unknown';
+        userStatus = Status.Unknown;
       }
     }
 
-    userInfo.name = user.name;
-    userInfo.username = user.username;
-    userInfo.major = user.major;
-    userInfo.country = user.country;
-
-    return userInfo;
+    return new SearchUserResponseDto(userStatus, user);
   }
 
   async sendFriendshipRequest(
@@ -193,14 +183,10 @@ export class FriendshipService {
 
     const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
       const waitingFriend = friendshipRequest.fromUser;
-      return {
-        friendshipId: friendshipRequest.id,
-        userId: waitingFriend.id,
-        name: waitingFriend.name,
-        username: waitingFriend.username,
-        major: waitingFriend.major,
-        country: waitingFriend.country,
-      };
+      return new GetWaitingFriendResponseDto(
+        friendshipRequest.id,
+        waitingFriend,
+      );
     });
 
     return waitingFriendList;
@@ -218,14 +204,10 @@ export class FriendshipService {
 
     const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
       const waitingFriend = friendshipRequest.toUser;
-      return {
-        friendshipId: friendshipRequest.id,
-        userId: waitingFriend.id,
-        name: waitingFriend.name,
-        username: waitingFriend.username,
-        major: waitingFriend.major,
-        country: waitingFriend.country,
-      };
+      return new GetWaitingFriendResponseDto(
+        friendshipRequest.id,
+        waitingFriend,
+      );
     });
 
     return waitingFriendList;

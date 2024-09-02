@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum } from 'class-validator';
+import { UserEntity } from 'src/entities/user.entity';
 
-const Status = {
+export const Status = {
   Me: 'me',
   Friend: 'friend',
   Requested: 'requested',
@@ -12,28 +13,18 @@ const Status = {
 export type Status = (typeof Status)[keyof typeof Status];
 
 export class SearchUserResponseDto {
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '본명' })
   name: string;
 
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '친구 추가용 id' })
   username: string;
 
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '전공' })
   major: string;
 
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '출신 나라' })
   country: string;
 
-  @IsString()
-  @IsNotEmpty()
   @IsEnum(Status)
   @ApiProperty({
     description:
@@ -41,4 +32,12 @@ export class SearchUserResponseDto {
     enum: Status,
   })
   status: Status;
+
+  constructor(status: Status, user: UserEntity) {
+    this.status = status;
+    this.name = user.name;
+    this.username = user.username;
+    this.major = user.major;
+    this.country = user.country;
+  }
 }
