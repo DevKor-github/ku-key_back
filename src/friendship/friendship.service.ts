@@ -83,6 +83,11 @@ export class FriendshipService {
       throw new BadRequestException('올바르지 않은 상대입니다.');
     }
 
+    const character = await this.userService.findCharacterByUserId(user.id);
+    if (!character) {
+      throw new NotFoundException('캐릭터 정보를 찾을 수 없습니다.');
+    }
+
     if (myId == user.id) {
       // 본인을 검색한 경우 status
       userStatus = Status.Me;
@@ -108,7 +113,7 @@ export class FriendshipService {
       }
     }
 
-    return new SearchUserResponseDto(userStatus, user);
+    return new SearchUserResponseDto(userStatus, user, character);
   }
 
   async sendFriendshipRequest(

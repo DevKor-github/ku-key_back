@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
+import { CharacterEntity } from 'src/entities/character.entity';
 import { UserEntity } from 'src/entities/user.entity';
+import { CharacterType } from 'src/enums/character-type.enum';
 
 export const Status = {
   Me: 'me',
@@ -33,11 +35,19 @@ export class SearchUserResponseDto {
   })
   status: Status;
 
-  constructor(status: Status, user: UserEntity) {
+  @ApiProperty({ description: '캐릭터 레벨' })
+  level: number;
+
+  @ApiProperty({ description: '캐릭터 타입' })
+  type: CharacterType;
+
+  constructor(status: Status, user: UserEntity, character: CharacterEntity) {
     this.status = status;
     this.name = user.name;
     this.username = user.username;
     this.major = user.major;
     this.country = user.country;
+    this.level = character.level;
+    this.type = character.type;
   }
 }
