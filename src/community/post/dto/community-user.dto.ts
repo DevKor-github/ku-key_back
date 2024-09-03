@@ -4,9 +4,9 @@ import { UserEntity } from 'src/entities/user.entity';
 import { CharacterType } from 'src/enums/character-type.enum';
 
 export class Character {
-  constructor(characterEntity?: CharacterEntity) {
-    this.type = characterEntity?.type ?? CharacterType.default;
-    this.level = characterEntity?.level ?? null;
+  constructor(characterEntity: CharacterEntity) {
+    this.type = characterEntity.type;
+    this.level = characterEntity.level;
   }
 
   @ApiProperty({ description: '캐릭터 종류', enum: CharacterType })
@@ -25,7 +25,7 @@ export class CommunityUser {
     if (user == null || user.deletedAt) {
       this.username = 'Deleted';
       this.isDeleted = true;
-      this.character = new Character();
+      this.character = { type: CharacterType.deleted, level: null };
     } else {
       if (!isAnonymous) {
         this.username =
@@ -39,7 +39,7 @@ export class CommunityUser {
         else if (!anonymousNumber) this.username = 'Anonymous';
         else this.username = `Anonymous ${anonymousNumber}`;
         this.isAnonymous = true;
-        this.character = new Character();
+        this.character = { type: CharacterType.anonymous, level: null };
       }
     }
   }
