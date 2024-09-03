@@ -37,6 +37,7 @@ import {
   LanguageRequestDto,
   LanguageResponseDto,
 } from './dto/user-language.dto';
+import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
@@ -187,6 +188,23 @@ export class UserController {
       user.id,
       requestDto,
     );
+  }
+
+  @ApiOperation({
+    summary: '강의평 열람권 만료 조회',
+    description:
+      '해당 사용자의 강의평 열람권이 만료되었는지 확인 후 만료되었으면 null, 만료되지 않았으면 강의평 열람권 만료일자를 반환합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '강의평 열람권 만료 조회 성공',
+    type: CheckCourseReviewReadingTicketResponseDto,
+  })
+  @Get('course-review-reading-ticket')
+  async checkCourseReviewReadingTicket(
+    @User() user: AuthorizedUserDto,
+  ): Promise<CheckCourseReviewReadingTicketResponseDto> {
+    return await this.userService.checkCourseReviewReadingTicket(user.id);
   }
 
   @ApiOperation({

@@ -56,6 +56,7 @@ import { Role } from 'src/enums/role.enum';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { PasswordDto } from './dto/password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -356,5 +357,26 @@ export class AuthController {
     @Body() body: SendTempPasswordRequestDto,
   ): Promise<SendTempPasswordResponseDto> {
     return await this.authService.sendTemporaryPassword(body.email);
+  }
+
+  @ApiOperation({
+    summary: '비밀번호 확인',
+    description: '저장된 비밀번호가 맞는지 확인합니다.',
+  })
+  @ApiBody({
+    type: PasswordDto,
+  })
+  @ApiResponse({
+    description: '비밀번호 일치 여부',
+    type: Boolean,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @Post('password')
+  async checkPasswordMatch(
+    @User() user: AuthorizedUserDto,
+    @Body() body: PasswordDto,
+  ): Promise<boolean> {
+    return await this.userService.isPasswordMatched(user.id, body.password);
   }
 }
