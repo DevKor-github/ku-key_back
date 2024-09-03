@@ -205,7 +205,8 @@ export class CourseReviewService {
 
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
-    if (viewableUser.viewableUntil.getDate() < koreaTime.getDate()) {
+
+    if (viewableUser.viewableUntil <= koreaTime) {
       throw new ForbiddenException('열람권을 구매해야 합니다.');
     }
 

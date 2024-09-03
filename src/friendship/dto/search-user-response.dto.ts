@@ -1,7 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum } from 'class-validator';
+import { CharacterEntity } from 'src/entities/character.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { CharacterType } from 'src/enums/character-type.enum';
 
-const Status = {
+export class Character {
+  @ApiProperty({ description: '캐릭터 종류', enum: CharacterType })
+  type: CharacterType;
+
+  @ApiProperty({ description: '캐릭터 레벨' })
+  level: number;
+
+  constructor(character: CharacterEntity) {
+    this.type = character.type;
+    this.level = character.level;
+  }
+}
+
+export const Status = {
   Me: 'me',
   Friend: 'friend',
   Requested: 'requested',
@@ -12,28 +28,21 @@ const Status = {
 export type Status = (typeof Status)[keyof typeof Status];
 
 export class SearchUserResponseDto {
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '본명' })
   name: string;
 
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '친구 추가용 id' })
   username: string;
 
-  @IsString()
-  @IsOptional()
+  @ApiProperty({ description: '출신 학교' })
+  homeUniversity: string;
+
   @ApiProperty({ description: '전공' })
   major: string;
 
-  @IsString()
-  @IsOptional()
   @ApiProperty({ description: '출신 나라' })
   country: string;
 
-  @IsString()
-  @IsNotEmpty()
   @IsEnum(Status)
   @ApiProperty({
     description:
@@ -41,4 +50,17 @@ export class SearchUserResponseDto {
     enum: Status,
   })
   status: Status;
+
+  @ApiProperty({ description: '유저 캐릭터' })
+  character: Character;
+
+  constructor(status: Status, user: UserEntity, character: CharacterEntity) {
+    this.status = status;
+    this.name = user.name;
+    this.username = user.username;
+    this.homeUniversity = user.homeUniversity;
+    this.major = user.major;
+    this.country = user.country;
+    this.character = character;
+  }
 }
