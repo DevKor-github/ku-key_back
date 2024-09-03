@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CharacterEntity } from 'src/entities/character.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { CharacterType } from 'src/enums/character-type.enum';
+
+export class Character {
+  @ApiProperty({ description: '캐릭터 종류', enum: CharacterType })
+  type: CharacterType;
+
+  @ApiProperty({ description: '캐릭터 레벨' })
+  level: number;
+
+  constructor(character: CharacterEntity) {
+    this.type = character.type;
+    this.level = character.level;
+  }
+}
 
 export class GetFriendResponseDto {
   @ApiProperty({ description: 'freindship table의 PK' })
@@ -21,11 +35,8 @@ export class GetFriendResponseDto {
   @ApiProperty({ description: '출신 나라' })
   country: string;
 
-  @ApiProperty({ description: '캐릭터 레벨' })
-  level: number;
-
-  @ApiProperty({ description: '캐릭터 타입' })
-  type: CharacterType;
+  @ApiProperty({ description: '유저 캐릭터' })
+  character: Character;
 
   constructor(friendshipId: number, friend: UserEntity) {
     this.friendshipId = friendshipId;
@@ -34,7 +45,6 @@ export class GetFriendResponseDto {
     this.username = friend.username;
     this.major = friend.major;
     this.country = friend.country;
-    this.level = friend.character.level;
-    this.type = friend.character.type;
+    this.character = friend.character;
   }
 }
