@@ -33,10 +33,10 @@ import {
 } from '@nestjs/swagger';
 import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
-import { SearchUserQueryDto } from './dto/search-user-query.dto';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { SearchUserRequestDto } from './dto/search-user-query.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -78,13 +78,13 @@ export class FriendshipController {
     type: SearchUserResponseDto,
   })
   async searchUserForFriendshipRequest(
-    @Query() searchUserQueryDto: SearchUserQueryDto,
+    @Query() searchUserRequestDto: SearchUserRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
     const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
       myId,
-      searchUserQueryDto,
+      searchUserRequestDto,
     );
   }
 

@@ -223,6 +223,12 @@ export class UserService {
     return await tranasactionManager.save(character);
   }
 
+  async findCharacterByUserId(userId: number): Promise<CharacterEntity> {
+    return await this.characterRepository.findOne({
+      where: { userId: userId },
+    });
+  }
+
   async updateViewableUntil(
     transactionManager: EntityManager,
     user: UserEntity,
