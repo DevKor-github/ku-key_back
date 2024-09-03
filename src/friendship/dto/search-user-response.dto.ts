@@ -34,6 +34,9 @@ export class SearchUserResponseDto {
   @ApiProperty({ description: '친구 추가용 id' })
   username: string;
 
+  @ApiProperty({ description: '출신 학교' })
+  homeUniversity: string;
+
   @ApiProperty({ description: '전공' })
   major: string;
 
@@ -48,9 +51,6 @@ export class SearchUserResponseDto {
   })
   status: Status;
 
-  @ApiProperty({ description: '캐릭터 레벨' })
-  level: number;
-
   @ApiProperty({ description: '유저 캐릭터' })
   character: Character;
 
@@ -58,6 +58,7 @@ export class SearchUserResponseDto {
     this.status = status;
     this.name = user.name;
     this.username = user.username;
+    this.homeUniversity = user.homeUniversity;
     this.major = user.major;
     this.country = user.country;
     this.character = character;

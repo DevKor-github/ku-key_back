@@ -29,6 +29,9 @@ export class GetFriendResponseDto {
   @ApiProperty({ description: '친구 추가용 아이디' })
   username: string;
 
+  @ApiProperty({ description: '출신 학교' })
+  homeUniversity: string;
+
   @ApiProperty({ description: '전공' })
   major: string;
 
@@ -43,6 +46,7 @@ export class GetFriendResponseDto {
     this.userId = friend.id;
     this.name = friend.name;
     this.username = friend.username;
+    this.homeUniversity = friend.homeUniversity;
     this.major = friend.major;
     this.country = friend.country;
     this.character = friend.character;
