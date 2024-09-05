@@ -26,6 +26,8 @@ import { Language } from 'src/enums/language';
 import { UserLanguageEntity } from 'src/entities/user-language.entity';
 import { LanguageResponseDto } from './dto/user-language.dto';
 import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
+import { SelectCharacterLevelRequestDto } from './dto/select-character-level-request.dto';
+import { SelectCharacterLevelResponseDto } from './dto/select-character-level-response-dto';
 
 @Injectable()
 export class UserService {
@@ -425,5 +427,33 @@ export class UserService {
     }
 
     return new CheckCourseReviewReadingTicketResponseDto(user.viewableUntil);
+  }
+
+  async selectCharacterLevel(
+    userId: number,
+    requestDto: SelectCharacterLevelRequestDto,
+  ): Promise<SelectCharacterLevelResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: ['character'],
+    });
+
+    if (!user) throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
+
+    const { selectedLevel } = requestDto;
+    if (selectedLevel > user.character.level)
+      throw new BadRequestException('해금되지 않은 레벨입니다.');
+
+    const updated = await this.characterRepository.update(user.character.id, {
+      selectedLevel,
+    });
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return new SelectCharacterLevelResponseDto(selectedLevel);
   }
 }
