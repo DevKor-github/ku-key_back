@@ -20,6 +20,9 @@ export class CharacterEntity extends CommonEntity {
   @Column('int', { nullable: false })
   level: number;
 
+  @Column('int', { nullable: true, default: null })
+  selectLevel: number;
+
   @Column({ type: 'enum', enum: CharacterType, nullable: false })
   type: CharacterType;
 
