@@ -21,6 +21,7 @@ import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { FileService } from 'src/common/file.service';
 import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
+import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 
 @Injectable()
 export class ClubService {
@@ -288,6 +289,26 @@ export class ClubService {
     }
 
     return new UpdateClubResponseDto(true);
+  }
+
+  async deleteClub(clubId: number): Promise<DeleteClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+    const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+    await this.fileService.deleteFile(filename);
+
+    const deleted = await this.clubRepository.softDelete({ id: clubId });
+    if (deleted.affected === 0) {
+      throw new InternalServerErrorException(
+        '동아리 정보를 삭제하는데 실패했습니다.',
+      );
+    }
+
+    return new DeleteClubResponseDto(true);
   }
 
   // 리스트를 랜덤하게 섞어서 반환하는 함수

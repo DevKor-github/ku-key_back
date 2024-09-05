@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -42,6 +43,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
+import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -195,7 +197,7 @@ export class ClubController {
     summary: '동아리 정보 수정',
     description: '동아리 id를 받아 admin page에서 동아리 정보를 수정합니다.',
   })
-  @ApiParam({ name: 'clubId', type: Number })
+  @ApiParam({ name: 'clubId', description: '동아리 id' })
   @ApiBody({ type: UpdateClubRequestDto })
   @ApiOkResponse({
     description: '동아리 정보 수정 성공',
@@ -207,5 +209,23 @@ export class ClubController {
     @Body() body: UpdateClubRequestDto,
   ) {
     return await this.clubService.updateClub(clubId, clubImage, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
+  @Delete('/:clubId')
+  @ApiOperation({
+    summary: '동아리 정보 삭제',
+    description: '동아리 id를 받아 admin page에서 동아리 정보를 삭제합니다.',
+  })
+  @ApiParam({ name: 'clubId', description: '동아리 id' })
+  @ApiOkResponse({
+    description: '동아리 정보 삭제 성공',
+    type: DeleteClubResponseDto,
+  })
+  async deleteClub(
+    @Param('clubId') clubId: number,
+  ): Promise<DeleteClubResponseDto> {
+    return await this.clubService.deleteClub(clubId);
   }
 }
