@@ -39,8 +39,8 @@ export class GetProfileResponseDto {
   @ApiProperty({ description: '캐릭터 타입' })
   type: CharacterType;
 
-  @ApiProperty({ description: '선택한 캐릭터 레벨' })
-  selectLevel: number;
+  @ApiProperty({ description: '선택된 캐릭터 레벨' })
+  selectedLevel: number;
 
   constructor(user: UserEntity, character: CharacterEntity) {
     this.name = user.name;
@@ -55,6 +55,6 @@ export class GetProfileResponseDto {
     );
     this.level = character.level;
     this.type = character.type;
-    this.selectLevel = character.selectLevel ?? character.level;
+    this.selectedLevel = character.selectedLevel ?? character.level;
   }
 }

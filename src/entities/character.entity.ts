@@ -21,7 +21,7 @@ export class CharacterEntity extends CommonEntity {
   level: number;
 
   @Column('int', { nullable: true, default: null })
-  selectLevel: number;
+  selectedLevel: number;
 
   @Column({ type: 'enum', enum: CharacterType, nullable: false })
   type: CharacterType;

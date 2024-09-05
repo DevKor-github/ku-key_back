@@ -12,7 +12,7 @@ export class Character {
 
   constructor(character: CharacterEntity) {
     this.type = character.type;
-    this.level = character.selectLevel ?? character.level;
+    this.level = character.selectedLevel ?? character.level;
   }
 }
 
