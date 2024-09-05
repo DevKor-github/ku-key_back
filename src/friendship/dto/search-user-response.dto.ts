@@ -13,7 +13,7 @@ export class Character {
 
   constructor(character: CharacterEntity) {
     this.type = character.type;
-    this.level = character.level;
+    this.level = character.selectLevel ?? character.level;
   }
 }
 
@@ -61,6 +61,6 @@ export class SearchUserResponseDto {
     this.homeUniversity = user.homeUniversity;
     this.major = user.major;
     this.country = user.country;
-    this.character = character;
+    this.character = new Character(character);
   }
 }

@@ -6,7 +6,7 @@ import { CharacterType } from 'src/enums/character-type.enum';
 export class Character {
   constructor(characterEntity?: CharacterEntity) {
     this.type = characterEntity?.type ?? CharacterType.default;
-    this.level = characterEntity?.level ?? null;
+    this.level = characterEntity?.selectLevel ?? characterEntity?.level ?? null;
   }
 
   @ApiProperty({ description: '캐릭터 종류', enum: CharacterType })
