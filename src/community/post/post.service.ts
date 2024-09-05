@@ -575,7 +575,7 @@ export class PostService {
         throw new InternalServerErrorException('React Failed!');
       }
 
-      if (post.allReactionCount + 1 >= 10) {
+      if (post.allReactionCount + 1 === 10) {
         await this.pointService.changePoint(
           post.userId,
           100,
@@ -587,6 +587,7 @@ export class PostService {
           'Your Post is selected to Hot Board!',
           Notice.hotPost,
           post.id,
+          transactionManager,
         );
       }
     } else {

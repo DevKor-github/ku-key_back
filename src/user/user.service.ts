@@ -25,6 +25,7 @@ import { CharacterType } from 'src/enums/character-type.enum';
 import { Language } from 'src/enums/language';
 import { UserLanguageEntity } from 'src/entities/user-language.entity';
 import { LanguageResponseDto } from './dto/user-language.dto';
+import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
 
 @Injectable()
 export class UserService {
@@ -222,6 +223,12 @@ export class UserService {
     return await tranasactionManager.save(character);
   }
 
+  async findCharacterByUserId(userId: number): Promise<CharacterEntity> {
+    return await this.characterRepository.findOne({
+      where: { userId: userId },
+    });
+  }
+
   async updateViewableUntil(
     transactionManager: EntityManager,
     user: UserEntity,
@@ -396,5 +403,27 @@ export class UserService {
     };
 
     return result;
+  }
+
+  async checkCourseReviewReadingTicket(
+    userId: number,
+  ): Promise<CheckCourseReviewReadingTicketResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) throw new NotFoundException('Cannot find user!');
+
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
+    const koreaTime = new Date(Date.now() + offset); // 현재 시간
+
+    if (user.viewableUntil <= koreaTime) {
+      // 강의평 열람기간이 같을때도 만료되었다고 처리
+      return null;
+    }
+
+    return new CheckCourseReviewReadingTicketResponseDto(user.viewableUntil);
   }
 }
