@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -39,6 +40,8 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { CreateClubRequestDto } from './dto/create-club-request-dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateClubResponseDto } from './dto/create-club-response-dto';
+import { UpdateClubRequestDto } from './dto/update-club-request-dto';
+import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -181,5 +184,28 @@ export class ClubController {
     @Body() body: CreateClubRequestDto,
   ): Promise<CreateClubResponseDto> {
     return await this.clubService.createClub(clubImage, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
+  @UseInterceptors(FileInterceptor('clubImage'))
+  @Patch('/:clubId')
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: '동아리 정보 수정',
+    description: '동아리 id를 받아 admin page에서 동아리 정보를 수정합니다.',
+  })
+  @ApiParam({ name: 'clubId', type: Number })
+  @ApiBody({ type: UpdateClubRequestDto })
+  @ApiOkResponse({
+    description: '동아리 정보 수정 성공',
+    type: UpdateClubResponseDto,
+  })
+  async updateClub(
+    @Param('clubId') clubId: number,
+    @UploadedFile() clubImage: Express.Multer.File,
+    @Body() body: UpdateClubRequestDto,
+  ) {
+    return await this.clubService.updateClub(clubId, clubImage, body);
   }
 }

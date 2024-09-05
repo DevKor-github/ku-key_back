@@ -75,4 +75,9 @@ export class FileService {
       fileDir
     );
   }
+
+  getFileDirFromUrl(url: string): string {
+    const baseUrl = `https://${this.configService.get('AWS_BUCKET_NAME')}.s3.${this.configService.get('AWS_BUCKET_REGION')}.amazonaws.com/`;
+    return url.slice(baseUrl.length);
+  }
 }

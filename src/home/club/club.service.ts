@@ -2,6 +2,7 @@ import { ClubLikeRepository } from './club-like.repository';
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto
 import { CreateClubRequestDto } from './dto/create-club-request-dto';
 import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { FileService } from 'src/common/file.service';
+import { UpdateClubRequestDto } from './dto/update-club-request-dto';
+import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 
 @Injectable()
 export class ClubService {
@@ -244,6 +247,47 @@ export class ClubService {
     await this.clubRepository.save(club);
 
     return new CreateClubResponseDto(club);
+  }
+
+  async updateClub(
+    clubId: number,
+    clubImage: Express.Multer.File,
+    requestDto: UpdateClubRequestDto,
+  ): Promise<UpdateClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+
+    const updateData: any = { ...requestDto };
+    delete updateData.clubImage;
+    let newFilename: string | null = null;
+
+    if (clubImage) {
+      if (!this.fileService.imagefilter(clubImage)) {
+        throw new BadRequestException('Only image file can be uploaded!');
+      }
+      const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+      await this.fileService.deleteFile(filename);
+      newFilename = await this.fileService.uploadFile(
+        clubImage,
+        'club',
+        'image',
+      );
+      updateData.imageUrl = this.fileService.makeUrlByFileDir(newFilename);
+    }
+
+    const updated = await this.clubRepository.update(
+      { id: clubId },
+      updateData,
+    );
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return new UpdateClubResponseDto(true);
   }
 
   // 리스트를 랜덤하게 섞어서 반환하는 함수
