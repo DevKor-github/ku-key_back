@@ -12,7 +12,7 @@ export class Character {
 
   constructor(character: CharacterEntity) {
     this.type = character.type;
-    this.level = character.level;
+    this.level = character.selectedLevel ?? character.level;
   }
 }
 
@@ -49,6 +49,6 @@ export class GetFriendResponseDto {
     this.homeUniversity = friend.homeUniversity;
     this.major = friend.major;
     this.country = friend.country;
-    this.character = friend.character;
+    this.character = new Character(friend.character);
   }
 }

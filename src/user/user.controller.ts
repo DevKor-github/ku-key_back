@@ -38,6 +38,8 @@ import {
   LanguageResponseDto,
 } from './dto/user-language.dto';
 import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
+import { SelectCharacterLevelRequestDto } from './dto/select-character-level-request.dto';
+import { SelectCharacterLevelResponseDto } from './dto/select-character-level-response-dto';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
@@ -205,6 +207,25 @@ export class UserController {
     @User() user: AuthorizedUserDto,
   ): Promise<CheckCourseReviewReadingTicketResponseDto> {
     return await this.userService.checkCourseReviewReadingTicket(user.id);
+  }
+
+  @ApiOperation({
+    summary: '캐릭터 레벨 선택',
+    description:
+      '현재 해금된 최대 레벨 이하의 캐릭터 레벨 중 하나를 선택합니다.',
+  })
+  @ApiBody({ type: SelectCharacterLevelRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: '캐릭터 레벨 선택 성공 및 선택된 캐릭터 레벨 반환',
+    type: SelectCharacterLevelResponseDto,
+  })
+  @Patch('character-level')
+  async selectCharacterLevel(
+    @User() user: AuthorizedUserDto,
+    @Body() body: SelectCharacterLevelRequestDto,
+  ): Promise<SelectCharacterLevelResponseDto> {
+    return await this.userService.selectCharacterLevel(user.id, body);
   }
 
   @ApiOperation({
