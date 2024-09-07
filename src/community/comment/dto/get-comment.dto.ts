@@ -11,8 +11,19 @@ export class GetCommentResponseDto {
     this.id = commentEntity.id;
     this.isDeleted = commentEntity.deletedAt ? true : false;
     this.createdAt = commentEntity.createdAt;
-    if (!this.isDeleted) {
-      this.updatedAt = commentEntity.updatedAt;
+    this.updatedAt = commentEntity.updatedAt;
+    if (this.isDeleted) {
+      this.isMyComment = false;
+      this.content = null;
+      this.user = {
+        username: null,
+        isAnonymous: false,
+        isDeleted: false,
+        character: { type: null, level: null },
+      };
+      this.likeCount = null;
+      this.myLike = false;
+    } else {
       this.isMyComment = commentEntity.userId === userId;
       this.content = commentEntity.content;
       this.user = new CommunityUser(
