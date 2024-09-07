@@ -301,18 +301,16 @@ export class UserService {
   }
 
   private getRandomCharacterType(existingType?: CharacterType): CharacterType {
-    const characterTypes = Object.values(CharacterType);
-    if (existingType) {
-      // 기존 타입을 제외한 나머지에서 랜덤 선택
-      const availableTypes = characterTypes.filter(
-        (type) => type !== existingType,
-      );
-      const randomIndex = Math.floor(Math.random() * availableTypes.length);
-      return availableTypes[randomIndex];
-    } else {
-      const randomIndex = Math.floor(Math.random() * characterTypes.length);
-      return characterTypes[randomIndex];
-    }
+    const excludedTypes = [CharacterType.anonymous, CharacterType.deleted];
+    if (existingType) excludedTypes.push(existingType);
+
+    // 기존 타입을 제외한 나머지에서 랜덤 선택
+    const availableTypes = Object.values(CharacterType).filter(
+      (type) => !excludedTypes.includes(type),
+    );
+
+    const randomIndex = Math.floor(Math.random() * availableTypes.length);
+    return availableTypes[randomIndex];
   }
 
   private generateDefaultExpiredate(): Date {

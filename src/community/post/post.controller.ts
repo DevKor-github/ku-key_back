@@ -188,6 +188,7 @@ export class PostController {
   }
 
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   @UseInterceptors(FilesInterceptor('images'))
   @ApiOperation({
     summary: '게시글 생성',
@@ -207,6 +208,7 @@ export class PostController {
     type: GetPostResponseDto,
   })
   async createPost(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Query('boardId') boardId: number,
     @UploadedFiles() images: Array<Express.Multer.File>,
@@ -215,10 +217,17 @@ export class PostController {
     if (!boardId) {
       throw new BadRequestException('No BoardId!');
     }
-    return await this.postService.createPost(user, boardId, images, body);
+    return await this.postService.createPost(
+      transactionManager,
+      user,
+      boardId,
+      images,
+      body,
+    );
   }
 
   @Patch('/:postId')
+  @UseInterceptors(TransactionInterceptor)
   @UseInterceptors(FilesInterceptor('images'))
   @ApiOperation({
     summary: '게시글 수정',
@@ -238,12 +247,19 @@ export class PostController {
     type: GetPostResponseDto,
   })
   async updatePost(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
     @UploadedFiles() images: Array<Express.Multer.File>,
     @Body() body: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
-    return await this.postService.updatePost(user, postId, images, body);
+    return await this.postService.updatePost(
+      transactionManager,
+      user,
+      postId,
+      images,
+      body,
+    );
   }
 
   @Delete('/:postId')
@@ -268,6 +284,7 @@ export class PostController {
   }
 
   @Post('/:postId/scrap')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '게시글 스크랩',
     description:
@@ -283,10 +300,11 @@ export class PostController {
     type: ScrapPostResponseDto,
   })
   async scrapPost(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
   ): Promise<ScrapPostResponseDto> {
-    return await this.postService.scrapPost(user, postId);
+    return await this.postService.scrapPost(transactionManager, user, postId);
   }
 
   @Post('/:postId/reaction')

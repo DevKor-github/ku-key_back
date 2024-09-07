@@ -379,4 +379,19 @@ export class AuthController {
   ): Promise<boolean> {
     return await this.userService.isPasswordMatched(user.id, body.password);
   }
+
+  @ApiOperation({
+    summary: '인증 여부 확인',
+    description: '유저가 인증이 되었는지 확인합니다.',
+  })
+  @ApiResponse({
+    description: '인증 여부',
+    type: Boolean,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @Get('is-verified')
+  async checkVerified(): Promise<boolean> {
+    return true;
+  }
 }
