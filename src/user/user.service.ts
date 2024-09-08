@@ -26,6 +26,8 @@ import { Language } from 'src/enums/language';
 import { UserLanguageEntity } from 'src/entities/user-language.entity';
 import { LanguageResponseDto } from './dto/user-language.dto';
 import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
+import { SelectCharacterLevelRequestDto } from './dto/select-character-level-request.dto';
+import { SelectCharacterLevelResponseDto } from './dto/select-character-level-response-dto';
 
 @Injectable()
 export class UserService {
@@ -299,18 +301,16 @@ export class UserService {
   }
 
   private getRandomCharacterType(existingType?: CharacterType): CharacterType {
-    const characterTypes = Object.values(CharacterType);
-    if (existingType) {
-      // 기존 타입을 제외한 나머지에서 랜덤 선택
-      const availableTypes = characterTypes.filter(
-        (type) => type !== existingType,
-      );
-      const randomIndex = Math.floor(Math.random() * availableTypes.length);
-      return availableTypes[randomIndex];
-    } else {
-      const randomIndex = Math.floor(Math.random() * characterTypes.length);
-      return characterTypes[randomIndex];
-    }
+    const excludedTypes = [CharacterType.anonymous, CharacterType.deleted];
+    if (existingType) excludedTypes.push(existingType);
+
+    // 기존 타입을 제외한 나머지에서 랜덤 선택
+    const availableTypes = Object.values(CharacterType).filter(
+      (type) => !excludedTypes.includes(type),
+    );
+
+    const randomIndex = Math.floor(Math.random() * availableTypes.length);
+    return availableTypes[randomIndex];
   }
 
   private generateDefaultExpiredate(): Date {
@@ -425,5 +425,33 @@ export class UserService {
     }
 
     return new CheckCourseReviewReadingTicketResponseDto(user.viewableUntil);
+  }
+
+  async selectCharacterLevel(
+    userId: number,
+    requestDto: SelectCharacterLevelRequestDto,
+  ): Promise<SelectCharacterLevelResponseDto> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: ['character'],
+    });
+
+    if (!user) throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
+
+    const { selectedLevel } = requestDto;
+    if (selectedLevel > user.character.level)
+      throw new BadRequestException('해금되지 않은 레벨입니다.');
+
+    const updated = await this.characterRepository.update(user.character.id, {
+      selectedLevel,
+    });
+
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return new SelectCharacterLevelResponseDto(selectedLevel);
   }
 }
