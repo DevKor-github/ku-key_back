@@ -4,8 +4,8 @@ import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class SetProfileRequestDto {
   @IsOptional()
   @IsString()
-  @ApiProperty({ description: '본명' })
-  name: string;
+  @ApiProperty({ description: '유저아이디' })
+  username: string;
 
   @IsOptional()
   @IsString()
