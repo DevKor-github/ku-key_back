@@ -35,7 +35,12 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
         { fromUserId: userId, areWeFriend: true },
         { toUserId: userId, areWeFriend: true },
       ],
-      relations: ['fromUser', 'toUser'],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 
@@ -45,7 +50,9 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity[]> {
     return await this.createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.fromUser', 'fromUser')
+      .leftJoinAndSelect('fromUser.character', 'fromUserCharacter') // fromUser와 연관된 character 엔티티 가져오기
       .leftJoinAndSelect('friendship.toUser', 'toUser')
+      .leftJoinAndSelect('toUser.character', 'toUserCharacter')
       .where('friendship.areWeFriend = :areWeFriend', { areWeFriend: true })
       .andWhere(
         new Brackets((qb) => {
@@ -83,7 +90,12 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity[]> {
     return await this.find({
       where: [{ toUserId: userId, areWeFriend: false }],
-      relations: ['fromUser', 'toUser'],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 
@@ -92,7 +104,12 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity[]> {
     return await this.find({
       where: [{ fromUserId: userId, areWeFriend: false }],
-      relations: ['fromUser', 'toUser'],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 }

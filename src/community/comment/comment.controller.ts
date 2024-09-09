@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -35,6 +36,9 @@ import {
 import { ReportService } from '../report/report.service';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
 import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -64,6 +68,7 @@ export class CommentController {
   }
 
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '댓글 작성',
     description: '댓글을 작성합니다.',
@@ -86,6 +91,7 @@ export class CommentController {
     type: GetCommentResponseDto,
   })
   async createComment(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Body() body: CreateCommentRequestDto,
     @Query('postId') postId: number,
@@ -95,6 +101,7 @@ export class CommentController {
       throw new BadRequestException('No PostId!');
     }
     return await this.commentService.createComment(
+      transactionManager,
       user,
       postId,
       body,
@@ -128,6 +135,7 @@ export class CommentController {
   }
 
   @Delete('/:commentId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '댓글 삭제',
     description: '댓글을 삭제합니다.',
@@ -142,13 +150,19 @@ export class CommentController {
     type: DeleteCommentResponseDto,
   })
   async deleteComment(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('commentId') commentId: number,
   ): Promise<DeleteCommentResponseDto> {
-    return await this.commentService.deleteComment(user, commentId);
+    return await this.commentService.deleteComment(
+      transactionManager,
+      user,
+      commentId,
+    );
   }
 
   @Post('/:commentId/like')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '댓글 좋아요',
     description: '댓글을 좋아요 합니다. 이미 눌렀다면 취소합니다.',
@@ -163,10 +177,15 @@ export class CommentController {
     type: LikeCommentResponseDto,
   })
   async likeComment(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('commentId') commentId: number,
   ): Promise<LikeCommentResponseDto> {
-    return await this.commentService.likeComment(user, commentId);
+    return await this.commentService.likeComment(
+      transactionManager,
+      user,
+      commentId,
+    );
   }
 
   @Post('/:commentId/report')

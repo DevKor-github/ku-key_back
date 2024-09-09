@@ -21,7 +21,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(request: Request, payload: any): Promise<AuthorizedUserDto> {
-    if (request.url !== '/auth/logout') {
+    const passingUrls = ['/auth/logout', '/auth/password'];
+    if (!passingUrls.includes(request.url)) {
       const isVerified = await this.userService.checkUserVerified(payload.id);
       if (!isVerified) {
         throw new BadRequestException('user is not verified!');

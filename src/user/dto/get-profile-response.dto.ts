@@ -5,8 +5,8 @@ import { CharacterType } from 'src/enums/character-type.enum';
 import { Language } from 'src/enums/language';
 
 export class GetProfileResponseDto {
-  @ApiProperty({ description: '본명' })
-  name: string;
+  @ApiProperty({ description: '유저아이디' })
+  username: string;
 
   @ApiProperty({ description: '국적' })
   country: string;
@@ -33,14 +33,17 @@ export class GetProfileResponseDto {
   })
   languages: Language[];
 
-  @ApiProperty({ description: '캐릭터 레벨' })
+  @ApiProperty({ description: '해금된 최대 캐릭터 레벨' })
   level: number;
 
   @ApiProperty({ description: '캐릭터 타입' })
   type: CharacterType;
 
+  @ApiProperty({ description: '선택된 캐릭터 레벨' })
+  selectedLevel: number;
+
   constructor(user: UserEntity, character: CharacterEntity) {
-    this.name = user.name;
+    this.username = user.username;
     this.country = user.country;
     this.homeUniversity = user.homeUniversity;
     this.major = user.major;
@@ -52,5 +55,6 @@ export class GetProfileResponseDto {
     );
     this.level = character.level;
     this.type = character.type;
+    this.selectedLevel = character.selectedLevel ?? character.level;
   }
 }
