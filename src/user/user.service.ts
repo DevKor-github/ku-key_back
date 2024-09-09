@@ -271,7 +271,10 @@ export class UserService {
     const updated = await transactionManager.update(
       CharacterEntity,
       { id: userCharacter.id },
-      { level: userCharacter.level + 1 },
+      {
+        level: userCharacter.level + 1,
+        selectedLevel: userCharacter.level + 1,
+      },
     );
 
     if (updated.affected === 0) {
