@@ -6,7 +6,7 @@ export class GetCommentResponseDto {
   constructor(
     commentEntity: CommentEntity,
     userId: number,
-    anonymousNumber: number,
+    anonymousNumber?: number,
   ) {
     this.id = commentEntity.id;
     this.isDeleted = commentEntity.deletedAt ? true : false;
