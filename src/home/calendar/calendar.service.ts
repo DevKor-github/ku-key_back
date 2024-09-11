@@ -5,10 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
-import {
-  GetDailyCalendarDataResponseDto,
-  GetMonthlyCalendarDataResponseDto,
-} from './dto/get-calendar-data-response-dto';
+import { GetDailyCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
@@ -55,22 +52,6 @@ export class CalendarService {
     }
 
     return monthCalendarData;
-  }
-
-  async getYearlyCalendarData(year: number) {
-    const allCalendarData: GetMonthlyCalendarDataResponseDto[] = [];
-    for (let month = 1; month <= 12; month++) {
-      const monthCalendarData = await this.getMonthlyCalendarData(year, month);
-      const filteredData = monthCalendarData.filter(
-        (dayCalendarData) =>
-          dayCalendarData.date.getMonth() === month - 1 &&
-          dayCalendarData.eventCount !== 0,
-      );
-      allCalendarData.push(
-        new GetMonthlyCalendarDataResponseDto(month, filteredData),
-      );
-    }
-    return allCalendarData;
   }
 
   async getAcademicScheduleData(
