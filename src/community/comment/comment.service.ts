@@ -113,7 +113,7 @@ export class CommentService {
     if (myAnonymousNumber) {
       anonymousNumber = myAnonymousNumber.anonymousNumber;
     } else {
-      if (post.userId === user.id) {
+      if (post.isAnonymous && post.userId === user.id) {
         anonymousNumber = 0;
       } else {
         const recentAnonymousNumber = await transactionManager.findOne(
