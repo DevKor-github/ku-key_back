@@ -86,6 +86,7 @@ export class GetPostResponseDto {
           (commentAnonymousNumber) =>
             commentAnonymousNumber.userId === comment.userId,
         )[0]?.anonymousNumber;
+        comment.post = postEntity;
         if (!comment.parentCommentId) {
           this.comments.push(new Comment(comment, userId, anonymousNumber));
         } else {

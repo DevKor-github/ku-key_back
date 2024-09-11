@@ -142,7 +142,7 @@ export class CommentService {
 
     const createdComment = await transactionManager.findOne(CommentEntity, {
       where: { id: newCommentId },
-      relations: ['parentComment', 'user.character', 'commentLikes'],
+      relations: ['parentComment', 'user.character', 'commentLikes', 'post'],
     });
     if (post.userId !== user.id) {
       await this.noticeService.emitNotice(
