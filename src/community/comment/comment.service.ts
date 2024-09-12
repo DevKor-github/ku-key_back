@@ -113,7 +113,7 @@ export class CommentService {
     if (myAnonymousNumber) {
       anonymousNumber = myAnonymousNumber.anonymousNumber;
     } else {
-      if (post.userId === user.id) {
+      if (post.isAnonymous && post.userId === user.id) {
         anonymousNumber = 0;
       } else {
         const recentAnonymousNumber = await transactionManager.findOne(
@@ -142,7 +142,7 @@ export class CommentService {
 
     const createdComment = await transactionManager.findOne(CommentEntity, {
       where: { id: newCommentId },
-      relations: ['parentComment', 'user.character', 'commentLikes'],
+      relations: ['parentComment', 'user.character', 'commentLikes', 'post'],
     });
     if (post.userId !== user.id) {
       await this.noticeService.emitNotice(
