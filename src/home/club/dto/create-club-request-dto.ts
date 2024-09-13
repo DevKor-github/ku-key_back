@@ -1,11 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ClubCategory } from 'src/common/types/club-category-type';
 
 export class CreateClubRequestDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ description: '동아리명' })
   name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ description: '카테고리' })
+  category: ClubCategory;
 
   @IsNotEmpty()
   @IsString()
