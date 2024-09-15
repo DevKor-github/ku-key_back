@@ -218,6 +218,7 @@ export class ClubService {
 
     const {
       name,
+      category,
       summary,
       regularMeeting,
       recruitmentPeriod,
@@ -236,6 +237,7 @@ export class ClubService {
 
     const club = this.clubRepository.create({
       name,
+      category,
       summary,
       regularMeeting,
       recruitmentPeriod,
