@@ -39,6 +39,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 import { GetAcademicScheduleDataRequestDto } from './dto/get-academic-schedule-request.dto';
 import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
+import { GetBannerImageUrlResponseDto } from './dto/get-banner-images-response.dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -169,5 +170,18 @@ export class CalendarController {
     @Param('calendarId') calendarId: number,
   ): Promise<DeleteCalendarDataResponseDto> {
     return await this.calendarService.deleteCalendarData(calendarId);
+  }
+
+  @Get('banner-image-urls')
+  @ApiOperation({
+    summary: '메인 홈 배너 이미지 URL 목록 조회',
+    description: 'S3에 저장된 메인 홈 배너 이미지 URL 목록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    description: 'URL 목록 반환',
+    type: [GetBannerImageUrlResponseDto],
+  })
+  async getBannerImageUrls(): Promise<GetBannerImageUrlResponseDto[]> {
+    return await this.calendarService.getBannerImageUrls();
   }
 }
