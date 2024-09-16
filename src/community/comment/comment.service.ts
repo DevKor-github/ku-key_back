@@ -10,7 +10,7 @@ import { PostService } from '../post/post.service';
 import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
-import { DataSource, Not, Repository } from 'typeorm';
+import { EntityManager, Not, Repository } from 'typeorm';
 import { CommentEntity } from 'src/entities/comment.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { LikeCommentResponseDto } from './dto/like-comment.dto';
@@ -19,19 +19,48 @@ import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-num
 import { InjectRepository } from '@nestjs/typeorm';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
+import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
+import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
+import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly postService: PostService,
-    private readonly dataSource: DataSource,
     @InjectRepository(CommentAnonymousNumberEntity)
     private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
     private readonly noticeService: NoticeService,
   ) {}
 
+  async getMyCommentList(
+    user: AuthorizedUserDto,
+    requestDto: CursorPageOptionsDto,
+  ): Promise<GetMyCommentListResponseDto> {
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const comments = await this.commentRepository.getCommentsByUserId(
+      user.id,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = comments.length > requestDto.take ? comments.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetMyCommentListResponseDto(comments);
+    result.meta = meta;
+
+    return result;
+  }
+
   async createComment(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
     requestDto: CreateCommentRequestDto,
@@ -55,104 +84,90 @@ export class CommentService {
       }
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const comment = transactionManager.create(CommentEntity, {
+      userId: user.id,
+      postId: postId,
+      content: requestDto.content,
+      isAnonymous: requestDto.isAnonymous,
+    });
+    if (parentCommentId) {
+      comment.parentCommentId = parentCommentId;
+    }
+    const newCommentId = (await transactionManager.save(comment)).id;
 
-    try {
-      const comment = queryRunner.manager.create(CommentEntity, {
-        userId: user.id,
-        postId: postId,
-        content: requestDto.content,
-        isAnonymous: requestDto.isAnonymous,
-      });
-      if (parentCommentId) {
-        comment.parentCommentId = parentCommentId;
-      }
-      const createResult = await queryRunner.manager.save(comment);
+    const updateResult = await transactionManager.increment(
+      PostEntity,
+      { id: postId },
+      'commentCount',
+      1,
+    );
+    if (!updateResult.affected) {
+      throw new InternalServerErrorException('Comment Create Failed!');
+    }
 
-      const updateResult = await queryRunner.manager.increment(
-        PostEntity,
-        { id: postId },
-        'commentCount',
-        1,
-      );
-      if (!updateResult.affected) {
-        throw new InternalServerErrorException('Comment Create Failed!');
-      }
-
-      let anonymousNumber: number;
-      const myAnonymousNumber = await queryRunner.manager.findOne(
-        CommentAnonymousNumberEntity,
-        { where: { postId: postId, userId: user.id } },
-      );
-      if (myAnonymousNumber) {
-        anonymousNumber = myAnonymousNumber.anonymousNumber;
+    let anonymousNumber: number;
+    const myAnonymousNumber = await transactionManager.findOne(
+      CommentAnonymousNumberEntity,
+      { where: { postId: postId, userId: user.id } },
+    );
+    if (myAnonymousNumber) {
+      anonymousNumber = myAnonymousNumber.anonymousNumber;
+    } else {
+      if (post.isAnonymous && post.userId === user.id) {
+        anonymousNumber = 0;
       } else {
-        if (post.userId === user.id) {
-          anonymousNumber = 0;
-        } else {
-          const recentAnonymousNumber = await queryRunner.manager.findOne(
-            CommentAnonymousNumberEntity,
-            {
-              where: { postId: postId, anonymousNumber: Not(0) },
-              order: { createdAt: 'DESC' },
-            },
-          );
-          if (!recentAnonymousNumber) {
-            anonymousNumber = 1;
-          } else {
-            anonymousNumber = recentAnonymousNumber.anonymousNumber + 1;
-          }
-        }
-        const newAnonymousNumber = queryRunner.manager.create(
+        const recentAnonymousNumber = await transactionManager.findOne(
           CommentAnonymousNumberEntity,
           {
-            userId: user.id,
-            postId: postId,
-            anonymousNumber: anonymousNumber,
+            where: { postId: postId, anonymousNumber: Not(0) },
+            order: { createdAt: 'DESC' },
           },
         );
-        await queryRunner.manager.save(newAnonymousNumber);
+        if (!recentAnonymousNumber) {
+          anonymousNumber = 1;
+        } else {
+          anonymousNumber = recentAnonymousNumber.anonymousNumber + 1;
+        }
       }
-
-      await queryRunner.commitTransaction();
-
-      const createdComment = await this.commentRepository.getCommentByCommentId(
-        createResult.id,
+      const newAnonymousNumber = transactionManager.create(
+        CommentAnonymousNumberEntity,
+        {
+          userId: user.id,
+          postId: postId,
+          anonymousNumber: anonymousNumber,
+        },
       );
-
-      if (post.userId !== user.id) {
-        await this.noticeService.emitNotice(
-          post.userId,
-          'New comment was posted on your post!',
-          Notice.commentOnPost,
-          post.id,
-        );
-      }
-
-      if (
-        createdComment.parentCommentId &&
-        createdComment.parentComment.userId !== user.id
-      ) {
-        await this.noticeService.emitNotice(
-          createdComment.parentComment.userId,
-          'New reply was posted on your comment!',
-          Notice.commentOnComment,
-          post.id,
-        );
-      }
-      return new GetCommentResponseDto(
-        createdComment,
-        user.id,
-        anonymousNumber,
-      );
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      await transactionManager.save(newAnonymousNumber);
     }
+
+    const createdComment = await transactionManager.findOne(CommentEntity, {
+      where: { id: newCommentId },
+      relations: ['parentComment', 'user.character', 'commentLikes', 'post'],
+    });
+    if (post.userId !== user.id) {
+      await this.noticeService.emitNotice(
+        post.userId,
+        'New comment was posted on your post!',
+        Notice.commentOnPost,
+        post.id,
+        transactionManager,
+      );
+    }
+
+    if (
+      createdComment.parentCommentId &&
+      createdComment.parentComment.userId !== user.id
+    ) {
+      await this.noticeService.emitNotice(
+        createdComment.parentComment.userId,
+        'New reply was posted on your comment!',
+        Notice.commentOnComment,
+        post.id,
+        transactionManager,
+      );
+    }
+
+    return new GetCommentResponseDto(createdComment, user.id, anonymousNumber);
   }
 
   async updateComment(
@@ -193,10 +208,12 @@ export class CommentService {
         },
       })
     ).anonymousNumber;
+
     return new GetCommentResponseDto(updatedComment, user.id, anonymousNumber);
   }
 
   async deleteComment(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     commentId: number,
   ): Promise<DeleteCommentResponseDto> {
@@ -214,107 +231,85 @@ export class CommentService {
       throw new BadRequestException('Cannot delete comment in Question Board!');
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const deleteResult = await transactionManager.softRemove(
+      CommentEntity,
+      comment,
+    );
+    if (!deleteResult.deletedAt) {
+      throw new InternalServerErrorException('Comment Delete Failed!');
+    }
 
-    try {
-      const deleteResult = await queryRunner.manager.softRemove(
-        CommentEntity,
-        comment,
-      );
-      if (!deleteResult.deletedAt) {
-        throw new InternalServerErrorException('Comment Delete Failed!');
-      }
-
-      const updateResult = await queryRunner.manager.decrement(
-        PostEntity,
-        { id: comment.postId },
-        'commentCount',
-        1,
-      );
-      if (!updateResult.affected) {
-        throw new InternalServerErrorException('Comment Delete Failed!');
-      }
-
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+    const updateResult = await transactionManager.decrement(
+      PostEntity,
+      { id: comment.postId },
+      'commentCount',
+      1,
+    );
+    if (!updateResult.affected) {
+      throw new InternalServerErrorException('Comment Delete Failed!');
     }
 
     return new DeleteCommentResponseDto(true);
   }
 
   async likeComment(
+    tranasactionManager: EntityManager,
     user: AuthorizedUserDto,
     commentId: number,
   ): Promise<LikeCommentResponseDto> {
-    if (!(await this.commentRepository.isExistingCommentId(commentId))) {
+    const comment = await this.commentRepository.isExistingCommentId(commentId);
+    if (!comment) {
       throw new BadRequestException('Wrong CommentId!');
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const like = await queryRunner.manager.findOne(CommentLikeEntity, {
-        where: {
-          userId: user.id,
-          commentId: commentId,
-        },
-      });
-
-      if (like) {
-        const deleteResult = await queryRunner.manager.delete(
-          CommentLikeEntity,
-          {
-            userId: user.id,
-            commentId: commentId,
-          },
-        );
-        if (!deleteResult.affected) {
-          throw new InternalServerErrorException('Like Cancel Failed!');
-        }
-
-        const updateResult = await queryRunner.manager.decrement(
-          CommentEntity,
-          { id: commentId },
-          'likeCount',
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('Like Cancel Failed!');
-        }
-      } else {
-        const newLike = queryRunner.manager.create(CommentLikeEntity, {
-          userId: user.id,
-          commentId: commentId,
-        });
-        await queryRunner.manager.save(newLike);
-
-        const updateResult = await queryRunner.manager.increment(
-          CommentEntity,
-          { id: commentId },
-          'likeCount',
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('Like Failed!');
-        }
-      }
-      await queryRunner.commitTransaction();
-
-      return new LikeCommentResponseDto(!like);
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+    if (comment.userId === user.id) {
+      throw new BadRequestException('Cannot like my comment!');
     }
+
+    const like = await tranasactionManager.findOne(CommentLikeEntity, {
+      where: {
+        userId: user.id,
+        commentId: commentId,
+      },
+    });
+
+    if (like) {
+      const deleteResult = await tranasactionManager.delete(CommentLikeEntity, {
+        userId: user.id,
+        commentId: commentId,
+      });
+      if (!deleteResult.affected) {
+        throw new InternalServerErrorException('Like Cancel Failed!');
+      }
+
+      const updateResult = await tranasactionManager.decrement(
+        CommentEntity,
+        { id: commentId },
+        'likeCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Like Cancel Failed!');
+      }
+    } else {
+      const newLike = tranasactionManager.create(CommentLikeEntity, {
+        userId: user.id,
+        commentId: commentId,
+      });
+      await tranasactionManager.save(newLike);
+
+      const updateResult = await tranasactionManager.increment(
+        CommentEntity,
+        { id: commentId },
+        'likeCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Like Failed!');
+      }
+    }
+
+    return new LikeCommentResponseDto(!like);
   }
 
   async getComment(commentId: number): Promise<CommentEntity> {

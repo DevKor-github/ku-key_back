@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { UserEntity } from './user.entity';
 
@@ -7,11 +13,19 @@ export class FriendshipEntity extends CommonEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
+  @Column({ nullable: false })
+  fromUserId: number;
+
+  @Column({ nullable: false })
+  toUserId: number;
+
+  @JoinColumn({ name: 'fromUserId' })
   @ManyToOne(() => UserEntity, (user) => user.sentFriendRequests, {
     onDelete: 'CASCADE',
   })
   fromUser: UserEntity;
 
+  @JoinColumn({ name: 'toUserId' })
   @ManyToOne(() => UserEntity, (user) => user.receivedFriendRequests, {
     onDelete: 'CASCADE',
   })

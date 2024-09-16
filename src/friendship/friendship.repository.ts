@@ -23,20 +23,24 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity> {
     return await this.findOne({
       where: [
-        { fromUser: { id: fromUserId }, toUser: { id: toUserId } },
-        { fromUser: { id: toUserId }, toUser: { id: fromUserId } },
+        { fromUserId: fromUserId, toUserId: toUserId },
+        { fromUserId: toUserId, toUserId: fromUserId },
       ],
-      relations: ['fromUser', 'toUser'],
     });
   }
 
   async findFriendshipsByUserId(userId: number): Promise<FriendshipEntity[]> {
     return await this.find({
       where: [
-        { fromUser: { id: userId }, areWeFriend: true },
-        { toUser: { id: userId }, areWeFriend: true },
+        { fromUserId: userId, areWeFriend: true },
+        { toUserId: userId, areWeFriend: true },
       ],
-      relations: ['fromUser', 'toUser'],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 
@@ -46,7 +50,9 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
   ): Promise<FriendshipEntity[]> {
     return await this.createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.fromUser', 'fromUser')
+      .leftJoinAndSelect('fromUser.character', 'fromUserCharacter') // fromUser와 연관된 character 엔티티 가져오기
       .leftJoinAndSelect('friendship.toUser', 'toUser')
+      .leftJoinAndSelect('toUser.character', 'toUserCharacter')
       .where('friendship.areWeFriend = :areWeFriend', { areWeFriend: true })
       .andWhere(
         new Brackets((qb) => {
@@ -83,8 +89,13 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     userId: number,
   ): Promise<FriendshipEntity[]> {
     return await this.find({
-      where: [{ toUser: { id: userId }, areWeFriend: false }],
-      relations: ['fromUser', 'toUser'],
+      where: [{ toUserId: userId, areWeFriend: false }],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 
@@ -92,8 +103,13 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     userId: number,
   ): Promise<FriendshipEntity[]> {
     return await this.find({
-      where: [{ fromUser: { id: userId }, areWeFriend: false }],
-      relations: ['fromUser', 'toUser'],
+      where: [{ fromUserId: userId, areWeFriend: false }],
+      relations: [
+        'fromUser',
+        'toUser',
+        'fromUser.character',
+        'toUser.character',
+      ],
     });
   }
 }

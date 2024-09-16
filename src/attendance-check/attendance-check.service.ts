@@ -1,12 +1,17 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { PointService } from './../user/point.service';
 import { AttendanceCheckEntity } from 'src/entities/attendance-check.entity';
-import { EntityManager } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { TakeAttendanceResponseDto } from './dto/take-attendance.dto';
-import { UserService } from 'src/user/user.service';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AttendanceCheckService {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly pointService: PointService,
+    @InjectRepository(AttendanceCheckEntity)
+    private readonly attendanceCheckRepository: Repository<AttendanceCheckEntity>,
+  ) {}
 
   async takeAttendance(
     transactionManager: EntityManager,
@@ -27,7 +32,7 @@ export class AttendanceCheckService {
       },
     );
     if (isAlreadyAttended) {
-      throw new ForbiddenException('Already attended');
+      throw new ConflictException('Already attended');
     }
 
     const attendance = transactionManager.create(AttendanceCheckEntity, {
@@ -35,7 +40,7 @@ export class AttendanceCheckService {
       userId,
     });
 
-    await this.userService.changePoint(
+    await this.pointService.changePoint(
       userId,
       10,
       'Attendance Check Complete!',
@@ -45,5 +50,20 @@ export class AttendanceCheckService {
     await transactionManager.save(attendance);
 
     return new TakeAttendanceResponseDto(userId, koreaToday, true);
+  }
+
+  async isTodayAttendanceChecked(userId: number): Promise<boolean> {
+    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
+    const koreaTime = new Date(Date.now() + offset);
+    const koreaToday = koreaTime.toISOString().split('T')[0];
+
+    const isAlreadyAttended = await this.attendanceCheckRepository.findOne({
+      where: {
+        userId,
+        attendanceDate: koreaToday,
+      },
+    });
+
+    return !!isAlreadyAttended;
   }
 }

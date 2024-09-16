@@ -16,7 +16,7 @@ import { FileService } from 'src/common/file.service';
 import { GetPostResponseDto } from './dto/get-post.dto';
 import { UpdatePostRequestDto } from './dto/update-post.dto';
 import { DeletePostResponseDto } from './dto/delete-post.dto';
-import { DataSource, EntityManager } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { PostEntity } from 'src/entities/post.entity';
 import { PostImageEntity } from 'src/entities/post-image.entity';
 import { PostScrapRepository } from './post-scrap.repository';
@@ -34,22 +34,24 @@ import {
 import { PostReactionEntity } from 'src/entities/post-reaction.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { UserService } from 'src/user/user.service';
 import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PointService } from 'src/user/point.service';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postScrapRepository: PostScrapRepository,
+    @InjectRepository(PostReactionEntity)
+    private readonly postReactionRepository: Repository<PostReactionEntity>,
     private readonly boardService: BoardService,
     private readonly fileService: FileService,
-    private readonly userService: UserService,
+    private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
-    private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -104,7 +106,11 @@ export class PostService {
     }
 
     if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
-      await this.cacheManager.set(`${postId}-${user.id}`, new Date());
+      await this.cacheManager.set(
+        `${postId}-${user.id}`,
+        new Date(),
+        1000 * 60 * 30,
+      );
       const isViewsIncreased = await this.postRepository.increaseViews(postId);
       if (!isViewsIncreased) {
         console.log('Views Increase Failed!');
@@ -119,6 +125,7 @@ export class PostService {
   }
 
   async createPost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     boardId: number,
     images: Array<Express.Multer.File>,
@@ -130,49 +137,50 @@ export class PostService {
       }
     }
 
+    if (images.length > 5) {
+      throw new BadRequestException('Only up to five images can be uploaded.');
+    }
+
     const board = await this.boardService.getBoardById(boardId);
     if (!board) {
       throw new BadRequestException('Wrong BoardId!');
     }
 
-    let newPostId: number;
+    const post = transactionManager.create(PostEntity, {
+      userId: user.id,
+      boardId: boardId,
+      title: requestDto.title,
+      content: requestDto.content,
+      isAnonymous: requestDto.isAnonymous,
+    });
+    const newPostId = (await transactionManager.save(post)).id;
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const post = queryRunner.manager.create(PostEntity, {
-        userId: user.id,
-        boardId: boardId,
-        title: requestDto.title,
-        content: requestDto.content,
-        isAnonymous: requestDto.isAnonymous,
+    for (const image of images) {
+      const imgDir = await this.fileService.uploadFile(
+        image,
+        'PostImage',
+        `${newPostId}`,
+      );
+      const postImage = transactionManager.create(PostImageEntity, {
+        postId: newPostId,
+        imgDir: imgDir,
       });
-      newPostId = (await queryRunner.manager.save(post)).id;
-
-      for (const image of images) {
-        const imgDir = await this.fileService.uploadFile(
-          image,
-          'PostImage',
-          `${newPostId}`,
-        );
-        const postImage = queryRunner.manager.create(PostImageEntity, {
-          postId: newPostId,
-          imgDir: imgDir,
-        });
-        await queryRunner.manager.save(postImage);
-      }
-
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      await transactionManager.save(postImage);
     }
 
-    const createdPost =
-      await this.postRepository.getPostByPostIdWithDeletedComment(newPostId);
+    const createdPost = await transactionManager.findOne(PostEntity, {
+      where: { id: newPostId },
+      withDeleted: true,
+      relations: [
+        'user.character',
+        'postImages',
+        'comments.user.character',
+        'comments.commentLikes',
+        'commentAnonymousNumbers',
+        'postScraps',
+        'postReactions',
+      ],
+    });
 
     const postResponse = new GetPostResponseDto(createdPost, user.id);
     this.makeImgDirUrlInPost(postResponse);
@@ -181,6 +189,7 @@ export class PostService {
   }
 
   async updatePost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
     images: Array<Express.Multer.File>,
@@ -204,54 +213,59 @@ export class PostService {
           throw new BadRequestException('Only image file can be uploaded!');
         }
       }
+
+      if (images.length > 5) {
+        throw new BadRequestException(
+          'Only up to five images can be uploaded.',
+        );
+      }
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      await queryRunner.manager.update(
-        PostEntity,
-        { id: postId },
-        {
-          title: requestDto.title,
-          content: requestDto.content,
-          isAnonymous: requestDto.isAnonymous,
-        },
-      );
+    await transactionManager.update(
+      PostEntity,
+      { id: postId },
+      {
+        title: requestDto.title,
+        content: requestDto.content,
+        isAnonymous: requestDto.isAnonymous,
+      },
+    );
 
-      if (requestDto.imageUpdate) {
-        for (const image of post.postImages) {
-          await this.fileService.deleteFile(image.imgDir);
-          await queryRunner.manager.softDelete(PostImageEntity, {
-            id: image.id,
-          });
-        }
-
-        for (const image of images) {
-          const imgDir = await this.fileService.uploadFile(
-            image,
-            'PostImage',
-            `${postId}`,
-          );
-          const postImage = queryRunner.manager.create(PostImageEntity, {
-            postId: postId,
-            imgDir: imgDir,
-          });
-          await queryRunner.manager.save(postImage);
-        }
+    if (requestDto.imageUpdate) {
+      for (const image of post.postImages) {
+        await this.fileService.deleteFile(image.imgDir);
+        await transactionManager.softDelete(PostImageEntity, {
+          id: image.id,
+        });
       }
 
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      for (const image of images) {
+        const imgDir = await this.fileService.uploadFile(
+          image,
+          'PostImage',
+          `${postId}`,
+        );
+        const postImage = transactionManager.create(PostImageEntity, {
+          postId: postId,
+          imgDir: imgDir,
+        });
+        await transactionManager.save(postImage);
+      }
     }
 
-    const updatedPost =
-      await this.postRepository.getPostByPostIdWithDeletedComment(postId);
+    const updatedPost = await transactionManager.findOne(PostEntity, {
+      where: { id: postId },
+      withDeleted: true,
+      relations: [
+        'user.character',
+        'postImages',
+        'comments.user.character',
+        'comments.commentLikes',
+        'commentAnonymousNumbers',
+        'postScraps',
+        'postReactions',
+      ],
+    });
     const postResponse = new GetPostResponseDto(updatedPost, user.id);
     this.makeImgDirUrlInPost(postResponse);
 
@@ -287,69 +301,64 @@ export class PostService {
   }
 
   async scrapPost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<ScrapPostResponseDto> {
-    if (!(await this.postRepository.isExistingPostId(postId))) {
+    const post = await this.postRepository.isExistingPostId(postId);
+
+    if (!post) {
       throw new BadRequestException('Wrong PostId!');
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const scrap = await queryRunner.manager.findOne(PostScrapEntity, {
-        where: {
-          userId: user.id,
-          postId: postId,
-        },
-      });
-
-      if (scrap) {
-        const deleteResult = await queryRunner.manager.delete(PostScrapEntity, {
-          userId: user.id,
-          postId: postId,
-        });
-        if (!deleteResult.affected) {
-          throw new InternalServerErrorException('Scrap Cancel Failed!');
-        }
-
-        const updateResult = await queryRunner.manager.decrement(
-          PostEntity,
-          { id: postId },
-          'scrapCount',
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('Scrap Cancel Failed!');
-        }
-      } else {
-        const newScrap = queryRunner.manager.create(PostScrapEntity, {
-          userId: user.id,
-          postId: postId,
-        });
-        await queryRunner.manager.save(newScrap);
-
-        const updateResult = await queryRunner.manager.increment(
-          PostEntity,
-          { id: postId },
-          'scrapCount',
-          1,
-        );
-        if (!updateResult.affected) {
-          throw new InternalServerErrorException('Scrap Failed!');
-        }
-      }
-      await queryRunner.commitTransaction();
-
-      return new ScrapPostResponseDto(scrap ? false : true);
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot scrap my post!');
     }
+
+    const scrap = await transactionManager.findOne(PostScrapEntity, {
+      where: {
+        userId: user.id,
+        postId: postId,
+      },
+    });
+
+    if (scrap) {
+      const deleteResult = await transactionManager.delete(PostScrapEntity, {
+        userId: user.id,
+        postId: postId,
+      });
+      if (!deleteResult.affected) {
+        throw new InternalServerErrorException('Scrap Cancel Failed!');
+      }
+
+      const updateResult = await transactionManager.decrement(
+        PostEntity,
+        { id: postId },
+        'scrapCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Scrap Cancel Failed!');
+      }
+    } else {
+      const newScrap = transactionManager.create(PostScrapEntity, {
+        userId: user.id,
+        postId: postId,
+      });
+      await transactionManager.save(newScrap);
+
+      const updateResult = await transactionManager.increment(
+        PostEntity,
+        { id: postId },
+        'scrapCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throw new InternalServerErrorException('Scrap Failed!');
+      }
+    }
+
+    return new ScrapPostResponseDto(scrap ? false : true);
   }
 
   async getMyPostList(
@@ -444,7 +453,39 @@ export class PostService {
     const cursor = new Date('9999-12-31');
     if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
 
-    const posts = await this.postRepository.getScrapPostsByPostIds(
+    const posts = await this.postRepository.getPostsByPostIds(
+      postIds,
+      requestDto.take + 1,
+      cursor,
+    );
+
+    const lastData = posts.length > requestDto.take ? posts.pop() : null;
+    const meta: CursorPageMetaResponseDto = {
+      hasNextData: lastData ? true : false,
+      nextCursor: lastData
+        ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
+        : null,
+    };
+    const result = new GetPostListResponseDto(posts, user.id);
+    result.meta = meta;
+    this.makeThumbnailDirUrlInPostList(result.data);
+
+    return result;
+  }
+
+  async getReactedPostList(
+    user: AuthorizedUserDto,
+    requestDto: GetPostListRequestDto,
+  ): Promise<GetPostListResponseDto> {
+    const reactionList = await this.postReactionRepository.find({
+      where: { userId: user.id },
+    });
+    const postIds = reactionList.map((reaction) => reaction.postId);
+
+    const cursor = new Date('9999-12-31');
+    if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
+
+    const posts = await this.postRepository.getPostsByPostIds(
       postIds,
       requestDto.take + 1,
       cursor,
@@ -473,6 +514,10 @@ export class PostService {
     const post = await this.postRepository.isExistingPostId(postId);
     if (!post) {
       throw new BadRequestException('Wrong PostId!');
+    }
+
+    if (post.userId === user.id) {
+      throw new BadRequestException('Cannot react my post!');
     }
 
     const ReactionColumn = [
@@ -516,8 +561,8 @@ export class PostService {
         throw new InternalServerErrorException('React Failed!');
       }
 
-      if (post.allReactionCount + 1 >= 10) {
-        await this.userService.changePoint(
+      if (post.allReactionCount + 1 === 10) {
+        await this.pointService.changePoint(
           post.userId,
           100,
           'Hot post selected',
@@ -528,6 +573,7 @@ export class PostService {
           'Your Post is selected to Hot Board!',
           Notice.hotPost,
           post.id,
+          transactionManager,
         );
       }
     } else {

@@ -15,12 +15,15 @@ import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
 import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
+import { GetBannerImageUrlResponseDto } from './dto/get-banner-images-response.dto';
+import { FileService } from 'src/common/file.service';
 
 @Injectable()
 export class CalendarService {
   constructor(
     @InjectRepository(CalendarRepository)
     private readonly calendarRepository: CalendarRepository,
+    private readonly fileService: FileService,
   ) {}
 
   async getMonthlyCalendarData(
@@ -161,6 +164,15 @@ export class CalendarService {
     }
 
     return new DeleteCalendarDataResponseDto(true);
+  }
+
+  async getBannerImageUrls(): Promise<GetBannerImageUrlResponseDto[]> {
+    const prefix = 'fe/home/homeBanners/';
+    const imageUrls = await this.fileService.getFileUrls(prefix);
+
+    return imageUrls.map((imageUrl) => {
+      return new GetBannerImageUrlResponseDto(imageUrl);
+    });
   }
 
   // 연도, 월 정보를 받아 캘린더의 시작 - 끝 날짜를 반환하는 함수

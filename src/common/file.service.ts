@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -64,11 +65,38 @@ export class FileService {
     }
   }
 
+  // S3 내 특정 경로의 파일 URL들을 가져오는 함수
+  async getFileUrls(prefix: string): Promise<string[]> {
+    const command = new ListObjectsV2Command({
+      Bucket: this.bucketName,
+      Prefix: prefix,
+    });
+
+    const response = await this.s3.send(command);
+
+    if (response.$metadata.httpStatusCode !== 200) {
+      throw new BadRequestException('Failed get file metadata');
+    }
+
+    if (!response.Contents) {
+      return [];
+    }
+
+    return response.Contents.filter((object) => this.isFile(object.Key)).map(
+      (object) => {
+        return this.makeUrlByFileDir(object.Key);
+      },
+    );
+  }
+
+  // 파일 확장자가 있는 경우에만 true를 반환
+  isFile(key: string): boolean {
+    return !!key.split('/').pop().includes('.');
+  }
+
   imagefilter(file: Express.Multer.File): boolean {
-    const splitedFileNames = file.originalname.split('.');
-    const extension = splitedFileNames.at(splitedFileNames.length - 1);
-    const validExtensions = ['jpg', 'jpeg', 'png'];
-    return validExtensions.includes(extension);
+    const filetype = file.mimetype.split('/');
+    return filetype[0] === 'image';
   }
 
   makeUrlByFileDir(fileDir: string): string {

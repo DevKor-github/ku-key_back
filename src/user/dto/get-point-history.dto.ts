@@ -7,7 +7,11 @@ export class GetPointHistoryResponseDto {
     this.history = pointHistoryEntity.history;
     this.changePoint = pointHistoryEntity.changePoint;
     this.resultPoint = pointHistoryEntity.resultPoint;
+    this.type = this.changePoint > 0 ? 'Get' : 'Purchase';
   }
+
+  @ApiProperty({ description: '유형' })
+  type: string;
 
   @ApiProperty({ description: '일시' })
   date: Date;

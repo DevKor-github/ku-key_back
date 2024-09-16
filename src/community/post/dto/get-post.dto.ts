@@ -10,7 +10,7 @@ class Comment extends GetCommentResponseDto {
   constructor(
     commentEntity: CommentEntity,
     userId: number,
-    anonymousNumber: number,
+    anonymousNumber?: number,
   ) {
     super(commentEntity, userId, anonymousNumber);
     if (!commentEntity.parentCommentId) {
@@ -74,10 +74,9 @@ export class GetPostResponseDto {
       (postScrap) => postScrap.userId === userId,
     );
     this.reactionCount = new ReactionCount(postEntity);
-    this.myReaction =
-      postEntity.postReactions.find(
-        (postReaction) => postReaction.userId === userId,
-      )?.reaction || null;
+    this.myReaction = postEntity.postReactions.find(
+      (postReaction) => postReaction.userId === userId,
+    )?.reaction;
 
     this.comments = [];
     postEntity.comments
@@ -86,7 +85,8 @@ export class GetPostResponseDto {
         const anonymousNumber = postEntity.commentAnonymousNumbers.filter(
           (commentAnonymousNumber) =>
             commentAnonymousNumber.userId === comment.userId,
-        )[0].anonymousNumber;
+        )[0]?.anonymousNumber;
+        comment.post = postEntity;
         if (!comment.parentCommentId) {
           this.comments.push(new Comment(comment, userId, anonymousNumber));
         } else {

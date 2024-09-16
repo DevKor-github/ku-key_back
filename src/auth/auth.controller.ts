@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -48,11 +49,14 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AdminRequestDto } from './dto/admin-request.dto';
 import { JwtTokenDto } from './dto/jwtToken.dto';
 import { RolesGuard } from './guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
+import { PasswordDto } from './dto/password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -170,8 +174,9 @@ export class AuthController {
     type: SignUpResponseDto,
   })
   @Post('sign-up')
-  @UseInterceptors(FileInterceptor('screenshot'))
+  @UseInterceptors(FileInterceptor('screenshot'), TransactionInterceptor)
   async createUserandScreenshotRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @UploadedFile() screenshot: Express.Multer.File,
     @Body() body: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
@@ -179,6 +184,7 @@ export class AuthController {
       throw new BadRequestException('screenshot should be uploaded');
     }
     return await this.authService.createUserandScreenshotRequest(
+      transactionManager,
       screenshot,
       body,
     );
@@ -190,15 +196,12 @@ export class AuthController {
     summary: '학교인증 요청 목록 조회',
     description: '승인 대기 중인 학교 인증 요청 목록을 조회합니다.',
   })
-  @ApiBody({
-    type: AdminRequestDto,
-  })
   @ApiResponse({
     status: 201,
     description: '학교인증 요청 조회 성공',
     type: [GetScreenshotVerificationsResponseDto],
   })
-  @Post('admin/requests')
+  @Get('admin/request')
   async getScreenshotVerifyRequests(): Promise<
     GetScreenshotVerificationsResponseDto[]
   > {
@@ -354,5 +357,41 @@ export class AuthController {
     @Body() body: SendTempPasswordRequestDto,
   ): Promise<SendTempPasswordResponseDto> {
     return await this.authService.sendTemporaryPassword(body.email);
+  }
+
+  @ApiOperation({
+    summary: '비밀번호 확인',
+    description: '저장된 비밀번호가 맞는지 확인합니다.',
+  })
+  @ApiBody({
+    type: PasswordDto,
+  })
+  @ApiResponse({
+    description: '비밀번호 일치 여부',
+    type: Boolean,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @Post('password')
+  async checkPasswordMatch(
+    @User() user: AuthorizedUserDto,
+    @Body() body: PasswordDto,
+  ): Promise<boolean> {
+    return await this.userService.isPasswordMatched(user.id, body.password);
+  }
+
+  @ApiOperation({
+    summary: '인증 여부 확인',
+    description: '유저가 인증이 되었는지 확인합니다.',
+  })
+  @ApiResponse({
+    description: '인증 여부',
+    type: Boolean,
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @Get('is-verified')
+  async checkVerified(): Promise<boolean> {
+    return true;
   }
 }

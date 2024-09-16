@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SendFriendshipRequestDto } from './dto/send-friendship-request.dto';
@@ -32,7 +33,10 @@ import {
 } from '@nestjs/swagger';
 import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
-import { SearchUserQueryDto } from './dto/search-user-query.dto';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { TransactionManager } from 'src/decorators/manager.decorator';
+import { EntityManager } from 'typeorm';
+import { SearchUserRequestDto } from './dto/search-user-query.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -74,13 +78,13 @@ export class FriendshipController {
     type: SearchUserResponseDto,
   })
   async searchUserForFriendshipRequest(
-    @Query() searchUserQueryDto: SearchUserQueryDto,
+    @Query() searchUserRequestDto: SearchUserRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SearchUserResponseDto> {
     const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
       myId,
-      searchUserQueryDto,
+      searchUserRequestDto,
     );
   }
 
@@ -126,6 +130,7 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '친구 요청 보내기',
     description:
@@ -139,13 +144,14 @@ export class FriendshipController {
     type: SendFriendshipResponseDto,
   })
   async sendFriendshipRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @Body() sendFriendDto: SendFriendshipRequestDto,
     @User() user: AuthorizedUserDto,
   ): Promise<SendFriendshipResponseDto> {
-    const fromUserId = user.id;
     const toUsername = sendFriendDto.toUsername;
     return await this.friendshipService.sendFriendshipRequest(
-      fromUserId,
+      transactionManager,
+      user,
       toUsername,
     );
   }
@@ -188,6 +194,7 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('received/:friendshipId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '받은 친구 요청 수락하기',
     description:
@@ -203,18 +210,20 @@ export class FriendshipController {
     type: UpdateFriendshipResponseDto,
   })
   async acceptFriendshipRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<UpdateFriendshipResponseDto> {
-    const userId = user.id;
     return await this.friendshipService.acceptFriendshipRequest(
-      userId,
+      transactionManager,
+      user,
       friendshipId,
     );
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('received/:friendshipId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '받은 친구 요청 거절하기',
     description: 'friendshipId를 받아 해당 friendship 레코드를 삭제합니다.',
@@ -229,11 +238,13 @@ export class FriendshipController {
     type: DeleteFriendshipResponseDto,
   })
   async rejectFriendshipRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
     const userId = user.id;
     return await this.friendshipService.rejectFriendshipRequest(
+      transactionManager,
       userId,
       friendshipId,
     );
@@ -241,6 +252,7 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('sent/:friendshipId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '보낸 친구 요청 취소하기',
     description: 'friendshipId를 받아 해당 friendship 레코드를 삭제합니다.',
@@ -255,11 +267,13 @@ export class FriendshipController {
     type: DeleteFriendshipResponseDto,
   })
   async cancelFriendshipRequest(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
     const userId = user.id;
     return await this.friendshipService.cancelFriendshipRequest(
+      transactionManager,
       userId,
       friendshipId,
     );
@@ -267,6 +281,7 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:friendshipId')
+  @UseInterceptors(TransactionInterceptor)
   @ApiOperation({
     summary: '친구 삭제하기',
     description:
@@ -281,10 +296,15 @@ export class FriendshipController {
     type: DeleteFriendshipResponseDto,
   })
   async deleteFriendship(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
     const userId = user.id;
-    return await this.friendshipService.deleteFriendship(userId, friendshipId);
+    return await this.friendshipService.deleteFriendship(
+      transactionManager,
+      userId,
+      friendshipId,
+    );
   }
 }
