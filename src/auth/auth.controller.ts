@@ -57,6 +57,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { loginLogger } from 'src/utils/winston.utils';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -86,7 +87,15 @@ export class AuthController {
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
     const keepingLogin = body.keepingLogin;
-    return await this.authService.logIn(user, keepingLogin);
+    const isLogin = await this.authService.logIn(user, keepingLogin);
+
+    if (isLogin) {
+      loginLogger.log(
+        `[User logged in successfully - email: ${body.email}, userId: ${user.id}]`,
+      );
+    }
+
+    return isLogin;
   }
 
   @UseGuards(RefreshAuthGuard)
