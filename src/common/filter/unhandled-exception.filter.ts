@@ -10,12 +10,25 @@ import {
 export class UnhandledExceptionFilter implements ExceptionFilter {
   catch(exception: Error | HttpException, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse();
+    let statusCode = 500;
+    let name = 'INTERNAL_SERVER_ERROR';
+    let message = 'Internal server error!';
+
+    if (exception instanceof HttpException) {
+      statusCode = exception.getStatus();
+      name = `Unhandled Exception : ${exception.name}`;
+      message = exception.message;
+    } else if (exception instanceof Error) {
+      name = `Unhandled Exception : ${exception.name}`;
+      message = exception.message;
+      console.error(exception);
+    }
 
     response.status(500).json({
-      statusCode: 500,
+      statusCode,
       errorCode: 9999,
-      name: exception.name,
-      message: exception.message,
+      name,
+      message,
       stack: exception.stack,
     });
   }
