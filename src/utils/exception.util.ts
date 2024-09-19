@@ -7,7 +7,113 @@ interface kukeyExceptionResponse {
 }
 
 // 커스텀 예외 종류
-export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {};
+export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
+  // 1xxx : 인증 관련 예외
+  // 2xxx : 유저 관련 예외
+  // - 20xx : User
+  USER_NOT_FOUND: {
+    name: 'USER_NOT_FOUND',
+    message: '존재하지 않는 유저입니다.',
+    errorCode: 2000,
+    statusCode: 404,
+  },
+  USER_NOT_VERIFIED: {
+    name: 'USER_NOT_VERIFIED',
+    message: '인증되지 않은 유저입니다.',
+    errorCode: 2001,
+    statusCode: 400,
+  },
+  // - 21xx : Point
+  // - 22xx : Character
+  CHARACTER_NOT_FOUND: {
+    name: 'CHARACTER_NOT_FOUND',
+    message: '존재하지 않는 캐릭터 정보입니다.',
+    errorCode: 2200,
+    statusCode: 404,
+  },
+  // - 23xx : AttendanceCheck
+  // 3xxx : 시간표 관련 예외
+  // - 30xx : Course
+  // - 31xx : Schedule
+  // - 32xx : Timetable
+  // - 33xx : CourseReview
+  // - 34xx : Friendship
+  FRIENDSHIP_NOT_FOUND: {
+    name: 'FRIENDSHIP_NOT_FOUND',
+    message: '존재하지 않는 친구 관계입니다.',
+    errorCode: 3400,
+    statusCode: 404,
+  },
+  FRIENDSHIP_REQUEST_TO_SELF: {
+    name: 'FRIENDSHIP_REQUEST_TO_SELF',
+    message: '자기 자신에게는 친구 요청을 보낼 수 없습니다.',
+    errorCode: 3401,
+    statusCode: 400,
+  },
+  FRIENDSHIP_ALREADY_EXIST: {
+    name: 'FRIENDSHIP_ALREADY_EXIST',
+    message: '이미 친구이거나, 요청 수락 대기중입니다.',
+    errorCode: 3402,
+    statusCode: 409,
+  },
+  FRIENDSHIP_ACCESS_FORBIDDEN: {
+    name: 'FRIENDSHIP_ACCESS_FORBIDDEN',
+    message: '해당 친구 요청이나 친구 관계에 대한 접근 권한이 없습니다.',
+    errorCode: 3403,
+    statusCode: 403,
+  },
+  FRIENDSHIP_REQUEST_ALREADY_ACCEPTED: {
+    name: 'FRIENDSHIP_REQUEST_ALREADY_ACCEPTED',
+    message: '이미 친구 요청을 수락했습니다.',
+    errorCode: 3404,
+    statusCode: 400,
+  },
+  FRIENDSHIP_REQUEST_NOT_ACCEPTED: {
+    name: 'FRIENDSHIP_REQUEST_NOT_ACCEPTED',
+    message: '수락되지 않은 친구 요청입니다.',
+    errorCode: 3405,
+    statusCode: 400,
+  },
+  FRIENDSHIP_REQUEST_ACCEPT_FAILED: {
+    name: 'FRIENDSHIP_REQUEST_ACCEPT_FAILED',
+    message: '친구 요청 수락에 실패했습니다.',
+    errorCode: 3406,
+    statusCode: 500,
+  },
+  FRIENDSHIP_REQUEST_REJECT_FAILED: {
+    name: 'FRIENDSHIP_REQUEST_REJECT_FAILED',
+    message: '친구 요청 거절에 실패했습니다.',
+    errorCode: 3407,
+    statusCode: 500,
+  },
+  FRIENDSHIP_REQUEST_CANCEL_FAILED: {
+    name: 'FRIENDSHIP_REQUEST_CANCEL_FAILED',
+    message: '친구 요청 취소에 실패했습니다.',
+    errorCode: 3408,
+    statusCode: 500,
+  },
+  FRIENDSHIP_DELETE_FAILED: {
+    name: 'FRIENDSHIP_DELETE_FAILED',
+    message: '친구 관계 삭제에 실패했습니다.',
+    errorCode: 3409,
+    statusCode: 500,
+  },
+  FRIEND_TIMETABLE_NOT_FOUND: {
+    name: 'FRIEND_TIMETABLE_NOT_FOUND',
+    message: '친구의 시간표를 찾을 수 없습니다.',
+    errorCode: 3410,
+    statusCode: 404,
+  },
+  // 4xxx : 커뮤니티 관련 예외
+  // - 40xx : Board
+  // - 41xx : Post
+  // - 42xx : Comment
+  // - 43xx : Report
+  // 5xxx : 메인 홈 관련 예외
+  // - 50xx : Club
+  // - 51xx : Calendar
+  // 6xxx : S3 관련 예외
+};
 
 // kukeyExceptions의 key들을 type으로 사용
 export type kukeyExceptionName = keyof typeof kukeyExceptions;
