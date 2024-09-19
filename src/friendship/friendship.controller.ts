@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -37,10 +38,13 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
+import { KukeyExceptionFilter } from 'src/common/filter/kukey-exception.filter';
+import { UnhandledExceptionFilter } from 'src/common/filter/unhandled-exception.filter';
 
 @Controller('friendship')
 @ApiTags('friendship')
 @ApiBearerAuth('accessToken')
+@UseFilters(UnhandledExceptionFilter, KukeyExceptionFilter)
 export class FriendshipController {
   constructor(private readonly friendshipService: FriendshipService) {}
 
