@@ -1,6 +1,8 @@
 import { ClubLikeRepository } from './club-like.repository';
 import {
+  BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -14,12 +16,19 @@ import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.d
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubRequestDto } from './dto/get-club-request';
 import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto';
+import { CreateClubRequestDto } from './dto/create-club-request-dto';
+import { CreateClubResponseDto } from './dto/create-club-response-dto';
+import { FileService } from 'src/common/file.service';
+import { UpdateClubRequestDto } from './dto/update-club-request-dto';
+import { UpdateClubResponseDto } from './dto/update-club-response-dto';
+import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 
 @Injectable()
 export class ClubService {
   constructor(
     private readonly clubRepository: ClubRepository,
     private readonly clubLikeRepository: ClubLikeRepository,
+    private readonly fileService: FileService,
   ) {}
 
   async getClubList(
@@ -197,6 +206,111 @@ export class ClubService {
 
     // 앞에서부터 4개를 랜덤한 순서로 반환
     return this.shuffleArray(recommendClubList.slice(0, 4));
+  }
+
+  async createClub(
+    clubImage: Express.Multer.File,
+    requestDto: CreateClubRequestDto,
+  ): Promise<CreateClubResponseDto> {
+    if (!this.fileService.imagefilter(clubImage)) {
+      throw new BadRequestException('Only image file can be uploaded!');
+    }
+
+    const {
+      name,
+      category,
+      summary,
+      regularMeeting,
+      recruitmentPeriod,
+      description,
+      instagramLink,
+      youtubeLink,
+    } = requestDto;
+
+    const filename = await this.fileService.uploadFile(
+      clubImage,
+      'club',
+      'image',
+    );
+
+    const imageUrl = this.fileService.makeUrlByFileDir(filename);
+
+    const club = this.clubRepository.create({
+      name,
+      category,
+      summary,
+      regularMeeting,
+      recruitmentPeriod,
+      description,
+      instagramLink,
+      youtubeLink,
+      imageUrl,
+    });
+
+    await this.clubRepository.save(club);
+
+    return new CreateClubResponseDto(club);
+  }
+
+  async updateClub(
+    clubId: number,
+    clubImage: Express.Multer.File,
+    requestDto: UpdateClubRequestDto,
+  ): Promise<UpdateClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+
+    const updateData: any = { ...requestDto };
+    delete updateData.clubImage;
+    let newFilename: string | null = null;
+
+    if (clubImage) {
+      if (!this.fileService.imagefilter(clubImage)) {
+        throw new BadRequestException('Only image file can be uploaded!');
+      }
+      const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+      await this.fileService.deleteFile(filename);
+      newFilename = await this.fileService.uploadFile(
+        clubImage,
+        'club',
+        'image',
+      );
+      updateData.imageUrl = this.fileService.makeUrlByFileDir(newFilename);
+    }
+
+    const updated = await this.clubRepository.update(
+      { id: clubId },
+      updateData,
+    );
+    if (updated.affected === 0) {
+      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+    }
+
+    return new UpdateClubResponseDto(true);
+  }
+
+  async deleteClub(clubId: number): Promise<DeleteClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+    }
+    const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+    await this.fileService.deleteFile(filename);
+
+    const deleted = await this.clubRepository.softDelete({ id: clubId });
+    if (deleted.affected === 0) {
+      throw new InternalServerErrorException(
+        '동아리 정보를 삭제하는데 실패했습니다.',
+      );
+    }
+
+    return new DeleteClubResponseDto(true);
   }
 
   // 리스트를 랜덤하게 섞어서 반환하는 함수
