@@ -137,6 +137,24 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
   },
 
   // - 51xx : Calendar
+  CALENDAR_NOT_FOUND: {
+    name: 'CALENDAR_NOT_FOUND',
+    message: '행사/일정 정보를 찾을 수 없습니다.',
+    errorCode: 5100,
+    statusCode: 404,
+  },
+  CALENDAR_UPDATE_FAILED: {
+    name: 'CALENDAR_UPDATE_FAILED',
+    message: '행사/일정 업데이트에 실패했습니다.',
+    errorCode: 5101,
+    statusCode: 500,
+  },
+  CALENDAR_DELETE_FAILED: {
+    name: 'CALENDAR_DELETE_FAILED',
+    message: '행사/일정 삭제에 실패했습니다.',
+    errorCode: 5102,
+    statusCode: 500,
+  },
   // 6xxx : S3, File 관련 예외
   NOT_IMAGE_FILE: {
     name: 'NOT_IMAGE_FILE',
