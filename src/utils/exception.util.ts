@@ -9,6 +9,12 @@ interface kukeyExceptionResponse {
 // 커스텀 예외 종류
 export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
   // 1xxx : 인증 관련 예외
+  LOGIN_REQUIRED: {
+    name: 'LOGIN_REQUIRED',
+    message: '로그인이 필요합니다.',
+    errorCode: 1000,
+    statusCode: 401,
+  },
   // 2xxx : 유저 관련 예외
   // - 20xx : User
   USER_NOT_FOUND: {
@@ -111,8 +117,33 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
   // - 43xx : Report
   // 5xxx : 메인 홈 관련 예외
   // - 50xx : Club
+  CLUB_NOT_FOUND: {
+    name: 'CLUB_NOT_FOUND',
+    message: '동아리 정보를 찾을 수 없습니다.',
+    errorCode: 5000,
+    statusCode: 404,
+  },
+  CLUB_UPDATE_FAILED: {
+    name: 'CLUB_UPDATE_FAILED',
+    message: '동아리 정보 업데이트에 실패했습니다.',
+    errorCode: 5001,
+    statusCode: 500,
+  },
+  CLUB_DELETE_FAILED: {
+    name: 'CLUB_DELETE_FAILED',
+    message: '동아리 삭제에 실패했습니다.',
+    errorCode: 5002,
+    statusCode: 500,
+  },
+
   // - 51xx : Calendar
-  // 6xxx : S3 관련 예외
+  // 6xxx : S3, File 관련 예외
+  NOT_IMAGE_FILE: {
+    name: 'NOT_IMAGE_FILE',
+    message: '이미지 파일만 업로드할 수 있습니다.',
+    errorCode: 6000,
+    statusCode: 400,
+  },
 };
 
 // kukeyExceptions의 key들을 type으로 사용
