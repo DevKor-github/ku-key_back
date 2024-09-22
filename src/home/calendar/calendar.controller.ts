@@ -20,14 +20,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  GetDailyCalendarDataResponseDto,
-  GetMonthlyCalendarDataResponseDto,
-} from './dto/get-calendar-data-response-dto';
-import {
-  GetMonthlyCalendarDataRequestDto,
-  GetYearlyCalendarDataRequestDto,
-} from './dto/get-calendar-data-request-dto';
+import { GetDailyCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
+import { GetMonthlyCalendarDataRequestDto } from './dto/get-calendar-data-request-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
@@ -39,6 +33,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 import { GetAcademicScheduleDataRequestDto } from './dto/get-academic-schedule-request.dto';
 import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
+import { GetBannerImageUrlResponseDto } from './dto/get-banner-images-response.dto';
 
 @Controller('calendar')
 @ApiTags('calendar')
@@ -87,27 +82,6 @@ export class CalendarController {
       queryDto.year,
       queryDto.semester,
     );
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.admin)
-  @Get('yearly')
-  @ApiBearerAuth('accessToken')
-  @ApiOperation({
-    summary: '연도별 행사/일정 전체 조회',
-    description:
-      '연도별 행사/일정 전체를 조회합니다. 행사/일정이 존재하는 날짜의 경우에만 가져옵니다.',
-  })
-  @ApiQuery({ name: 'year', required: true, description: '연도' })
-  @ApiOkResponse({
-    description: '특정 연도별 행사/일정 데이터 반환',
-    isArray: true,
-    type: GetMonthlyCalendarDataResponseDto,
-  })
-  async getYearlyCalendarData(
-    @Query() queryDto: GetYearlyCalendarDataRequestDto,
-  ): Promise<GetMonthlyCalendarDataResponseDto[]> {
-    return await this.calendarService.getYearlyCalendarData(queryDto.year);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -169,5 +143,18 @@ export class CalendarController {
     @Param('calendarId') calendarId: number,
   ): Promise<DeleteCalendarDataResponseDto> {
     return await this.calendarService.deleteCalendarData(calendarId);
+  }
+
+  @Get('banner-image-urls')
+  @ApiOperation({
+    summary: '메인 홈 배너 이미지 URL 목록 조회',
+    description: 'S3에 저장된 메인 홈 배너 이미지 URL 목록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    description: 'URL 목록 반환',
+    type: [GetBannerImageUrlResponseDto],
+  })
+  async getBannerImageUrls(): Promise<GetBannerImageUrlResponseDto[]> {
+    return await this.calendarService.getBannerImageUrls();
   }
 }
