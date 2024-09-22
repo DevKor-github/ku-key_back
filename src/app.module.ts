@@ -19,7 +19,6 @@ import { PostModule } from './community/post/post.module';
 import { CommentModule } from './community/comment/comment.module';
 import { NoticeModule } from './notice/notice.module';
 import { CalendarModule } from './home/calendar/calendar.module';
-import { InstitutionModule } from './home/institution/institution.module';
 import { ReportModule } from './community/report/report.module';
 import { AttendanceCheckModule } from './attendance-check/attendance-check.module';
 
@@ -65,7 +64,6 @@ console.log(`.env.${process.env.NODE_ENV}`);
     ClubModule,
     NoticeModule,
     CalendarModule,
-    InstitutionModule,
     ReportModule,
     AttendanceCheckModule,
   ],
