@@ -19,7 +19,7 @@ const dailyOption = (level: string, folder: string, appName: string) => {
     filename: `%DATE%.${level}.log`,
     maxFiles: 15,
     zippedArchive: true,
-    logFormat: logFormat(appName),
+    format: logFormat(appName),
   };
 };
 
