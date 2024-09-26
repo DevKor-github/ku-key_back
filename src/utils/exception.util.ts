@@ -9,12 +9,93 @@ interface kukeyExceptionResponse {
 // 커스텀 예외 종류
 export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
   // 1xxx : 인증 관련 예외
+  // - 10xx : 일반 인증 관련
   LOGIN_REQUIRED: {
     name: 'LOGIN_REQUIRED',
     message: '로그인이 필요합니다.',
     errorCode: 1000,
     statusCode: 401,
   },
+  INVALID_EMAIL: {
+    name: 'INVALID_EMAIL',
+    message: '이메일이 잘못되었습니다.',
+    errorCode: 1001,
+    statusCode: 400,
+  },
+  INVALID_PASSWORD: {
+    name: 'INVALID_PASSWORD',
+    message: '비밀번호가 일치하지 않습니다.',
+    errorCode: 1002,
+    statusCode: 400,
+  },
+  VERIFY_TOKEN_NOT_FOUND: {
+    name: 'VERIFY_TOKEN_NOT_FOUND',
+    message: '해당 메일로 전송된 인증번호가 없습니다.',
+    errorCode: 1003,
+    statusCode: 404,
+  },
+  INVALID_VERIFY_TOKEN: {
+    name: 'INVALID_VERIFY_TOKEN',
+    message: '인증번호가 일치하지 않습니다.',
+    errorCode: 1004,
+    statusCode: 401,
+  },
+  // - 11xx : 토큰 관련
+  INVALID_ACCESS_TOKEN: {
+    name: 'INVALID_ACCESS_TOKEN',
+    message: '액세스 토큰이 유효하지 않습니다.',
+    errorCode: 1100,
+    statusCode: 401,
+  },
+  ACCESS_TOKEN_EXPIRED: {
+    name: 'ACCESS_TOKEN_EXPIRED',
+    message: '액세스 토큰이 만료되었습니다. 리프레시를 시도해주세요.',
+    errorCode: 1101,
+    statusCode: 401,
+  },
+  INVALID_REFRESH_TOKEN: {
+    name: 'INVALID_REFRESH_TOKEN',
+    message: '리프레시 토큰이 유효하지 않습니다.',
+    errorCode: 1102,
+    statusCode: 401,
+  },
+  REFRESH_TOKEN_EXPIRED: {
+    name: 'REFRESH_TOKEN_EXPIRED',
+    message: '리프레시 토큰이 만료되었습니다.',
+    errorCode: 1103,
+    statusCode: 401,
+  },
+  MISSING_AUTHORIZATION_HEADER: {
+    name: 'MISSING_AUTHORIZATION_HEADER',
+    message: 'Authorization header가 존재하지 않습니다.',
+    errorCode: 1104,
+    statusCode: 400,
+  },
+  INVALID_TOKEN_TYPE: {
+    name: 'INVALID_TOKEN_TYPE',
+    message: '토큰 유형이 유효하지 않습니다.',
+    errorCode: 1105,
+    statusCode: 400,
+  },
+  MISSING_TOKEN: {
+    name: 'MISSING_TOKEN',
+    message: '토큰 정보가 없습니다.',
+    errorCode: 1106,
+    statusCode: 400,
+  },
+  REFRESH_TOKEN_UPDATE_FAILED: {
+    name: 'REFRESH_TOKEN_UPDATE_FAILED',
+    message: '리프레시 토큰 업데이트에 실패했습니다.',
+    errorCode: 1107,
+    statusCode: 500,
+  },
+  REFRESH_TOKEN_NOT_MATCHED: {
+    name: 'REFRESH_TOKEN_NOT_MATCHED',
+    message: '리프레시 토큰이 데이터베이스 정보와 일치하지 않습니다.',
+    errorCode: 1108,
+    statusCode: 400,
+  },
+
   // 2xxx : 유저 관련 예외
   // - 20xx : User
   USER_NOT_FOUND: {
@@ -28,6 +109,24 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     message: '인증되지 않은 유저입니다.',
     errorCode: 2001,
     statusCode: 400,
+  },
+  USER_VERIFICATION_FAILED: {
+    name: 'USER_VERIFICATION_FAILED',
+    message: '유저 스크린샷 인증에 실패했습니다.',
+    errorCode: 2002,
+    statusCode: 500,
+  },
+  PASSWORD_UPDATE_FAILED: {
+    name: 'PASSWORD_UPDATE_FAILED',
+    message: '유저 비밀번호 변경에 실패했습니다.',
+    errorCode: 2003,
+    statusCode: 500,
+  },
+  ADMIN_ONLY_ACCESSIBLE: {
+    name: 'ADMIN_ONLY_ACCESSIBLE',
+    message: '관리자만 접근할 수 있습니다.',
+    errorCode: 2004,
+    statusCode: 403,
   },
   // - 21xx : Point
   // - 22xx : Character
