@@ -1,8 +1,9 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthorizedUserDto } from '../dto/authorized-user-dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
@@ -20,7 +21,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     );
 
     if (!user) {
-      throw new UnauthorizedException();
+      throwKukeyException('INVALID_EMAIL');
     }
 
     return user;
