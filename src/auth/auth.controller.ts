@@ -8,6 +8,7 @@ import {
   Post,
   Res,
   UploadedFile,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -57,9 +58,12 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { UnhandledExceptionFilter } from 'src/common/filter/unhandled-exception.filter';
+import { KukeyExceptionFilter } from 'src/common/filter/kukey-exception.filter';
 
 @ApiTags('Auth')
 @Controller('auth')
+@UseFilters(UnhandledExceptionFilter, KukeyExceptionFilter)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
