@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClubCategory } from 'src/common/types/club-category-type';
 import { ClubEntity } from 'src/entities/club.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class ClubRepository extends Repository<ClubEntity> {
@@ -22,11 +22,15 @@ export class ClubRepository extends Repository<ClubEntity> {
     }
 
     if (keyword) {
-      queryBuilder
-        .andWhere('club.name LIKE :keyword', {
-          keyword: `${keyword}%`,
-        })
-        .orWhere('club.summary LIKE :keyword', { keyword: `%${keyword}%` });
+      queryBuilder.andWhere(
+        new Brackets((qb) =>
+          qb
+            .where('club.name LIKE :keyword', {
+              keyword: `${keyword}%`,
+            })
+            .orWhere('club.summary LIKE :keyword', { keyword: `%${keyword}%` }),
+        ),
+      );
     }
 
     if (sortBy === 'like') {

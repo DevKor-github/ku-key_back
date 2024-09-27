@@ -6,7 +6,7 @@ export class GetCommentResponseDto {
   constructor(
     commentEntity: CommentEntity,
     userId: number,
-    anonymousNumber: number,
+    anonymousNumber?: number,
   ) {
     this.id = commentEntity.id;
     this.isDeleted = commentEntity.deletedAt ? true : false;
@@ -14,6 +14,7 @@ export class GetCommentResponseDto {
     this.updatedAt = commentEntity.updatedAt;
     if (this.isDeleted) {
       this.isMyComment = false;
+      this.isAuthor = false;
       this.content = null;
       this.user = {
         username: null,
@@ -25,6 +26,9 @@ export class GetCommentResponseDto {
       this.myLike = false;
     } else {
       this.isMyComment = commentEntity.userId === userId;
+      this.isAuthor =
+        commentEntity.post.isAnonymous === commentEntity.isAnonymous &&
+        commentEntity.post.userId === commentEntity.userId;
       this.content = commentEntity.content;
       this.user = new CommunityUser(
         commentEntity.user,
@@ -51,6 +55,9 @@ export class GetCommentResponseDto {
 
   @ApiProperty({ description: '본인이 작성한 댓글인지 여부' })
   isMyComment?: boolean;
+
+  @ApiProperty({ description: '게시글 작성자의 댓글인지 여부' })
+  isAuthor?: boolean;
 
   @ApiProperty({ description: '댓글 내용' })
   content?: string;
