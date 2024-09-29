@@ -291,7 +291,32 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     statusCode: 400,
   },
   // - 31xx : Schedule
+  INVALID_TIME_RANGE: {
+    name: 'INVALID_TIME_RANGE',
+    message: '시작 시간보다 종료 시간이 앞설 수 없습니다.',
+    errorCode: 3100,
+    statusCode: 400,
+  },
+  SCHEDULE_CONFLICT: {
+    name: 'SCHEDULE_CONFLICT',
+    message: '스케쥴이 기존 강의/스케쥴 시간대와 충돌합니다.',
+    errorCode: 3101,
+    statusCode: 409,
+  },
+  SCHEDULE_NOT_FOUND: {
+    name: 'SCHEDULE_NOT_FOUND',
+    message: '존재하지 않는 스케쥴입니다.',
+    errorCode: 3102,
+    statusCode: 404,
+  },
+
   // - 32xx : Timetable
+  TIMETABLE_NOT_FOUND: {
+    name: 'TIMETABLE_NOT_FOUND',
+    message: '존재하지 않는 시간표입니다.',
+    errorCode: 3200,
+    statusCode: 404,
+  },
   // - 33xx : CourseReview
   VIEWABLE_UNTIL_UPDATE_FAILED: {
     name: 'VIEWABLE_UNTIL_UPDATE_FAILED',

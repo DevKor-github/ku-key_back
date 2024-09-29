@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { ScheduleEntity } from 'src/entities/schedule.entity';
 import { CreateScheduleRequestDto } from './dto/create-schedule-request.dto';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -16,6 +9,7 @@ import { UpdateScheduleResponseDto } from './dto/update-schedule-response.dto';
 import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isConflictingTime } from 'src/utils/time-utils';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class ScheduleService {
@@ -42,22 +36,20 @@ export class ScheduleService {
         user.id,
       );
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     if (
       createScheduleRequestDto.startTime >= createScheduleRequestDto.endTime
     ) {
-      throw new BadRequestException('Start time must be earlier than end time');
+      throwKukeyException('INVALID_TIME_RANGE');
     }
 
     // 시간표에 존재하는 강의, 스케쥴과 추가하려는 스케쥴이 시간이 겹치는 지 확인
     const isConflict = await this.checkTimeConflict(createScheduleRequestDto);
 
     if (isConflict) {
-      throw new ConflictException(
-        'Schedule conflicts with existing courses and schedules',
-      );
+      throwKukeyException('SCHEDULE_CONFLICT');
     }
 
     const newSchedule = this.scheduleRepository.create({
@@ -79,13 +71,11 @@ export class ScheduleService {
     });
 
     if (!schedule) {
-      throw new NotFoundException('Schedule not found');
+      throwKukeyException('SCHEDULE_NOT_FOUND');
     }
 
     if (Number(schedule.timetableId) !== updateScheduleRequestDto.timetableId) {
-      throw new NotFoundException(
-        '변경하고자 하는 일정이 해당 시간표에 존재하지 않습니다!',
-      );
+      throwKukeyException('SCHEDULE_NOT_FOUND');
     }
 
     // 수정할 부분이 시간 or 요일일 때
@@ -97,9 +87,7 @@ export class ScheduleService {
       if (
         updateScheduleRequestDto.startTime >= updateScheduleRequestDto.endTime
       ) {
-        throw new BadRequestException(
-          'Start time must be earlier than end time',
-        );
+        throwKukeyException('INVALID_TIME_RANGE');
       }
       // 시간표에 존재하는 강의, 스케쥴과 수정하려는 스케쥴이 시간이 겹치는 지 확인
       const isConflict = await this.checkTimeConflict(
@@ -108,9 +96,7 @@ export class ScheduleService {
       );
 
       if (isConflict) {
-        throw new ConflictException(
-          'Schedule conflicts with existing courses and schedules',
-        );
+        throwKukeyException('SCHEDULE_CONFLICT');
       }
     }
 
@@ -135,7 +121,7 @@ export class ScheduleService {
     });
 
     if (!schedule) {
-      throw new NotFoundException('Schedule not found');
+      throwKukeyException('SCHEDULE_NOT_FOUND');
     }
 
     await this.scheduleRepository.softDelete(scheduleId);
