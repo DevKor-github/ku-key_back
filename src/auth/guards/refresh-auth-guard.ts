@@ -13,11 +13,9 @@ export class RefreshAuthGuard extends AuthGuard('refresh') {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     if (!request.headers.authorization) {
       throwKukeyException('MISSING_AUTHORIZATION_HEADER');
-    }
-    if (type !== 'Bearer') {
+    } else if (type !== 'Bearer') {
       throwKukeyException('INVALID_TOKEN_TYPE');
-    }
-    if (!token) {
+    } else if (!token) {
       throwKukeyException('MISSING_TOKEN');
     }
 
@@ -27,11 +25,9 @@ export class RefreshAuthGuard extends AuthGuard('refresh') {
   handleRequest(err: any, user: any, info: any, context: any, status: any) {
     if (info instanceof TokenExpiredError) {
       throwKukeyException('REFRESH_TOKEN_EXPIRED');
-    }
-    if (info instanceof JsonWebTokenError) {
+    } else if (info instanceof JsonWebTokenError) {
       throwKukeyException('INVALID_REFRESH_TOKEN');
-    }
-    if (!user) {
+    } else if (!user) {
       // validate 함수의 반환값이 없는 경우
       if (err) {
         // 에러가 있다면 그대로 던짐
