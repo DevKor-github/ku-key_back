@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   UploadedFile,
-  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -45,13 +44,10 @@ import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
-import { UnhandledExceptionFilter } from 'src/common/filter/unhandled-exception.filter';
-import { KukeyExceptionFilter } from 'src/common/filter/kukey-exception.filter';
 
 @Controller('club')
 @ApiTags('club')
 @ApiBearerAuth('accessToken')
-@UseFilters(UnhandledExceptionFilter, KukeyExceptionFilter)
 export class ClubController {
   constructor(private readonly clubService: ClubService) {}
 

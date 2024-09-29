@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Query,
-  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
@@ -35,12 +34,9 @@ import { Role } from 'src/enums/role.enum';
 import { GetAcademicScheduleDataRequestDto } from './dto/get-academic-schedule-request.dto';
 import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
 import { GetBannerImageUrlResponseDto } from './dto/get-banner-images-response.dto';
-import { UnhandledExceptionFilter } from 'src/common/filter/unhandled-exception.filter';
-import { KukeyExceptionFilter } from 'src/common/filter/kukey-exception.filter';
 
 @Controller('calendar')
 @ApiTags('calendar')
-@UseFilters(UnhandledExceptionFilter, KukeyExceptionFilter)
 export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
