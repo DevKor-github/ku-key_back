@@ -264,6 +264,12 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     statusCode: 500,
   },
   // - 23xx : AttendanceCheck
+  ATTENDANCE_ALREADY_CHECKED: {
+    name: 'ATTENDANCE_ALREADY_CHECKED',
+    message: '이미 오늘자 출석체크를 했습니다.',
+    errorCode: 2300,
+    statusCode: 409,
+  },
   // 3xxx : 시간표 관련 예외
   // - 30xx : Course
   // - 31xx : Schedule
