@@ -128,7 +128,98 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 2004,
     statusCode: 403,
   },
+  EMAIL_ALREADY_USED: {
+    name: 'EMAIL_ALREADY_USED',
+    message: '이미 해당 이메일이 존재합니다.',
+    errorCode: 2005,
+    statusCode: 400,
+  },
+  USERNAME_ALREADY_USED: {
+    name: 'USERNAME_ALREADY_USED',
+    message: '이미 해당 아이디가 존재합니다.',
+    errorCode: 2006,
+    statusCode: 400,
+  },
+  USER_DELETE_FAILED: {
+    name: 'USER_DELETE_FAILED',
+    message: '유저 삭제에 실패했습니다.',
+    errorCode: 2007,
+    statusCode: 500,
+  },
+  RE_REGISTRATION_NOT_ALLOWED: {
+    name: 'RE_REGISTRATION_NOT_ALLOWED',
+    message: '동일 이메일로 7일 이내에 재가입할 수 없습니다.',
+    errorCode: 2008,
+    statusCode: 400,
+  },
+  PROFILE_UPDATE_FAILED: {
+    name: 'PROFILE_UPDATE_FAILED',
+    message: '유저 프로필 업데이트에 실패했습니다.',
+    errorCode: 2009,
+    statusCode: 500,
+  },
+  INVALID_DATE_RANGE: {
+    name: 'INVALID_DATE_RANGE',
+    message: '시작 날짜보다 종료 날짜가 앞설 수 없습니다.',
+    errorCode: 2010,
+    statusCode: 400,
+  },
+  EXCHANGE_DAY_UPDATE_FAILED: {
+    name: 'EXCHANGE_DAY_UPDATE_FAILED',
+    message: '교환 날짜 업데이트에 실패했습니다.',
+    errorCode: 2011,
+    statusCode: 500,
+  },
+  SAME_PASSWORD: {
+    name: 'SAME_PASSWORD',
+    message: '이전 비밀번호와 동일합니다.',
+    errorCode: 2012,
+    statusCode: 400,
+  },
+  LANGUAGE_LIMIT_EXCEEDED: {
+    name: 'LANGUAGE_LIMIT_EXCEEDED',
+    message: '언어는 5개까지만 추가할 수 있습니다.',
+    errorCode: 2013,
+    statusCode: 400,
+  },
+  LANGUAGE_ALREADY_EXIST: {
+    name: 'LANGUAGE_ALREADY_EXIST',
+    message: '언어가 이미 존재합니다.',
+    errorCode: 2014,
+    statusCode: 409,
+  },
+  LANGUAGE_NOT_FOUND: {
+    name: 'LANGUAGE_NOT_FOUND',
+    message: '존재하지 않는 언어 정보입니다.',
+    errorCode: 2015,
+    statusCode: 404,
+  },
+  LANGUAGE_DELETE_FAILED: {
+    name: 'LANGUAGE_DELETE_FAILED',
+    message: '언어 삭제에 실패했습니다.',
+    errorCode: 2016,
+    statusCode: 500,
+  },
   // - 21xx : Point
+  POINT_NOT_ENOUGH: {
+    name: 'POINT_NOT_ENOUGH',
+    message: '포인트가 부족합니다.',
+    errorCode: 2100,
+    statusCode: 400,
+  },
+  ITEM_METADATA_MISSING: {
+    name: 'ITEM_METADATA_MISSING',
+    message: '아이템 메타데이터 정보가 없습니다.',
+    errorCode: 2101,
+    statusCode: 400,
+  },
+  ITEM_POINT_NOT_MATCHED: {
+    name: 'ITEM_POINT_NOT_MATCHED',
+    message: '요구 포인트가 아이템 정보와 일치하지 않습니다',
+    errorCode: 2102,
+    statusCode: 400,
+  },
+
   // - 22xx : Character
   CHARACTER_NOT_FOUND: {
     name: 'CHARACTER_NOT_FOUND',
@@ -136,12 +227,54 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 2200,
     statusCode: 404,
   },
+  CHARACTER_ALREADY_EXIST: {
+    name: 'CHARACTER_ALREADY_EXIST',
+    message: '캐릭터 정보가 이미 존재합니다.',
+    errorCode: 2201,
+    statusCode: 409,
+  },
+  CHARACTER_LEVEL_ALREADY_MAX: {
+    name: 'CHARACTER_LEVEL_ALREADY_MAX',
+    message: '이미 최대 레벨입니다.',
+    errorCode: 2202,
+    statusCode: 400,
+  },
+  CHARACTER_LEVEL_UPGRADE_FAILED: {
+    name: 'CHARACTER_LEVEL_UPGRADE_FAILED',
+    message: '캐릭터 레벨 업그레이드에 실패했습니다.',
+    errorCode: 2203,
+    statusCode: 500,
+  },
+  CHARACTER_TYPE_CHANGE_FAILED: {
+    name: 'CHARACTER_TYPE_CHANGE_FAILED',
+    message: '캐릭터 타입 변경에 실패했습니다.',
+    errorCode: 2204,
+    statusCode: 500,
+  },
+  CHARACTER_LEVEL_NOT_UNLOCKED: {
+    name: 'CHARACTER_LEVEL_NOT_UNLOCKED',
+    message: '해금되지 않은 레벨입니다.',
+    errorCode: 2205,
+    statusCode: 400,
+  },
+  CHARACTER_LEVEL_SELECT_FAILED: {
+    name: 'CHARACTER_LEVEL_SELECT_FAILED',
+    message: '캐릭터 레벨 선택에 실패했습니다.',
+    errorCode: 2206,
+    statusCode: 500,
+  },
   // - 23xx : AttendanceCheck
   // 3xxx : 시간표 관련 예외
   // - 30xx : Course
   // - 31xx : Schedule
   // - 32xx : Timetable
   // - 33xx : CourseReview
+  VIEWABLE_UNTIL_UPDATE_FAILED: {
+    name: 'VIEWABLE_UNTIL_UPDATE_FAILED',
+    message: '강의 열람권 날짜 업데이트에 실패했습니다.',
+    errorCode: 3300,
+    statusCode: 500,
+  },
   // - 34xx : Friendship
   FRIENDSHIP_NOT_FOUND: {
     name: 'FRIENDSHIP_NOT_FOUND',
@@ -234,7 +367,6 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 5002,
     statusCode: 500,
   },
-
   // - 51xx : Calendar
   CALENDAR_NOT_FOUND: {
     name: 'CALENDAR_NOT_FOUND',
@@ -261,6 +393,13 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 6000,
     statusCode: 400,
   },
+  // 7xxx : Class-Validator, TypeORM 관련 예외
+  VALIDATION_ERROR: {
+    name: 'VALIDATION_ERROR',
+    message: '올바르지 않은 입력 값입니다.',
+    errorCode: 7000,
+    statusCode: 400,
+  },
 };
 
 // kukeyExceptions의 key들을 type으로 사용
@@ -271,8 +410,8 @@ export class kukeyException extends Error {
   readonly errorCode: number;
   readonly statusCode: number;
 
-  constructor(name: kukeyExceptionName) {
-    super(kukeyExceptions[name].message);
+  constructor(name: kukeyExceptionName, message?: string) {
+    super(message ?? kukeyExceptions[name].message);
     this.name = name;
     this.errorCode = kukeyExceptions[name].errorCode;
     this.statusCode = kukeyExceptions[name].statusCode;
@@ -280,6 +419,9 @@ export class kukeyException extends Error {
 }
 
 // 예외 던지는 함수
-export function throwKukeyException(name: kukeyExceptionName): never {
-  throw new kukeyException(name);
+export function throwKukeyException(
+  name: kukeyExceptionName,
+  message?: string,
+): never {
+  throw new kukeyException(name, message);
 }
