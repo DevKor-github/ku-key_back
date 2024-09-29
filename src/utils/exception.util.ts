@@ -348,6 +348,30 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 3300,
     statusCode: 500,
   },
+  COURSE_REVIEW_ALREADY_EXIST: {
+    name: 'COURSE_REVIEW_ALREADY_EXIST',
+    message: '이미 해당 강의에 대한 강의평을 등록했습니다.',
+    errorCode: 3301,
+    statusCode: 409,
+  },
+  COURSE_REVIEW_NOT_VIEWABLE: {
+    name: 'COURSE_REVIEW_NOT_VIEWABLE',
+    message: '열람권을 구매해야 합니다.',
+    errorCode: 3302,
+    statusCode: 403,
+  },
+  COURSE_REVIEW_NOT_FOUND: {
+    name: 'COURSE_REVIEW_NOT_FOUND',
+    message: '존재하지 않는 강의평입니다.',
+    errorCode: 3303,
+    statusCode: 404,
+  },
+  SELF_REVIEW_RECOMMENDATION_FORBIDDEN: {
+    name: 'SELF_REVIEW_RECOMMENDATION_FORBIDDEN',
+    message: '본인이 작성한 강의평은 추천할 수 없습니다.',
+    errorCode: 3304,
+    statusCode: 403,
+  },
   // - 34xx : Friendship
   FRIENDSHIP_NOT_FOUND: {
     name: 'FRIENDSHIP_NOT_FOUND',
