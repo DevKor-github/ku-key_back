@@ -272,6 +272,24 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
   },
   // 3xxx : 시간표 관련 예외
   // - 30xx : Course
+  COURSE_NOT_FOUND: {
+    name: 'COURSE_NOT_FOUND',
+    message: '존재하지 않는 강의입니다.',
+    errorCode: 3000,
+    statusCode: 404,
+  },
+  MAJOR_REQURIED: {
+    name: 'MAJOR_REQUIRED',
+    message: '전공을 입력해주세요.',
+    errorCode: 3001,
+    statusCode: 400,
+  },
+  COLLEGE_REQURIED: {
+    name: 'COLLEGE_REQUIRED',
+    message: '단과대 정보를 입력해주세요.',
+    errorCode: 3002,
+    statusCode: 400,
+  },
   // - 31xx : Schedule
   // - 32xx : Timetable
   // - 33xx : CourseReview
