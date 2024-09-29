@@ -290,6 +290,18 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 3002,
     statusCode: 400,
   },
+  COURSE_ALREADY_EXIST: {
+    name: 'COURSE_ALREADY_EXIST',
+    message: '강의가 이미 시간표 내에 존재합니다.',
+    errorCode: 3003,
+    statusCode: 409,
+  },
+  COURSE_CONFLICT: {
+    name: 'COURSE_CONFLICT',
+    message: '강의가 기존 강의/스케쥴 시간대와 충돌합니다.',
+    errorCode: 3004,
+    statusCode: 409,
+  },
   // - 31xx : Schedule
   INVALID_TIME_RANGE: {
     name: 'INVALID_TIME_RANGE',
@@ -316,6 +328,18 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     message: '존재하지 않는 시간표입니다.',
     errorCode: 3200,
     statusCode: 404,
+  },
+  TIMETABLE_LIMIT_EXCEEDED: {
+    name: 'TIMETABLE_LIMIT_EXCEEDED',
+    message: '시간표는 3개까지만 추가할 수 있습니다.',
+    errorCode: 3201,
+    statusCode: 409,
+  },
+  ALREADY_MAIN_TIMETABLE: {
+    name: 'ALREADY_MAIN_TIMETABLE',
+    message: '이미 대표 시간표로 선택된 시간표입니다.',
+    errorCode: 3202,
+    statusCode: 409,
   },
   // - 33xx : CourseReview
   VIEWABLE_UNTIL_UPDATE_FAILED: {
