@@ -1,9 +1,5 @@
 import { EntityManager, Repository } from 'typeorm';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PurchaseItemRequestDto } from './dto/purchase-item-request.dto';
 import { UserService } from './user.service';
 import { UserEntity } from 'src/entities/user.entity';
@@ -15,6 +11,7 @@ import { PointHistoryEntity } from 'src/entities/point-history.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequiredPoints } from 'src/common/types/required-points';
 import { CharacterEntity } from 'src/entities/character.entity';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class PointService {
@@ -35,11 +32,11 @@ export class PointService {
     });
 
     if (!user) {
-      throw new BadRequestException('Wrong userId!');
+      throwKukeyException('USER_NOT_FOUND');
     }
     const originPoint = user.point;
     if (originPoint + changePoint < 0) {
-      throw new BadRequestException("Don't have enough point!");
+      throwKukeyException('POINT_NOT_ENOUGH');
     }
 
     user.point = originPoint + changePoint;
@@ -65,7 +62,7 @@ export class PointService {
     });
 
     if (!user) {
-      throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
+      throwKukeyException('USER_NOT_FOUND');
     }
 
     let userCharacter: CharacterEntity | undefined;
@@ -84,7 +81,7 @@ export class PointService {
       });
 
       if (!userCharacter) {
-        throw new NotFoundException('캐릭터 정보를 찾을 수 없습니다.');
+        throwKukeyException('CHARACTER_NOT_FOUND');
       }
     }
 
@@ -93,13 +90,11 @@ export class PointService {
         const days = itemMetadata.days;
 
         if (!days) {
-          throw new BadRequestException('열람권 일수 정보가 없습니다.');
+          throwKukeyException('ITEM_METADATA_MISSING');
         }
 
         if (!this.checkRequiredPoints(requiredPoints, itemCategory, days)) {
-          throw new BadRequestException(
-            '요구 포인트가 아이템 정보와 일치하지 않습니다',
-          );
+          throwKukeyException('ITEM_POINT_NOT_MATCHED');
         }
 
         responseDto.viewableUntil = await this.userSerivce.updateViewableUntil(
@@ -118,9 +113,7 @@ export class PointService {
             userCharacter.level + 1,
           )
         ) {
-          throw new BadRequestException(
-            '요구 포인트가 아이템 정보와 일치하지 않습니다',
-          );
+          throwKukeyException('ITEM_POINT_NOT_MATCHED');
         }
 
         const newLevel = await this.userSerivce.upgradeUserCharacter(
@@ -133,9 +126,7 @@ export class PointService {
 
       case ItemCategory.CHARACTER_TYPE_CHANGE:
         if (!this.checkRequiredPoints(requiredPoints, itemCategory)) {
-          throw new BadRequestException(
-            '요구 포인트가 아이템 정보와 일치하지 않습니다',
-          );
+          throwKukeyException('ITEM_POINT_NOT_MATCHED');
         }
 
         responseDto.newCharacterType =

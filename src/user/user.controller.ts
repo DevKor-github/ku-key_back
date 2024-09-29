@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -40,11 +41,14 @@ import {
 import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
 import { SelectCharacterLevelRequestDto } from './dto/select-character-level-request.dto';
 import { SelectCharacterLevelResponseDto } from './dto/select-character-level-response-dto';
+import { UnhandledExceptionFilter } from 'src/common/filter/unhandled-exception.filter';
+import { KukeyExceptionFilter } from 'src/common/filter/kukey-exception.filter';
 
 @ApiTags('User')
 @ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard)
 @Controller('user')
+@UseFilters(UnhandledExceptionFilter, KukeyExceptionFilter)
 export class UserController {
   constructor(
     private readonly userService: UserService,
