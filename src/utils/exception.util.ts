@@ -6,8 +6,14 @@ interface kukeyExceptionResponse {
   statusCode: number;
 }
 
+function createKukeyExceptions<
+  T extends Record<string, kukeyExceptionResponse>,
+>(exceptions: T) {
+  return exceptions;
+}
+
 // 커스텀 예외 종류
-export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
+export const kukeyExceptions = createKukeyExceptions({
   // 1xxx : 인증 관련 예외
   // - 10xx : 일반 인증 관련
   LOGIN_REQUIRED: {
@@ -278,13 +284,13 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 3000,
     statusCode: 404,
   },
-  MAJOR_REQURIED: {
+  MAJOR_REQUIRED: {
     name: 'MAJOR_REQUIRED',
     message: '전공을 입력해주세요.',
     errorCode: 3001,
     statusCode: 400,
   },
-  COLLEGE_REQURIED: {
+  COLLEGE_REQUIRED: {
     name: 'COLLEGE_REQUIRED',
     message: '단과대 정보를 입력해주세요.',
     errorCode: 3002,
@@ -497,7 +503,7 @@ export const kukeyExceptions: Record<string, kukeyExceptionResponse> = {
     errorCode: 7000,
     statusCode: 400,
   },
-};
+});
 
 // kukeyExceptions의 key들을 type으로 사용
 export type kukeyExceptionName = keyof typeof kukeyExceptions;

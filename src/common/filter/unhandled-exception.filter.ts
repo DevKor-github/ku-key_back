@@ -24,12 +24,11 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
       console.error(exception);
     }
 
-    response.status(500).json({
+    response.status(statusCode).json({
       statusCode,
       errorCode: 9999,
       name,
       message,
-      stack: exception.stack,
     });
   }
 }
