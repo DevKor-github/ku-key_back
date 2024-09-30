@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import * as redisStore from 'cache-manager-redis-store';
 import { CourseModule } from './course/course.module';
 import { TimetableModule } from './timetable/timetable.module';
 import * as path from 'path';
@@ -47,8 +48,9 @@ console.log(`.env.${process.env.NODE_ENV}`);
       }),
     }),
     CacheModule.register({
-      ttl: 300000,
-      max: 100,
+      store: redisStore,
+      host: 'localhost',
+      port: 6379,
       isGlobal: true,
     }),
     CommonModule,

@@ -154,7 +154,7 @@ export class AuthService {
   ): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
-    await this.cacheManager.set(email, verifyToken);
+    await this.cacheManager.set(email, verifyToken, 1000 * 60 * 5);
     await this.emailService.sendVerityToken(email, verifyToken);
     return new VerificationResponseDto(true);
   }
