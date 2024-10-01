@@ -87,20 +87,6 @@ export class UserRepository extends Repository<UserEntity> {
     return user;
   }
 
-  async setCurrentRefreshToken(
-    id: number,
-    newRefresthToken: string,
-  ): Promise<boolean> {
-    const updateResult = await this.update(
-      { id: id },
-      {
-        refreshToken: newRefresthToken,
-      },
-    );
-
-    return updateResult.affected ? true : false;
-  }
-
   async setProfile(
     id: number,
     profileDto: SetProfileRequestDto,

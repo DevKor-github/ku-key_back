@@ -74,13 +74,13 @@ export class AuthService {
       this.createAccessToken(user),
       this.createRefreshToken(id, keepingLogin),
     );
-    const isSet = await this.userService.setCurrentRefresthToken(
-      id,
-      tokenDto.refreshToken,
+
+    const hashedToken = await argon2.hash(tokenDto.refreshToken);
+    await this.cacheManager.set(
+      `token-${id}`,
+      hashedToken,
+      1000 * 60 * 60 * 24 * (keepingLogin ? 14 : 2),
     );
-    if (!isSet) {
-      throw new NotImplementedException('update refresh token failed!');
-    }
     return tokenDto;
   }
 
@@ -110,19 +110,21 @@ export class AuthService {
     refreshToken: string,
     id: number,
   ): Promise<AuthorizedUserDto> {
-    const user = await this.userService.findUserById(id);
+    const existingToken: string = await this.cacheManager.get(`token-${id}`);
 
-    if (user.refreshToken === null) {
+    if (!existingToken) {
       throw new BadRequestException(
         "There's no refresh token! Please login first",
       );
     }
 
-    const isMatches = await argon2.verify(user.refreshToken, refreshToken);
+    const isMatches = await argon2.verify(existingToken, refreshToken);
 
     if (!isMatches) {
       throw new BadRequestException('refreshToken is not matched!');
     }
+
+    const user = await this.userService.findUserById(id);
 
     return new AuthorizedUserDto(user.id, user.username);
   }
@@ -137,11 +139,8 @@ export class AuthService {
   }
 
   async logout(user: AuthorizedUserDto) {
-    const result = await this.userService.setCurrentRefresthToken(
-      user.id,
-      null,
-    );
-    return new LogoutResponseDto(result);
+    await this.cacheManager.del(`token-${user.id}`);
+    return new LogoutResponseDto(true);
   }
 
   async refreshToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
@@ -154,7 +153,11 @@ export class AuthService {
   ): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
-    await this.cacheManager.set(email, verifyToken, 1000 * 60 * 5);
+    await this.cacheManager.set(
+      `emailverify-${email}`,
+      verifyToken,
+      1000 * 60 * 5,
+    );
     await this.emailService.sendVerityToken(email, verifyToken);
     return new VerificationResponseDto(true);
   }
@@ -163,13 +166,15 @@ export class AuthService {
     email: string,
     verifyToken: number,
   ): Promise<VerifyEmailResponseDto> {
-    const cache_verifyToken = await this.cacheManager.get(email);
+    const cache_verifyToken = await this.cacheManager.get(
+      `emailverify-${email}`,
+    );
     if (!cache_verifyToken) {
       throw new NotFoundException('해당 메일로 전송된 인증번호가 없습니다.');
     } else if (cache_verifyToken !== verifyToken) {
       throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
     } else {
-      await this.cacheManager.del(email);
+      await this.cacheManager.del(`emailverify-${email}`);
       return new VerifyEmailResponseDto(true);
     }
   }
