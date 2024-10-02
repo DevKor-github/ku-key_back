@@ -20,7 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(request: Request, payload: any): Promise<AuthorizedUserDto> {
+  async validate(
+    request: Request,
+    payload: AuthorizedUserDto,
+  ): Promise<AuthorizedUserDto> {
     const passingUrls = ['/auth/logout', '/auth/password'];
     if (!passingUrls.includes(request.url)) {
       const isVerified = await this.userService.checkUserVerified(payload.id);
@@ -28,6 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         throw new BadRequestException('user is not verified!');
       }
     }
-    return new AuthorizedUserDto(payload.id, payload.username);
+    return payload;
   }
 }

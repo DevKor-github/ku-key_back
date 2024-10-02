@@ -74,7 +74,7 @@ export class AuthService {
 
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id, keepingLogin, deviceCode),
+      this.createRefreshToken(user, keepingLogin, deviceCode),
     );
 
     const hashedToken = await argon2.hash(tokenDto.refreshToken);
@@ -98,13 +98,18 @@ export class AuthService {
   }
 
   createRefreshToken(
-    id: number,
+    user: AuthorizedUserDto,
     keepingLogin: boolean,
     deviceCode: string,
   ): string {
     const expiresIn = keepingLogin ? '14d' : '2d';
     return this.jwtService.sign(
-      { id, keepingLogin, deviceCode },
+      {
+        id: user.id,
+        username: user.username,
+        keepingLogin: keepingLogin,
+        deviceCode: deviceCode,
+      },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
@@ -116,7 +121,7 @@ export class AuthService {
     refreshToken: string,
     id: number,
     deviceCode: string,
-  ): Promise<AuthorizedUserDto> {
+  ): Promise<void> {
     const existingToken: string = await this.cacheManager.get(
       `token-${id}-${deviceCode}`,
     );
@@ -132,10 +137,6 @@ export class AuthService {
     if (!isMatches) {
       throw new BadRequestException('refreshToken is not matched!');
     }
-
-    const user = await this.userService.findUserById(id);
-
-    return new AuthorizedUserDto(user.id, user.username);
   }
 
   async logIn(
