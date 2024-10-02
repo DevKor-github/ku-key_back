@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
@@ -27,6 +21,7 @@ import { LanguageResponseDto } from './dto/user-language.dto';
 import { CheckCourseReviewReadingTicketResponseDto } from './dto/check-course-review-reading-ticket.dto';
 import { SelectCharacterLevelRequestDto } from './dto/select-character-level-request.dto';
 import { SelectCharacterLevelResponseDto } from './dto/select-character-level-response-dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class UserService {
@@ -47,14 +42,14 @@ export class UserService {
       createUserDto.email,
     );
     if (userByEmail) {
-      throw new BadRequestException('이미 해당 이메일이 존재합니다.');
+      throwKukeyException('EMAIL_ALREADY_USED');
     }
 
     const userByUsername = await this.userRepository.findUserByUsername(
       createUserDto.username,
     );
     if (userByUsername) {
-      throw new BadRequestException('이미 해당 아이디가 존재합니다.');
+      throwKukeyException('USERNAME_ALREADY_USED');
     }
 
     const hashedPassword = await hash(createUserDto.password, 10);
@@ -72,7 +67,7 @@ export class UserService {
   async hardDeleteUser(userId: number): Promise<boolean> {
     const isDeleted = await this.userRepository.hardDeleteUser(userId);
     if (!isDeleted) {
-      throw new InternalServerErrorException('remove user failed!');
+      throwKukeyException('USER_DELETE_FAILED');
     }
 
     return isDeleted;
@@ -81,7 +76,7 @@ export class UserService {
   async softDeleteUser(userId: number): Promise<DeleteUserResponseDto> {
     const isDeleted = await this.userRepository.softDeleteUser(userId);
     if (!isDeleted) {
-      throw new InternalServerErrorException('remove user failed!');
+      throwKukeyException('USER_DELETE_FAILED');
     }
 
     return new DeleteUserResponseDto(isDeleted);
@@ -110,9 +105,7 @@ export class UserService {
       user.deletedAt.getTime() >
       new Date().getTime() - 1000 * 60 * 60 * 24 * 7
     ) {
-      throw new BadRequestException(
-        'Re-registration is not possible within 7 days of withdrawal.',
-      );
+      throwKukeyException('RE_REGISTRATION_NOT_ALLOWED');
     } else {
       await this.hardDeleteUser(user.id);
       return new checkPossibleResponseDto(true);
@@ -125,7 +118,7 @@ export class UserService {
   ): Promise<SetResponseDto> {
     const isSet = await this.userRepository.setProfile(id, profileDto);
     if (!isSet) {
-      throw new InternalServerErrorException('Profile setting failed!');
+      throwKukeyException('PROFILE_UPDATE_FAILED');
     }
 
     return new SetResponseDto(true);
@@ -136,11 +129,11 @@ export class UserService {
     requestDto: SetExchangeDayReqeustDto,
   ): Promise<SetResponseDto> {
     if (requestDto.startDay >= requestDto.endDay) {
-      throw new BadRequestException('StartDay should be earlier than EndDay!');
+      throwKukeyException('INVALID_DATE_RANGE');
     }
     const isSet = await this.userRepository.setExchangeDay(id, requestDto);
     if (!isSet) {
-      throw new InternalServerErrorException('Exchange Day setting failed!');
+      throwKukeyException('EXCHANGE_DAY_UPDATE_FAILED');
     }
 
     return new SetResponseDto(true);
@@ -181,10 +174,19 @@ export class UserService {
     const user = await this.userRepository.findUserById(userId);
     const isSame = await compare(newPassword, user.password);
     if (isSame) {
-      throw new BadRequestException('Same Password!');
+      throwKukeyException('SAME_PASSWORD');
     }
     const hashedPassword = await hash(newPassword, 10);
-    return await this.userRepository.updatePassword(userId, hashedPassword);
+    const updated = await this.userRepository.updatePassword(
+      userId,
+      hashedPassword,
+    );
+
+    if (!updated) {
+      throwKukeyException('PASSWORD_UPDATE_FAILED');
+    }
+
+    return true;
   }
 
   async isPasswordMatched(userId: number, password: string): Promise<boolean> {
@@ -200,7 +202,7 @@ export class UserService {
       where: { userId: userId },
     });
     if (existingCharacter) {
-      throw new ConflictException('이미 캐릭터가 존재합니다.');
+      throwKukeyException('CHARACTER_ALREADY_EXIST');
     }
     const character = tranasactionManager.create(CharacterEntity, {
       userId: userId,
@@ -240,7 +242,7 @@ export class UserService {
     );
 
     if (updated.affected === 0) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+      throwKukeyException('VIEWABLE_UNTIL_UPDATE_FAILED');
     }
 
     return newExpireDate;
@@ -251,7 +253,7 @@ export class UserService {
     userCharacter: CharacterEntity,
   ): Promise<number> {
     if (userCharacter.level === 6) {
-      throw new BadRequestException('최대 레벨입니다.');
+      throwKukeyException('CHARACTER_LEVEL_ALREADY_MAX');
     }
 
     const updated = await transactionManager.update(
@@ -264,7 +266,7 @@ export class UserService {
     );
 
     if (updated.affected === 0) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+      throwKukeyException('CHARACTER_LEVEL_UPGRADE_FAILED');
     }
 
     return userCharacter.level + 1;
@@ -283,7 +285,7 @@ export class UserService {
     );
 
     if (updated.affected === 0) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+      throwKukeyException('CHARACTER_TYPE_CHANGE_FAILED');
     }
 
     return newType;
@@ -323,17 +325,17 @@ export class UserService {
       },
     });
 
-    if (!user) throw new BadRequestException('Wrong userId!');
+    if (!user) throwKukeyException('USER_NOT_FOUND');
 
     if (user.userLanguages.length >= 5)
-      throw new BadRequestException('Can Only append up to 5 language!');
+      throwKukeyException('LANGUAGE_LIMIT_EXCEEDED');
 
     if (
       user.userLanguages.some(
         (userLanguage) => userLanguage.language === language,
       )
     )
-      throw new ConflictException('Existing Language!');
+      throwKukeyException('LANGUAGE_ALREADY_EXIST');
 
     const newLanguage = this.userLanguageRepository.create({
       userId,
@@ -366,13 +368,12 @@ export class UserService {
       },
     });
 
-    if (!user) throw new BadRequestException('Wrong userId!');
+    if (!user) throwKukeyException('USER_NOT_FOUND');
 
     const existingLanguage = user.userLanguages.find(
       (userLanguage) => userLanguage.language === language,
     );
-    if (!existingLanguage)
-      throw new NotFoundException(`There's no ${language}`);
+    if (!existingLanguage) throwKukeyException('LANGUAGE_NOT_FOUND');
 
     if (
       !(
@@ -381,7 +382,7 @@ export class UserService {
         })
       ).affected
     )
-      throw new InternalServerErrorException('Delete failed!');
+      throwKukeyException('LANGUAGE_DELETE_FAILED');
 
     const allLanguage = user.userLanguages
       .filter((userLanguage) => userLanguage.language !== language)
@@ -403,7 +404,7 @@ export class UserService {
       },
     });
 
-    if (!user) throw new NotFoundException('Cannot find user!');
+    if (!user) throwKukeyException('USER_NOT_FOUND');
 
     const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
     const koreaTime = new Date(Date.now() + offset); // 현재 시간
@@ -427,18 +428,18 @@ export class UserService {
       relations: ['character'],
     });
 
-    if (!user) throw new NotFoundException('유저 정보를 찾을 수 없습니다.');
+    if (!user) throwKukeyException('USER_NOT_FOUND');
 
     const { selectedLevel } = requestDto;
     if (selectedLevel > user.character.level)
-      throw new BadRequestException('해금되지 않은 레벨입니다.');
+      throwKukeyException('CHARACTER_LEVEL_NOT_UNLOCKED');
 
     const updated = await this.characterRepository.update(user.character.id, {
       selectedLevel,
     });
 
     if (updated.affected === 0) {
-      throw new InternalServerErrorException('업데이트에 실패했습니다.');
+      throwKukeyException('CHARACTER_LEVEL_SELECT_FAILED');
     }
 
     return new SelectCharacterLevelResponseDto(selectedLevel);

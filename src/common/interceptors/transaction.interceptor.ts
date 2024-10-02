@@ -7,6 +7,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { catchError, Observable, tap } from 'rxjs';
+import { kukeyException } from 'src/utils/exception.util';
 import { DataSource } from 'typeorm';
 
 @Injectable()
@@ -25,7 +26,9 @@ export class TransactionInterceptor implements NestInterceptor {
       catchError(async (err) => {
         await queryRunner.rollbackTransaction();
         await queryRunner.release();
-        if (err instanceof HttpException) {
+        if (err instanceof kukeyException) {
+          throw err;
+        } else if (err instanceof HttpException) {
           throw new HttpException(err.getResponse(), err.getStatus());
         } else {
           throw new InternalServerErrorException('Transaction Failed');

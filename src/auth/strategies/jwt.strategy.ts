@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthorizedUserDto } from '../dto/authorized-user-dto';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -28,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!passingUrls.includes(request.url)) {
       const isVerified = await this.userService.checkUserVerified(payload.id);
       if (!isVerified) {
-        throw new BadRequestException('user is not verified!');
+        throwKukeyException('USER_NOT_VERIFIED');
       }
     }
     return payload;
