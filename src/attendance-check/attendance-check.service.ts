@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PointService } from './../user/point.service';
 import { AttendanceCheckEntity } from 'src/entities/attendance-check.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { TakeAttendanceResponseDto } from './dto/take-attendance.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class AttendanceCheckService {
@@ -32,7 +33,7 @@ export class AttendanceCheckService {
       },
     );
     if (isAlreadyAttended) {
-      throw new ConflictException('Already attended');
+      throwKukeyException('ATTENDANCE_ALREADY_CHECKED');
     }
 
     const attendance = transactionManager.create(AttendanceCheckEntity, {

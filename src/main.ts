@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
+import { throwKukeyException } from './utils/exception.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,6 +29,16 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       transformOptions: { enableImplicitConversion: true },
+      exceptionFactory: (validationErrors = []) => {
+        const messages = validationErrors.map(
+          (error) =>
+            `{${error.property} - ${Object.values(error.constraints).join(', ')}}`,
+        );
+        throwKukeyException(
+          'VALIDATION_ERROR',
+          `올바르지 않은 입력 값입니다. 세부 정보: ${messages.join(', ')}`,
+        );
+      },
     }),
   );
 

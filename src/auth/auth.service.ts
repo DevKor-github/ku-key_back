@@ -1,12 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  NotImplementedException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compare } from 'bcrypt';
 import * as argon2 from 'argon2';
@@ -32,6 +24,7 @@ import { LogoutResponseDto } from './dto/logout-response.dto';
 import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 import { SendTempPasswordResponseDto } from './dto/send-temporary-password.dto';
 import { EntityManager } from 'typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class AuthService {
@@ -53,13 +46,13 @@ export class AuthService {
     const user = await this.userService.findUserByEmail(email);
 
     if (!user) {
-      throw new BadRequestException('이메일이 잘못되었습니다.');
+      throwKukeyException('INVALID_EMAIL');
     }
 
     const isPasswordMatch = await compare(password, user.password);
 
     if (!isPasswordMatch) {
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      throwKukeyException('INVALID_PASSWORD');
     }
 
     return new AuthorizedUserDto(user.id, user.username);
@@ -79,7 +72,7 @@ export class AuthService {
       tokenDto.refreshToken,
     );
     if (!isSet) {
-      throw new NotImplementedException('update refresh token failed!');
+      throwKukeyException('REFRESH_TOKEN_UPDATE_FAILED');
     }
     return tokenDto;
   }
@@ -113,15 +106,13 @@ export class AuthService {
     const user = await this.userService.findUserById(id);
 
     if (user.refreshToken === null) {
-      throw new BadRequestException(
-        "There's no refresh token! Please login first",
-      );
+      throwKukeyException('LOGIN_REQUIRED');
     }
 
     const isMatches = await argon2.verify(user.refreshToken, refreshToken);
 
     if (!isMatches) {
-      throw new BadRequestException('refreshToken is not matched!');
+      throwKukeyException('REFRESH_TOKEN_NOT_MATCHED');
     }
 
     return new AuthorizedUserDto(user.id, user.username);
@@ -165,9 +156,9 @@ export class AuthService {
   ): Promise<VerifyEmailResponseDto> {
     const cache_verifyToken = await this.cacheManager.get(email);
     if (!cache_verifyToken) {
-      throw new NotFoundException('해당 메일로 전송된 인증번호가 없습니다.');
+      throwKukeyException('VERIFY_TOKEN_NOT_FOUND');
     } else if (cache_verifyToken !== verifyToken) {
-      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+      throwKukeyException('INVALID_VERIFY_TOKEN');
     } else {
       await this.cacheManager.del(email);
       return new VerifyEmailResponseDto(true);
@@ -204,7 +195,7 @@ export class AuthService {
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
     if (!this.fileService.imagefilter(screenshot)) {
-      throw new BadRequestException('Only image file can be uploaded!');
+      throwKukeyException('NOT_IMAGE_FILE');
     }
 
     //유저생성
@@ -218,14 +209,7 @@ export class AuthService {
       major: requestDto.major,
     });
 
-    const character = await this.userService.createUserCharacter(
-      transactionManager,
-      user.id,
-    );
-
-    if (!character) {
-      throw new InternalServerErrorException('캐릭터 생성에 실패했습니다.');
-    }
+    await this.userService.createUserCharacter(transactionManager, user.id);
 
     const studentNumber = requestDto.studentNumber;
 
@@ -281,7 +265,7 @@ export class AuthService {
     if (verify) {
       const isVerified = await this.userService.verifyUser(userId, verify);
       if (!isVerified) {
-        throw new NotImplementedException('reqeust allow failed!');
+        throwKukeyException('USER_VERIFICATION_FAILED');
       }
       const requests =
         await this.kuVerificationRepository.findRequestsByStudentNumber(
@@ -319,7 +303,7 @@ export class AuthService {
       newPassword,
     );
     if (!updateResult) {
-      throw new NotImplementedException('Change password failed!');
+      throwKukeyException('PASSWORD_UPDATE_FAILED');
     }
 
     return new ChangePasswordResponseDto(updateResult);
@@ -336,7 +320,7 @@ export class AuthService {
       tempPassword,
     );
     if (!isUpdated) {
-      throw new NotImplementedException('Change password failed!');
+      throwKukeyException('PASSWORD_UPDATE_FAILED');
     }
     await this.emailService.sendTempPassword(email, tempPassword);
     return new SendTempPasswordResponseDto(true);
