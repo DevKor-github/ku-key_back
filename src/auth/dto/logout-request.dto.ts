@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class LogoutRequestDto {
-  @ApiProperty({ description: '기기 코드' })
-  @IsNotEmpty()
+  @ApiProperty({ description: '기기 코드 (없으면 모든 기기 로그아웃)' })
+  @IsOptional()
   @IsString()
-  deviceCode: string;
+  deviceCode?: string;
 }

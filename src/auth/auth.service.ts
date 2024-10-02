@@ -153,7 +153,14 @@ export class AuthService {
   }
 
   async logout(user: AuthorizedUserDto, deviceCode: string) {
-    await this.cacheManager.del(`token-${user.id}-${deviceCode}`);
+    if (deviceCode) {
+      await this.cacheManager.del(`token-${user.id}-${deviceCode}`);
+    } else {
+      const keys = await this.cacheManager.store.keys(`token-${user.id}-*`);
+      for (const key of keys) {
+        await this.cacheManager.del(key);
+      }
+    }
     return new LogoutResponseDto(true);
   }
 
