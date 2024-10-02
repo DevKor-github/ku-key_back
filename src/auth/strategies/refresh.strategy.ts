@@ -25,8 +25,11 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
     const user = await this.authService.refreshTokenMatches(
       refreshToken,
       payload.id,
+      payload.deviceCode,
     );
+
     user.keepingLogin = payload.keepingLogin;
+    user.deviceCode = payload.deviceCode;
 
     return user;
   }

@@ -68,16 +68,18 @@ export class AuthService {
   async createToken(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
+    deviceCode: string,
   ): Promise<JwtTokenDto> {
     const id = user.id;
+
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id, keepingLogin),
+      this.createRefreshToken(id, keepingLogin, deviceCode),
     );
 
     const hashedToken = await argon2.hash(tokenDto.refreshToken);
     await this.cacheManager.set(
-      `token-${id}`,
+      `token-${id}-${deviceCode}`,
       hashedToken,
       1000 * 60 * 60 * 24 * (keepingLogin ? 14 : 2),
     );
@@ -95,10 +97,14 @@ export class AuthService {
     });
   }
 
-  createRefreshToken(id: number, keepingLogin: boolean): string {
+  createRefreshToken(
+    id: number,
+    keepingLogin: boolean,
+    deviceCode: string,
+  ): string {
     const expiresIn = keepingLogin ? '14d' : '2d';
     return this.jwtService.sign(
-      { id, keepingLogin },
+      { id, keepingLogin, deviceCode },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
@@ -109,8 +115,11 @@ export class AuthService {
   async refreshTokenMatches(
     refreshToken: string,
     id: number,
+    deviceCode: string,
   ): Promise<AuthorizedUserDto> {
-    const existingToken: string = await this.cacheManager.get(`token-${id}`);
+    const existingToken: string = await this.cacheManager.get(
+      `token-${id}-${deviceCode}`,
+    );
 
     if (!existingToken) {
       throw new BadRequestException(
@@ -132,19 +141,27 @@ export class AuthService {
   async logIn(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
+    deviceCode?: string,
   ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    const token = await this.createToken(user, keepingLogin);
-    return new LoginResponseDto(token, verified);
+    if (!(await this.cacheManager.get(`token-${user.id}-${deviceCode}`))) {
+      deviceCode = this.generateRandomString(10) + Date.now().toString();
+    }
+    const token = await this.createToken(user, keepingLogin, deviceCode);
+    return new LoginResponseDto(token, verified, deviceCode);
   }
 
-  async logout(user: AuthorizedUserDto) {
-    await this.cacheManager.del(`token-${user.id}`);
+  async logout(user: AuthorizedUserDto, deviceCode: string) {
+    await this.cacheManager.del(`token-${user.id}-${deviceCode}`);
     return new LogoutResponseDto(true);
   }
 
   async refreshToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
-    const jwtToken = await this.createToken(user, user.keepingLogin);
+    const jwtToken = await this.createToken(
+      user,
+      user.keepingLogin,
+      user.deviceCode,
+    );
     return jwtToken;
   }
 
@@ -334,7 +351,7 @@ export class AuthService {
     email: string,
   ): Promise<SendTempPasswordResponseDto> {
     const user = await this.userService.findUserByEmail(email);
-    const tempPassword = this.generateTempPassword(10);
+    const tempPassword = this.generateRandomString(10);
 
     const isUpdated = await this.userService.updatePassword(
       user.id,
@@ -347,7 +364,7 @@ export class AuthService {
     return new SendTempPasswordResponseDto(true);
   }
 
-  generateTempPassword(len: number): string {
+  generateRandomString(len: number): string {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
