@@ -49,11 +49,14 @@ console.log(`.env.${process.env.NODE_ENV}`);
         timezone: 'Asia/Seoul',
       }),
     }),
-    CacheModule.register({
-      store: redisStore,
-      host: 'localhost',
-      port: 6379,
+    CacheModule.registerAsync({
       isGlobal: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        store: redisStore,
+        host: configService.get('REDIS_HOST'),
+        port: configService.get('REDIS_PORT'),
+      }),
     }),
     CommonModule,
     UserModule,
