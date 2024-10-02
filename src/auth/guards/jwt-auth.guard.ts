@@ -12,7 +12,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     if (!request.headers.authorization) {
-      throwKukeyException('MISSING_AUTHORIZATION_HEADER');
+      // access token은 비로그인 상태에서 인증 헤더 없을 시, LOGIN_REQUIRED로 처리
+      throwKukeyException('LOGIN_REQUIRED');
     }
     if (type !== 'Bearer') {
       throwKukeyException('INVALID_TOKEN_TYPE');

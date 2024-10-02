@@ -4,8 +4,6 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
 import { throwKukeyException } from './utils/exception.util';
-import { UnhandledExceptionFilter } from './common/filter/unhandled-exception.filter';
-import { KukeyExceptionFilter } from './common/filter/kukey-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,11 +22,6 @@ async function bootstrap() {
         [process.env.SWAGGER_USER]: process.env.SWAGGER_PASSWORD,
       },
     }),
-  );
-
-  app.useGlobalFilters(
-    new UnhandledExceptionFilter(),
-    new KukeyExceptionFilter(),
   );
 
   app.useGlobalPipes(
