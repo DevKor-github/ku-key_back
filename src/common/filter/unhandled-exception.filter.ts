@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import { extractUserId } from 'src/utils/user-id-extractor.util';
 import { winstonLogger } from 'src/utils/winston.utils';
 
 // 정의되지 않은 예외를 캐치하는 예외 필터
@@ -26,18 +27,7 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
       console.error(exception);
     }
 
-    let tokenPayload;
-    let userId: string = 'Not Logged In';
-    
-    // 로그인한 사용자의 경우 - userId 추출
-    if (request.headers['authorization']) {
-      const splitedTokens = request.headers['authorization']
-        .split(' ')[1]
-        .split('.');
-      tokenPayload = JSON.parse(atob(splitedTokens[1]));
-      userId = tokenPayload.id;
-    }
-
+    const userId = extractUserId(request);
     const exceptionStack = exception.stack;
     const exceptionMethod = request.method;
     const exceptionUrl = request.url;
