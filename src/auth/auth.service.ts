@@ -297,6 +297,8 @@ export class AuthService {
       if (!isVerified) {
         throwKukeyException('USER_VERIFICATION_FAILED');
       }
+
+      // 동일 학번의 다른 요청 reject
       const requests =
         await this.kuVerificationRepository.findRequestsByStudentNumber(
           request.studentNumber,
@@ -307,6 +309,7 @@ export class AuthService {
         }
 
         await this.deleteRequest(otherRequest.id);
+        await this.emailService.sendVerifyCompleteEmail(user.email, false);
       }
     } else {
       await this.deleteRequest(request.id);
