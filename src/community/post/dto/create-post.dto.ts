@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 
 export class CreatePostRequestDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(255)
   @ApiProperty({ description: '게시글 제목' })
   title: string;
 
