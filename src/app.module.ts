@@ -19,10 +19,11 @@ import { PostModule } from './community/post/post.module';
 import { CommentModule } from './community/comment/comment.module';
 import { NoticeModule } from './notice/notice.module';
 import { CalendarModule } from './home/calendar/calendar.module';
-import { InstitutionModule } from './home/institution/institution.module';
 import { ReportModule } from './community/report/report.module';
 import { AttendanceCheckModule } from './attendance-check/attendance-check.module';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { APP_FILTER } from '@nestjs/core';
+import { UnhandledExceptionFilter } from './common/filter/unhandled-exception.filter';
+import { KukeyExceptionFilter } from './common/filter/kukey-exception.filter';
 
 console.log(`.env.${process.env.NODE_ENV}`);
 
@@ -66,15 +67,20 @@ console.log(`.env.${process.env.NODE_ENV}`);
     ClubModule,
     NoticeModule,
     CalendarModule,
-    InstitutionModule,
     ReportModule,
     AttendanceCheckModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: UnhandledExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: KukeyExceptionFilter,
+    },
+  ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

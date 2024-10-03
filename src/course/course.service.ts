@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
@@ -13,6 +9,7 @@ import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class CourseService {
@@ -28,7 +25,7 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new NotFoundException('Course not found!');
+      throwKukeyException('COURSE_NOT_FOUND');
     }
 
     return new CommonCourseResponseDto(course);
@@ -102,7 +99,7 @@ export class CourseService {
     major: string,
     searchCourseNameDto: SearchCourseNameDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!major) throw new BadRequestException('전공을 입력하세요!');
+    if (!major) throwKukeyException('MAJOR_REQUIRED');
 
     let courses = [];
 
@@ -164,7 +161,7 @@ export class CourseService {
     searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<PaginatedCoursesDto> {
     if (!major) {
-      throw new BadRequestException('전공을 입력하세요!');
+      throwKukeyException('MAJOR_REQUIRED');
     }
     let courses = [];
 
@@ -311,7 +308,7 @@ export class CourseService {
     major: string,
     cursorId: number,
   ): Promise<PaginatedCoursesDto> {
-    if (!major) throw new BadRequestException('Major is required!');
+    if (!major) throwKukeyException('MAJOR_REQUIRED');
     let courses = [];
     if (cursorId) {
       courses = await this.courseRepository.find({
@@ -337,7 +334,7 @@ export class CourseService {
     college: string,
     cursorId: number,
   ): Promise<PaginatedCoursesDto> {
-    if (!college) throw new BadRequestException('College is required!');
+    if (!college) throwKukeyException('COLLEGE_REQUIRED');
     let courses = [];
     if (cursorId) {
       courses = await this.courseRepository.find({

@@ -1,15 +1,21 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ClubService } from './club.service';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -29,6 +35,15 @@ import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { RolesGuard } from 'src/auth/guards/role.guard';
+import { Role } from 'src/enums/role.enum';
+import { Roles } from 'src/decorators/roles.decorator';
+import { CreateClubRequestDto } from './dto/create-club-request-dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CreateClubResponseDto } from './dto/create-club-response-dto';
+import { UpdateClubRequestDto } from './dto/update-club-request-dto';
+import { UpdateClubResponseDto } from './dto/update-club-response-dto';
+import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -150,5 +165,67 @@ export class ClubController {
       user,
       getRecommendClubRequestDto,
     );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
+  @UseInterceptors(FileInterceptor('clubImage'))
+  @Post()
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: '동아리 생성',
+    description: 'Admin page에서 새로운 동아리를 생성합니다.',
+  })
+  @ApiBody({ type: CreateClubRequestDto })
+  @ApiCreatedResponse({
+    description: '동아리 생성 성공',
+    type: CreateClubResponseDto,
+  })
+  async createClub(
+    @UploadedFile() clubImage: Express.Multer.File,
+    @Body() body: CreateClubRequestDto,
+  ): Promise<CreateClubResponseDto> {
+    return await this.clubService.createClub(clubImage, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
+  @UseInterceptors(FileInterceptor('clubImage'))
+  @Patch('/:clubId')
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: '동아리 정보 수정',
+    description: '동아리 id를 받아 admin page에서 동아리 정보를 수정합니다.',
+  })
+  @ApiParam({ name: 'clubId', description: '동아리 id' })
+  @ApiBody({ type: UpdateClubRequestDto })
+  @ApiOkResponse({
+    description: '동아리 정보 수정 성공',
+    type: UpdateClubResponseDto,
+  })
+  async updateClub(
+    @Param('clubId') clubId: number,
+    @UploadedFile() clubImage: Express.Multer.File,
+    @Body() body: UpdateClubRequestDto,
+  ) {
+    return await this.clubService.updateClub(clubId, clubImage, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.admin)
+  @Delete('/:clubId')
+  @ApiOperation({
+    summary: '동아리 정보 삭제',
+    description: '동아리 id를 받아 admin page에서 동아리 정보를 삭제합니다.',
+  })
+  @ApiParam({ name: 'clubId', description: '동아리 id' })
+  @ApiOkResponse({
+    description: '동아리 정보 삭제 성공',
+    type: DeleteClubResponseDto,
+  })
+  async deleteClub(
+    @Param('clubId') clubId: number,
+  ): Promise<DeleteClubResponseDto> {
+    return await this.clubService.deleteClub(clubId);
   }
 }

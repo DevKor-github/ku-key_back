@@ -20,14 +20,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  GetDailyCalendarDataResponseDto,
-  GetMonthlyCalendarDataResponseDto,
-} from './dto/get-calendar-data-response-dto';
-import {
-  GetMonthlyCalendarDataRequestDto,
-  GetYearlyCalendarDataRequestDto,
-} from './dto/get-calendar-data-request-dto';
+import { GetDailyCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
+import { GetMonthlyCalendarDataRequestDto } from './dto/get-calendar-data-request-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
@@ -88,27 +82,6 @@ export class CalendarController {
       queryDto.year,
       queryDto.semester,
     );
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.admin)
-  @Get('yearly')
-  @ApiBearerAuth('accessToken')
-  @ApiOperation({
-    summary: '연도별 행사/일정 전체 조회',
-    description:
-      '연도별 행사/일정 전체를 조회합니다. 행사/일정이 존재하는 날짜의 경우에만 가져옵니다.',
-  })
-  @ApiQuery({ name: 'year', required: true, description: '연도' })
-  @ApiOkResponse({
-    description: '특정 연도별 행사/일정 데이터 반환',
-    isArray: true,
-    type: GetMonthlyCalendarDataResponseDto,
-  })
-  async getYearlyCalendarData(
-    @Query() queryDto: GetYearlyCalendarDataRequestDto,
-  ): Promise<GetMonthlyCalendarDataResponseDto[]> {
-    return await this.calendarService.getYearlyCalendarData(queryDto.year);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

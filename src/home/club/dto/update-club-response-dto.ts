@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateInstitutionResponseDto {
+export class UpdateClubResponseDto {
   @ApiProperty({ description: '업데이트 여부' })
   updated: boolean;
 
