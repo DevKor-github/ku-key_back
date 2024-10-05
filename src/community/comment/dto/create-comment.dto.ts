@@ -4,7 +4,7 @@ import { IsBoolean, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 export class CreateCommentRequestDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(1000)
   @ApiProperty({ description: '댓글 내용' })
   content: string;
 
