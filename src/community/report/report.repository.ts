@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { ReportEntity } from 'src/entities/report.entity';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class ReportRepository extends Repository<ReportEntity> {
@@ -55,7 +56,7 @@ export class ReportRepository extends Repository<ReportEntity> {
     });
 
     if (!report) {
-      throw new BadRequestException('Wrong ReportId!');
+      throwKukeyException('REPORT_NOT_FOUND');
     }
 
     return await this.findOne({

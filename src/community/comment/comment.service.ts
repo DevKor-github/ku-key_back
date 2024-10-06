@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommentRepository } from './comment.repository';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCommentRequestDto } from './dto/create-comment.dto';
@@ -22,6 +18,7 @@ import { Notice } from 'src/notice/enum/notice.enum';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class CommentService {
@@ -68,16 +65,16 @@ export class CommentService {
   ) {
     const post = await this.postService.isExistingPostId(postId);
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     if (parentCommentId) {
       const parentComment =
         await this.commentRepository.getCommentByCommentId(parentCommentId);
       if (!parentComment) {
-        throw new BadRequestException('Wrong ParentCommentId!');
+        throwKukeyException('INVALID_PARENT_COMMENT_REQUEST');
       }
       if (postId !== Number(parentComment.postId)) {
-        throw new BadRequestException("Cannot create other post's reply!");
+        throwKukeyException('REPLY_TO_DIFFERENT_POST');
       }
       if (parentComment.parentCommentId) {
         parentCommentId = parentComment.parentCommentId;
@@ -102,7 +99,7 @@ export class CommentService {
       1,
     );
     if (!updateResult.affected) {
-      throw new InternalServerErrorException('Comment Create Failed!');
+      throwKukeyException('POST_UPDATE_FAILED');
     }
 
     let anonymousNumber: number;
@@ -178,15 +175,15 @@ export class CommentService {
     const comment =
       await this.commentRepository.getCommentByCommentId(commentId);
     if (!comment) {
-      throw new BadRequestException('Wrong CommentId!');
+      throwKukeyException('COMMENT_NOT_FOUND');
     }
     if (comment.userId !== user.id) {
-      throw new BadRequestException("Other user's comment!");
+      throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
     }
 
     const post = await this.postService.isExistingPostId(comment.postId);
     if (Number(post.boardId) === 2) {
-      throw new BadRequestException('Cannot update comment in Question Board!');
+      throwKukeyException('COMMENT_IN_QUESTION_BOARD');
     }
 
     const isUpdated = await this.commentRepository.updateComment(
@@ -195,7 +192,7 @@ export class CommentService {
       requestDto.isAnonymous,
     );
     if (!isUpdated) {
-      throw new InternalServerErrorException('Comment Update Failed!');
+      throwKukeyException('COMMENT_UPDATE_FAILED');
     }
 
     const updatedComment =
@@ -220,15 +217,15 @@ export class CommentService {
     const comment =
       await this.commentRepository.getCommentByCommentIdWithLike(commentId);
     if (!comment) {
-      throw new BadRequestException('Wrong commentId!');
+      throwKukeyException('COMMENT_NOT_FOUND');
     }
     if (comment.userId !== user.id) {
-      throw new BadRequestException("Other user's comment!");
+      throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
     }
 
     const post = await this.postService.isExistingPostId(comment.postId);
     if (Number(post.boardId) === 2) {
-      throw new BadRequestException('Cannot delete comment in Question Board!');
+      throwKukeyException('COMMENT_IN_QUESTION_BOARD');
     }
 
     const deleteResult = await transactionManager.softRemove(
@@ -236,7 +233,7 @@ export class CommentService {
       comment,
     );
     if (!deleteResult.deletedAt) {
-      throw new InternalServerErrorException('Comment Delete Failed!');
+      throwKukeyException('COMMENT_DELETE_FAILED');
     }
 
     const updateResult = await transactionManager.decrement(
@@ -246,7 +243,7 @@ export class CommentService {
       1,
     );
     if (!updateResult.affected) {
-      throw new InternalServerErrorException('Comment Delete Failed!');
+      throwKukeyException('POST_UPDATE_FAILED');
     }
 
     return new DeleteCommentResponseDto(true);
@@ -259,11 +256,11 @@ export class CommentService {
   ): Promise<LikeCommentResponseDto> {
     const comment = await this.commentRepository.isExistingCommentId(commentId);
     if (!comment) {
-      throw new BadRequestException('Wrong CommentId!');
+      throwKukeyException('COMMENT_NOT_FOUND');
     }
 
     if (comment.userId === user.id) {
-      throw new BadRequestException('Cannot like my comment!');
+      throwKukeyException('SELF_COMMENT_LIKE_FORBIDDEN');
     }
 
     const like = await tranasactionManager.findOne(CommentLikeEntity, {
@@ -279,7 +276,7 @@ export class CommentService {
         commentId: commentId,
       });
       if (!deleteResult.affected) {
-        throw new InternalServerErrorException('Like Cancel Failed!');
+        throwKukeyException('COMMENT_LIKE_CANCEL_FAILED');
       }
 
       const updateResult = await tranasactionManager.decrement(
@@ -289,7 +286,7 @@ export class CommentService {
         1,
       );
       if (!updateResult.affected) {
-        throw new InternalServerErrorException('Like Cancel Failed!');
+        throwKukeyException('COMMENT_LIKE_CANCEL_FAILED');
       }
     } else {
       const newLike = tranasactionManager.create(CommentLikeEntity, {
@@ -305,7 +302,7 @@ export class CommentService {
         1,
       );
       if (!updateResult.affected) {
-        throw new InternalServerErrorException('Like Failed!');
+        throwKukeyException('COMMENT_LIKE_CANCEL_FAILED');
       }
     }
 

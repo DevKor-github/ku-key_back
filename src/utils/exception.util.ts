@@ -447,9 +447,165 @@ export const kukeyExceptions = createKukeyExceptions({
   },
   // 4xxx : 커뮤니티 관련 예외
   // - 40xx : Board
+  BOARD_NOT_FOUND: {
+    name: 'BOARD_NOT_FOUND',
+    message: 'Board not found.',
+    errorCode: 4000,
+    statusCode: 404,
+  },
   // - 41xx : Post
+  POST_NOT_FOUND: {
+    name: 'POST_NOT_FOUND',
+    message: 'Post not found.',
+    errorCode: 4100,
+    statusCode: 404,
+  },
+  POST_DELETED: {
+    name: 'POST_DELETED',
+    message: 'This post has been deleted.',
+    errorCode: 4101,
+    statusCode: 404,
+  },
+  TOO_MANY_IMAGES: {
+    name: 'TOO_MANY_IMAGES',
+    message: 'Only up to five images can be uploaded.',
+    errorCode: 4102,
+    statusCode: 400,
+  },
+  POST_OWNERSHIP_REQUIRED: {
+    name: 'POST_OWNERSHIP_REQUIRED',
+    message: 'Only the post author can edit or delete post.',
+    errorCode: 4103,
+    statusCode: 403,
+  },
+  POST_IN_QUESTION_BOARD: {
+    name: 'POST_IN_QUESTION_BOARD',
+    message: 'Cannot edit or delete answered post in question board.',
+    errorCode: 4104,
+    statusCode: 403,
+  },
+  POST_UPDATE_FAILED: {
+    name: 'POST_UPDATE_FAILED',
+    message: 'Post update failed.',
+    errorCode: 4105,
+    statusCode: 500,
+  },
+  POST_DELETE_FAILED: {
+    name: 'POST_DELETE_FAILED',
+    message: 'Post delete failed.',
+    errorCode: 4106,
+    statusCode: 500,
+  },
+  SELF_POST_SCRAP_FORBIDDEN: {
+    name: 'SELF_POST_SCRAP_FORBIDDEN',
+    message: 'Scrap is not allowed on your own post.',
+    errorCode: 4107,
+    statusCode: 403,
+  },
+  SCRAP_FAILED: {
+    name: 'SCRAP_FAILED',
+    message: 'Scrap failed.',
+    errorCode: 4108,
+    statusCode: 500,
+  },
+  SCRAP_CANCEL_FAILED: {
+    name: 'SCRAP_CANCEL_FAILED',
+    message: 'Scrap cancel failed.',
+    errorCode: 4109,
+    statusCode: 500,
+  },
+  SELF_POST_REACTION_FORBIDDEN: {
+    name: 'SELF_POST_REACTION_FORBIDDEN',
+    message: 'Reaction is not allowed on your own post.',
+    errorCode: 4110,
+    statusCode: 403,
+  },
+  REACT_FAILED: {
+    name: 'REACT_FAILED',
+    message: 'React failed.',
+    errorCode: 4111,
+    statusCode: 500,
+  },
+  SAME_REACTION: {
+    name: 'SAME_REACTION',
+    message: 'Same reaction.',
+    errorCode: 4112,
+    statusCode: 409,
+  },
+  REACTION_CHANGE_FAILED: {
+    name: 'REACTION_CHANGE_FAILED',
+    message: 'Reaction change failed.',
+    errorCode: 4113,
+    statusCode: 500,
+  },
   // - 42xx : Comment
+  INVALID_PARENT_COMMENT_REQUEST: {
+    name: 'INVALID_PARENT_COMMENT_REQUEST',
+    message: 'The provided parent comment ID is invalid or does not exist.',
+    errorCode: 4200,
+    statusCode: 400,
+  },
+  REPLY_TO_DIFFERENT_POST: {
+    name: 'INVALID_PARENT_COMMENT_REQUEST',
+    message: "Cannot create other post's reply.",
+    errorCode: 4201,
+    statusCode: 400,
+  },
+  COMMENT_NOT_FOUND: {
+    name: 'COMMENT_NOT_FOUND',
+    message: 'Comment not found.',
+    errorCode: 4202,
+    statusCode: 404,
+  },
+  COMMENT_OWNERSHIP_REQUIRED: {
+    name: 'COMMENT_OWNERSHIP_REQUIRED',
+    message: 'Only the comment author can edit or delete post.',
+    errorCode: 4203,
+    statusCode: 403,
+  },
+  COMMENT_IN_QUESTION_BOARD: {
+    name: 'COMMENT_IN_QUESTION_BOARD',
+    message: 'Cannot edit or delete answered post in question board.',
+    errorCode: 4204,
+    statusCode: 403,
+  },
+  COMMENT_UPDATE_FAILED: {
+    name: 'COMMENT_UPDATE_FAILED',
+    message: 'Comment update failed.',
+    errorCode: 4205,
+    statusCode: 500,
+  },
+  COMMENT_DELETE_FAILED: {
+    name: 'COMMENT_DELETE_FAILED',
+    message: 'Comment delete failed.',
+    errorCode: 4206,
+    statusCode: 500,
+  },
+  SELF_COMMENT_LIKE_FORBIDDEN: {
+    name: 'SELF_COMMENT_LIKE_FORBIDDEN',
+    message: 'Cannot like my comment.',
+    errorCode: 4207,
+    statusCode: 403,
+  },
+  COMMENT_LIKE_CANCEL_FAILED: {
+    name: 'COMMENT_LIKE_CANCEL_FAILED',
+    message: 'Like cancel failed.',
+    errorCode: 4208,
+    statusCode: 500,
+  },
   // - 43xx : Report
+  REPORT_NOT_FOUND: {
+    name: 'REPORT_NOT_FOUND',
+    message: 'Report not found.',
+    errorCode: 4300,
+    statusCode: 404,
+  },
+  ALREADY_REPORTED: {
+    name: 'ALREADY_REPORTED',
+    message: 'Already reported post or comment.',
+    errorCode: 4301,
+    statusCode: 409,
+  },
   // 5xxx : 메인 홈 관련 예외
   // - 50xx : Club
   CLUB_NOT_FOUND: {
@@ -492,7 +648,7 @@ export const kukeyExceptions = createKukeyExceptions({
   // 6xxx : S3, File 관련 예외
   NOT_IMAGE_FILE: {
     name: 'NOT_IMAGE_FILE',
-    message: '이미지 파일만 업로드할 수 있습니다.',
+    message: 'Only image file can be uploaded.',
     errorCode: 6000,
     statusCode: 400,
   },
