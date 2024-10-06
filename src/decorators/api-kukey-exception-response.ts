@@ -26,11 +26,10 @@ export function ApiKukeyExceptionResponse(names: kukeyExceptionName[]) {
           },
         },
       };
-
-      kukeyExceptionResponseOptions[statusCode].content[
-        'application/json'
-      ].examples[name] = { value: kukeyException };
     }
+    kukeyExceptionResponseOptions[statusCode].content[
+      'application/json'
+    ].examples[name] = { value: kukeyException };
   });
 
   const apiResponseDecorators = Object.keys(kukeyExceptionResponseOptions).map(
