@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -53,6 +52,7 @@ import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Controller('post')
 @ApiTags('post')
@@ -215,7 +215,10 @@ export class PostController {
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     if (!boardId) {
-      throw new BadRequestException('No BoardId!');
+      throwKukeyException(
+        'VALIDATION_ERROR',
+        'Invalid input value. Details: {No boardId.}',
+      );
     }
     return await this.postService.createPost(
       transactionManager,
@@ -363,7 +366,7 @@ export class PostController {
     @Body() body: CreateReportRequestDto,
   ): Promise<CreateReportResponseDto> {
     if (!(await this.postService.isExistingPostId(postId))) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     return await this.reportService.createReport(user.id, body.reason, postId);
   }

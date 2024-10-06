@@ -652,6 +652,24 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 6000,
     statusCode: 400,
   },
+  FILE_UPLOAD_FAILED: {
+    name: 'FILE_UPLOAD_FAILED',
+    message: 'File upload failed.',
+    errorCode: 6001,
+    statusCode: 400,
+  },
+  FILE_DELETE_FAILED: {
+    name: 'FILE_DELETE_FAILED',
+    message: 'File delete failed.',
+    errorCode: 6002,
+    statusCode: 400,
+  },
+  FILE_METADATA_GET_FAILED: {
+    name: 'FILE_METADATA_GET_FAILED',
+    message: 'File metadata get failed.',
+    errorCode: 6003,
+    statusCode: 400,
+  },
   // 7xxx : Class-Validator, TypeORM 관련 예외
   VALIDATION_ERROR: {
     name: 'VALIDATION_ERROR',

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -39,6 +38,7 @@ import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Controller('comment')
 @ApiTags('comment')
@@ -98,7 +98,10 @@ export class CommentController {
     @Query('parentCommentId') parentCommentId?: number,
   ): Promise<GetCommentResponseDto> {
     if (!postId) {
-      throw new BadRequestException('No PostId!');
+      throwKukeyException(
+        'VALIDATION_ERROR',
+        'Invalid input value. Details: {No postId.}',
+      );
     }
     return await this.commentService.createComment(
       transactionManager,
@@ -212,7 +215,7 @@ export class CommentController {
   ): Promise<CreateReportResponseDto> {
     const comment = await this.commentService.getComment(commentId);
     if (!comment) {
-      throw new BadRequestException('Wrong CommentId!');
+      throwKukeyException('COMMENT_NOT_FOUND');
     }
     return await this.reportService.createReport(
       user.id,

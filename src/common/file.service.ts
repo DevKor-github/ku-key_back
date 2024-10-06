@@ -4,8 +4,9 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class FileService {
@@ -43,7 +44,7 @@ export class FileService {
     const uploadFile = await this.s3.send(command);
 
     if (uploadFile.$metadata.httpStatusCode !== 200) {
-      throw new BadRequestException('Failed upload file');
+      throwKukeyException('FILE_UPLOAD_FAILED');
     }
 
     return filename;
@@ -61,7 +62,7 @@ export class FileService {
     console.log(deleteFile);
 
     if (deleteFile.$metadata.httpStatusCode !== 204) {
-      throw new BadRequestException('Failed delete file');
+      throwKukeyException('FILE_DELETE_FAILED');
     }
   }
 
@@ -75,7 +76,7 @@ export class FileService {
     const response = await this.s3.send(command);
 
     if (response.$metadata.httpStatusCode !== 200) {
-      throw new BadRequestException('Failed get file metadata');
+      throwKukeyException('FILE_METADATA_GET_FAILED');
     }
 
     if (!response.Contents) {

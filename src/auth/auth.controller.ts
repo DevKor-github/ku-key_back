@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -57,6 +56,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -181,7 +181,10 @@ export class AuthController {
     @Body() body: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
     if (!screenshot) {
-      throw new BadRequestException('screenshot should be uploaded');
+      throwKukeyException(
+        'VALIDATION_ERROR',
+        'Invalid input value. Details: {Screenshot should be uploaded}',
+      );
     }
     return await this.authService.createUserandScreenshotRequest(
       transactionManager,
