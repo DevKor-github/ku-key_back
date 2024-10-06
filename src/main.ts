@@ -36,7 +36,7 @@ async function bootstrap() {
         );
         throwKukeyException(
           'VALIDATION_ERROR',
-          `올바르지 않은 입력 값입니다. 세부 정보: ${messages.join(', ')}`,
+          `Invalid input values. Details: ${messages.join(', ')}`,
         );
       },
     }),
