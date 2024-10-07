@@ -2,7 +2,24 @@ import { WinstonModule, utilities } from 'nest-winston';
 import * as winston from 'winston';
 import * as winstonDaily from 'winston-daily-rotate-file';
 
-const logFormat = (appName: string, colors?: boolean) =>
+// 메타 데이터를 포함한 포맷 정의
+const singleLineFormat = winston.format.printf(
+  ({ timestamp, level, message, ...meta }) => {
+    const {
+      userId,
+      exceptionMethod,
+      exceptionUrl,
+      name,
+      errorCode,
+      statusCode,
+    } = meta;
+
+    // 명시적으로 순서대로 포맷팅하여 출력
+    return `{${timestamp}} [errorCode: ${errorCode}] ${exceptionMethod} ${exceptionUrl} - ${name} (status: ${statusCode}, userId: ${userId})`;
+  },
+);
+
+const multiLineFormat = (appName: string, colors?: boolean) =>
   winston.format.combine(
     winston.format.timestamp(),
     utilities.format.nestLike(appName, {
@@ -11,7 +28,7 @@ const logFormat = (appName: string, colors?: boolean) =>
     }),
   );
 
-const dailyOption = (level: string, folder: string, appName: string) => {
+const multiLineOption = (level: string, folder: string, appName: string) => {
   return {
     level,
     datePattern: 'YYYY-MM-DD',
@@ -19,7 +36,23 @@ const dailyOption = (level: string, folder: string, appName: string) => {
     filename: `%DATE%.${level}.log`,
     maxFiles: 15,
     zippedArchive: true,
-    format: logFormat(appName),
+    format: multiLineFormat(appName),
+  };
+};
+
+const singleLineOption = (level: string, folder: string, appName: string) => {
+  return {
+    level,
+    datePattern: 'YYYY-MM-DD',
+    dirname: `./logs/${folder}`,
+    filename: `%DATE%.${level}.log`,
+    maxFiles: 15,
+    zippedArchive: true,
+    format: winston.format.combine(
+      winston.format.label({ label: appName }),
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      singleLineFormat,
+    ),
   };
 };
 
@@ -27,13 +60,15 @@ export const winstonLogger = WinstonModule.createLogger({
   transports: [
     new winston.transports.Console({
       level: process.env.NODE_ENV === 'prod' ? 'http' : 'debug',
-      format: logFormat('KU-KEY', true),
+      format: multiLineFormat('KU-KEY', true),
     }),
-    new winstonDaily(dailyOption('warn', 'warn', 'KU-KEY')),
-    new winstonDaily(dailyOption('error', 'error', 'KU-KEY')),
+    new winstonDaily(singleLineOption('warn', 'warn', 'KU-KEY')),
+    new winstonDaily(multiLineOption('error', 'error', 'KU-KEY')),
   ],
 });
 
 export const loginLogger = WinstonModule.createLogger({
-  transports: [new winstonDaily(dailyOption('info', 'login', 'KU-KEY-LOGIN'))],
+  transports: [
+    new winstonDaily(multiLineOption('info', 'login', 'KU-KEY-LOGIN')),
+  ],
 });
