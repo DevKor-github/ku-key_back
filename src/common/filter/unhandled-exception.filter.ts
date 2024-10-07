@@ -28,14 +28,13 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
     }
 
     const userId = extractUserId(request);
-    const exceptionStack = exception.stack;
     const exceptionMethod = request.method;
     const exceptionUrl = request.url;
     winstonLogger.error({
       userId,
       exceptionMethod,
       exceptionUrl,
-      exceptionStack,
+      stack: exception.stack,
       name,
       message,
       errorCode: 9999,
