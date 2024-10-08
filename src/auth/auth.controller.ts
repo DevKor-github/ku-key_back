@@ -233,11 +233,11 @@ export class AuthController {
     type: VerifyScreenshotResponseDto,
   })
   @Post('admin/request/:id')
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     @Param('id') id: number,
     @Body() body: VerifyScreenshotRequestDto,
   ): Promise<VerifyScreenshotResponseDto> {
-    return await this.authService.verifyScreenshotReqeust(id, body.verify);
+    return await this.authService.verifyScreenshotRequest(id, body.verify);
   }
 
   @ApiOperation({

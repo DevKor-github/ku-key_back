@@ -285,7 +285,7 @@ export class AuthService {
     return results;
   }
 
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
