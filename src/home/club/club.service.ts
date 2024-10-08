@@ -1,9 +1,5 @@
 import { ClubLikeRepository } from './club-like.repository';
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { GetClubResponseDto } from './dto/get-club-response.dto';
 import { GetHotClubResponseDto } from './dto/get-hot-club-response.dto';
@@ -14,12 +10,20 @@ import { GetRecommendClubResponseDto } from './dto/get-recommend-club-response.d
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetClubRequestDto } from './dto/get-club-request';
 import { GetRecommendClubRequestDto } from './dto/get-recommend-club-request.dto';
+import { CreateClubRequestDto } from './dto/create-club-request-dto';
+import { CreateClubResponseDto } from './dto/create-club-response-dto';
+import { FileService } from 'src/common/file.service';
+import { UpdateClubRequestDto } from './dto/update-club-request-dto';
+import { UpdateClubResponseDto } from './dto/update-club-response-dto';
+import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class ClubService {
   constructor(
     private readonly clubRepository: ClubRepository,
     private readonly clubLikeRepository: ClubLikeRepository,
+    private readonly fileService: FileService,
   ) {}
 
   async getClubList(
@@ -31,7 +35,7 @@ export class ClubService {
 
     // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
     if (!user && isLogin) {
-      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
+      throwKukeyException('LOGIN_REQUIRED');
     }
 
     const clubs = await this.clubRepository.findClubsByFiltering(
@@ -39,10 +43,6 @@ export class ClubService {
       keyword,
       sortBy,
     );
-
-    if (!clubs) {
-      throw new NotFoundException('동아리 목록을 불러오는데 실패했습니다.');
-    }
 
     // 반환할 동아리가 없는 경우
     if (clubs.length === 0) {
@@ -74,7 +74,7 @@ export class ClubService {
     });
 
     if (!club) {
-      throw new NotFoundException('동아리 정보를 찾을 수 없습니다.');
+      throwKukeyException('CLUB_NOT_FOUND');
     }
 
     const clubLike = await transactionManager.findOne(ClubLikeEntity, {
@@ -112,10 +112,6 @@ export class ClubService {
     const topLikedClubsInfo =
       await this.clubLikeRepository.findTopLikedClubsInfo();
 
-    if (!topLikedClubsInfo) {
-      throw new NotFoundException('동아리 목록을 불러오는데 실패했습니다.');
-    }
-
     const hotClubIds = topLikedClubsInfo.map((info) => info.clubId);
     const hotClubs = await this.clubRepository.findClubsByIdOrder(hotClubIds);
 
@@ -144,7 +140,7 @@ export class ClubService {
     const { isLogin } = requestDto;
     // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
     if (!user && isLogin) {
-      throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
+      throwKukeyException('LOGIN_REQUIRED');
     }
     // 비로그인 or 미인증 유저의 경우 랜덤으로 반환
     if (!user || !isLogin) {
@@ -197,6 +193,109 @@ export class ClubService {
 
     // 앞에서부터 4개를 랜덤한 순서로 반환
     return this.shuffleArray(recommendClubList.slice(0, 4));
+  }
+
+  async createClub(
+    clubImage: Express.Multer.File,
+    requestDto: CreateClubRequestDto,
+  ): Promise<CreateClubResponseDto> {
+    if (!this.fileService.imagefilter(clubImage)) {
+      throwKukeyException('NOT_IMAGE_FILE');
+    }
+
+    const {
+      name,
+      category,
+      summary,
+      regularMeeting,
+      recruitmentPeriod,
+      description,
+      instagramLink,
+      youtubeLink,
+    } = requestDto;
+
+    const filename = await this.fileService.uploadFile(
+      clubImage,
+      'club',
+      'image',
+    );
+
+    const imageUrl = this.fileService.makeUrlByFileDir(filename);
+
+    const club = this.clubRepository.create({
+      name,
+      category,
+      summary,
+      regularMeeting,
+      recruitmentPeriod,
+      description,
+      instagramLink,
+      youtubeLink,
+      imageUrl,
+    });
+
+    await this.clubRepository.save(club);
+
+    return new CreateClubResponseDto(club);
+  }
+
+  async updateClub(
+    clubId: number,
+    clubImage: Express.Multer.File,
+    requestDto: UpdateClubRequestDto,
+  ): Promise<UpdateClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throwKukeyException('CLUB_NOT_FOUND');
+    }
+
+    const updateData: any = { ...requestDto };
+    delete updateData.clubImage;
+    let newFilename: string | null = null;
+
+    if (clubImage) {
+      if (!this.fileService.imagefilter(clubImage)) {
+        throwKukeyException('NOT_IMAGE_FILE');
+      }
+      const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+      await this.fileService.deleteFile(filename);
+      newFilename = await this.fileService.uploadFile(
+        clubImage,
+        'club',
+        'image',
+      );
+      updateData.imageUrl = this.fileService.makeUrlByFileDir(newFilename);
+    }
+
+    const updated = await this.clubRepository.update(
+      { id: clubId },
+      updateData,
+    );
+    if (updated.affected === 0) {
+      throwKukeyException('CLUB_UPDATE_FAILED');
+    }
+
+    return new UpdateClubResponseDto(true);
+  }
+
+  async deleteClub(clubId: number): Promise<DeleteClubResponseDto> {
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+    });
+    if (!club) {
+      throwKukeyException('CLUB_NOT_FOUND');
+    }
+    const filename = this.fileService.getFileDirFromUrl(club.imageUrl);
+    await this.fileService.deleteFile(filename);
+
+    const deleted = await this.clubRepository.softDelete({ id: clubId });
+    if (deleted.affected === 0) {
+      throwKukeyException('CLUB_DELETE_FAILED');
+    }
+
+    return new DeleteClubResponseDto(true);
   }
 
   // 리스트를 랜덤하게 섞어서 반환하는 함수

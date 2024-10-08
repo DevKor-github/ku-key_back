@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ClubCategory } from 'src/common/types/club-category-type';
 import { ClubEntity } from 'src/entities/club.entity';
 
 export class GetClubResponseDto {
@@ -7,6 +8,9 @@ export class GetClubResponseDto {
 
   @ApiProperty({ description: '동아리명' })
   name: string;
+
+  @ApiProperty({ description: '동아리 카테고리' })
+  category: ClubCategory;
 
   @ApiProperty({ description: '동아리 요약' })
   summary: string;
@@ -38,6 +42,7 @@ export class GetClubResponseDto {
   constructor(club: ClubEntity, isLiked: boolean) {
     this.clubId = club.id;
     this.name = club.name;
+    this.category = club.category;
     this.summary = club.summary;
     this.regularMeeting = club.regularMeeting;
     this.recruitmentPeriod = club.recruitmentPeriod;

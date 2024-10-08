@@ -57,6 +57,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { LogoutRequestDto } from './dto/logout-request.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -85,8 +86,11 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    const keepingLogin = body.keepingLogin;
-    return await this.authService.logIn(user, keepingLogin);
+    return await this.authService.logIn(
+      user,
+      body.keepingLogin,
+      body.deviceCode,
+    );
   }
 
   @UseGuards(RefreshAuthGuard)
@@ -112,14 +116,20 @@ export class AuthController {
     description: '서버에 저장된 Refresh Token을 삭제합니다.',
   })
   @ApiBearerAuth('accessToken')
+  @ApiBody({
+    type: LogoutRequestDto,
+  })
   @ApiResponse({
     status: 201,
     description: '로그아웃 성공',
     type: LogoutResponseDto,
   })
   @Post('logout')
-  async logOut(@User() user: AuthorizedUserDto): Promise<LogoutResponseDto> {
-    return await this.authService.logout(user);
+  async logOut(
+    @User() user: AuthorizedUserDto,
+    @Body() body: LogoutRequestDto,
+  ): Promise<LogoutResponseDto> {
+    return await this.authService.logout(user, body.deviceCode);
   }
 
   @ApiOperation({

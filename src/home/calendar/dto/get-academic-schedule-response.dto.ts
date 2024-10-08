@@ -12,6 +12,9 @@ enum DayOfWeek {
 }
 
 class AcademicSchedule {
+  @ApiProperty({ description: '행사/일정 id' })
+  id: number;
+
   @ApiProperty({ description: '행사/일정 제목' })
   title: string;
 
@@ -31,6 +34,7 @@ class AcademicSchedule {
   endDay: string;
 
   constructor(calendar: CalendarEntity) {
+    this.id = calendar.id;
     this.title = calendar.title;
     this.description = calendar.description;
     this.startDate = calendar.startDate;

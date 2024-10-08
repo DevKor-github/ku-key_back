@@ -20,14 +20,17 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
     });
   }
 
-  async validate(request: Request, payload: any): Promise<AuthorizedUserDto> {
+  async validate(
+    request: Request,
+    payload: AuthorizedUserDto,
+  ): Promise<AuthorizedUserDto> {
     const refreshToken = request.headers.authorization.split(' ')[1];
-    const user = await this.authService.refreshTokenMatches(
+    await this.authService.refreshTokenMatches(
       refreshToken,
       payload.id,
+      payload.deviceCode,
     );
-    user.keepingLogin = payload.keepingLogin;
 
-    return user;
+    return payload;
   }
 }

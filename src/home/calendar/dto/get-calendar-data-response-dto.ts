@@ -36,19 +36,3 @@ export class GetDailyCalendarDataResponseDto {
     this.eventCount = this.event.length;
   }
 }
-
-export class GetMonthlyCalendarDataResponseDto {
-  @ApiProperty({ description: '월' })
-  month: number;
-
-  @ApiProperty({
-    description: '월별 행사/일정',
-    type: [GetDailyCalendarDataResponseDto],
-  })
-  monthEvents: GetDailyCalendarDataResponseDto[];
-
-  constructor(month: number, monthEvents: GetDailyCalendarDataResponseDto[]) {
-    this.month = month;
-    this.monthEvents = monthEvents;
-  }
-}

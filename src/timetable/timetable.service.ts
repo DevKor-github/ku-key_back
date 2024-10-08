@@ -1,10 +1,4 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { TimetableDto } from './dto/timetable.dto';
 import { TimetableEntity } from 'src/entities/timetable.entity';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
@@ -22,6 +16,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { isConflictingTime } from 'src/utils/time-utils';
 import { DayType } from 'src/common/types/day-type.utils';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class TimetableService {
@@ -44,14 +39,14 @@ export class TimetableService {
       where: { id: timetableId, userId: user.id },
     });
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     const course =
       await this.courseService.getCourseWithCourseDetails(courseId);
 
     if (!course) {
-      throw new NotFoundException('Course not found');
+      throwKukeyException('COURSE_NOT_FOUND');
     }
 
     // TimetableCourse 테이블에 이미 동일한 레코드가 존재하는지 확인
@@ -60,16 +55,14 @@ export class TimetableService {
         where: { timetableId, courseId },
       });
     if (existingTimetableCourse) {
-      throw new ConflictException('Already exists in Timetable');
+      throwKukeyException('COURSE_ALREADY_EXIST');
     }
 
     // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
     const isConflict = await this.checkTimeConflict(timetableId, courseId);
 
     if (isConflict) {
-      throw new ConflictException(
-        'Course conflicts with existing courses and schedules',
-      );
+      throwKukeyException('COURSE_CONFLICT');
     }
 
     const timetableCourse = this.timetableCourseRepository.create({
@@ -184,7 +177,7 @@ export class TimetableService {
     );
 
     if (existingTimetableNumber >= 3) {
-      throw new ConflictException('Maximum number of Timetables reached');
+      throwKukeyException('TIMETABLE_LIMIT_EXCEEDED');
     }
 
     const isFirstTimetable = existingTimetableNumber === 0; // 처음 생성하는 시간표인지 확인 (대표시간표가 될 예정)
@@ -223,7 +216,7 @@ export class TimetableService {
       ],
     });
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     const schedules =
@@ -284,7 +277,7 @@ export class TimetableService {
     const userTimetable = await this.timetableRepository.find({
       where: { userId },
     });
-    if (!userTimetable) throw new NotFoundException('Timetable not found');
+    if (!userTimetable) throwKukeyException('TIMETABLE_NOT_FOUND');
     return userTimetable.map(
       (table) => new GetTimetableByUserIdResponseDto(table),
     );
@@ -307,7 +300,7 @@ export class TimetableService {
 
     // 시간표가 없을 경우
     if (!timetable) {
-      throw new NotFoundException('친구 시간표가 존재하지 않습니다!');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     // 시간표 id 추출 후 구현해놓은 함수 사용
@@ -327,14 +320,14 @@ export class TimetableService {
     });
 
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     const timetableCourse = await this.timetableCourseRepository.findOne({
       where: { timetableId, courseId },
     });
     if (!timetableCourse) {
-      throw new NotFoundException('There is no course in this timetable!');
+      throwKukeyException('COURSE_NOT_FOUND');
     }
 
     await this.timetableCourseRepository.softDelete({
@@ -356,7 +349,7 @@ export class TimetableService {
     });
 
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     if (timetable.mainTimetable) {
@@ -397,7 +390,7 @@ export class TimetableService {
     });
 
     if (!mainTimetable) {
-      throw new NotFoundException('MainTimetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
     return mainTimetable;
   }
@@ -415,7 +408,7 @@ export class TimetableService {
       },
     });
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     await this.timetableRepository.update(timetableId, {
@@ -438,7 +431,7 @@ export class TimetableService {
       },
     });
     if (!timetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     }
 
     await this.timetableRepository.update(timetableId, { timetableName });
@@ -470,9 +463,9 @@ export class TimetableService {
       },
     });
     if (!newMainTimetable || !oldMainTimetable) {
-      throw new NotFoundException('Timetable not found');
+      throwKukeyException('TIMETABLE_NOT_FOUND');
     } else if (oldMainTimetable.id === newMainTimetable.id) {
-      throw new ConflictException('Already main Timetable');
+      throwKukeyException('ALREADY_MAIN_TIMETABLE');
     }
 
     await transactionManager.update(TimetableEntity, oldMainTimetable.id, {

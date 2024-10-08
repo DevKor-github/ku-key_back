@@ -1,26 +1,23 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CalendarRepository } from './calendar.repository';
-import {
-  GetDailyCalendarDataResponseDto,
-  GetMonthlyCalendarDataResponseDto,
-} from './dto/get-calendar-data-response-dto';
+import { GetDailyCalendarDataResponseDto } from './dto/get-calendar-data-response-dto';
 import { CreateCalendarDataRequestDto } from './dto/create-calendar-data-request.dto';
 import { CreateCalendarDataResponseDto } from './dto/create-calendar-data-response.dto';
 import { UpdateCalendarDataRequestDto } from './dto/update-calendar-data-request.dto';
 import { UpdateCalendarDataResponseDto } from './dto/update-calendar-data-response.dto';
 import { DeleteCalendarDataResponseDto } from './dto/delete-calendar-data-response-dto';
 import { GetAcademicScheduleDataResponseDto } from './dto/get-academic-schedule-response.dto';
+import { GetBannerImageUrlResponseDto } from './dto/get-banner-images-response.dto';
+import { FileService } from 'src/common/file.service';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class CalendarService {
   constructor(
     @InjectRepository(CalendarRepository)
     private readonly calendarRepository: CalendarRepository,
+    private readonly fileService: FileService,
   ) {}
 
   async getMonthlyCalendarData(
@@ -55,22 +52,6 @@ export class CalendarService {
     }
 
     return monthCalendarData;
-  }
-
-  async getYearlyCalendarData(year: number) {
-    const allCalendarData: GetMonthlyCalendarDataResponseDto[] = [];
-    for (let month = 1; month <= 12; month++) {
-      const monthCalendarData = await this.getMonthlyCalendarData(year, month);
-      const filteredData = monthCalendarData.filter(
-        (dayCalendarData) =>
-          dayCalendarData.date.getMonth() === month - 1 &&
-          dayCalendarData.eventCount !== 0,
-      );
-      allCalendarData.push(
-        new GetMonthlyCalendarDataResponseDto(month, filteredData),
-      );
-    }
-    return allCalendarData;
   }
 
   async getAcademicScheduleData(
@@ -117,10 +98,6 @@ export class CalendarService {
       isAcademic,
     );
 
-    if (!calendarData) {
-      throw new InternalServerErrorException('행사/일정 생성에 실패했습니다.');
-    }
-
     return new CreateCalendarDataResponseDto(calendarData);
   }
 
@@ -133,13 +110,27 @@ export class CalendarService {
     });
 
     if (!calendarData) {
-      throw new NotFoundException('행사/일정 정보가 없습니다.');
+      throwKukeyException('CALENDAR_NOT_FOUND');
     }
 
-    return await this.calendarRepository.updateCalendarData(
-      calendarId,
-      requestDto,
+    const updateData = {
+      ...requestDto,
+      startDate: requestDto.startDate
+        ? new Date(requestDto.startDate)
+        : undefined,
+      endDate: requestDto.endDate ? new Date(requestDto.endDate) : undefined,
+    };
+
+    const updated = await this.calendarRepository.update(
+      { id: calendarId },
+      updateData,
     );
+
+    if (updated.affected === 0) {
+      throwKukeyException('CALENDAR_UPDATE_FAILED');
+    }
+
+    return new UpdateCalendarDataResponseDto(true);
   }
 
   async deleteCalendarData(
@@ -150,17 +141,27 @@ export class CalendarService {
     });
 
     if (!calendarData) {
-      throw new NotFoundException('행사/일정 정보가 없습니다.');
+      throwKukeyException('CALENDAR_NOT_FOUND');
     }
 
-    const isDeleted =
-      await this.calendarRepository.deleteCalendarData(calendarId);
+    const deleted = await this.calendarRepository.softDelete({
+      id: calendarId,
+    });
 
-    if (!isDeleted) {
-      throw new InternalServerErrorException('삭제에 실패했습니다.');
+    if (deleted.affected === 0) {
+      throwKukeyException('CALENDAR_DELETE_FAILED');
     }
 
     return new DeleteCalendarDataResponseDto(true);
+  }
+
+  async getBannerImageUrls(): Promise<GetBannerImageUrlResponseDto[]> {
+    const prefix = 'fe/home/homeBanners/';
+    const imageUrls = await this.fileService.getFileUrls(prefix);
+
+    return imageUrls.map((imageUrl) => {
+      return new GetBannerImageUrlResponseDto(imageUrl);
+    });
   }
 
   // 연도, 월 정보를 받아 캘린더의 시작 - 끝 날짜를 반환하는 함수

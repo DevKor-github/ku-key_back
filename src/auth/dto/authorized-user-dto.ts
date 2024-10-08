@@ -7,10 +7,16 @@ import {
 } from 'class-validator';
 
 export class AuthorizedUserDto {
-  constructor(id: number, username: string, keepingLogin?: boolean) {
+  constructor(
+    id: number,
+    username: string,
+    keepingLogin?: boolean,
+    deviceCode?: string,
+  ) {
     this.id = id;
     this.username = username;
     this.keepingLogin = keepingLogin;
+    this.deviceCode = deviceCode;
   }
 
   @IsNotEmpty()
@@ -24,4 +30,8 @@ export class AuthorizedUserDto {
   @IsOptional()
   @IsBoolean()
   keepingLogin?: boolean;
+
+  @IsOptional()
+  @IsString()
+  deviceCode?: string;
 }
