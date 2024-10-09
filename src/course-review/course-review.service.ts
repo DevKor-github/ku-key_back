@@ -194,13 +194,12 @@ export class CourseReviewService {
       throwKukeyException('COURSE_NOT_FOUND');
     }
 
-    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
-    const koreaTime = new Date(Date.now() + offset);
+    const universalTime = new Date();
 
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
 
-    if (viewableUser.viewableUntil <= koreaTime) {
+    if (viewableUser.viewableUntil <= universalTime) {
       throwKukeyException('COURSE_REVIEW_NOT_VIEWABLE');
     }
 
@@ -266,12 +265,11 @@ export class CourseReviewService {
       throwKukeyException('COURSE_REVIEW_NOT_FOUND');
     }
 
-    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨트 값
-    const koreaTime = new Date(Date.now() + offset);
+    const universalTime = new Date();
 
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
-    if (viewableUser.viewableUntil.getDate() < koreaTime.getDate()) {
+    if (viewableUser.viewableUntil.getDate() < universalTime.getDate()) {
       throwKukeyException('COURSE_REVIEW_NOT_VIEWABLE');
     }
 
