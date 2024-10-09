@@ -58,6 +58,7 @@ import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
 import { loginLogger } from 'src/utils/winston.utils';
+import { LogoutRequestDto } from './dto/logout-request.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -86,8 +87,7 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    const keepingLogin = body.keepingLogin;
-    const isLogin = await this.authService.logIn(user, keepingLogin);
+    const isLogin = await this.authService.logIn(user, body.keepingLogin,body.deviceCode);
 
     if (isLogin) {
       loginLogger.log(
@@ -121,14 +121,20 @@ export class AuthController {
     description: '서버에 저장된 Refresh Token을 삭제합니다.',
   })
   @ApiBearerAuth('accessToken')
+  @ApiBody({
+    type: LogoutRequestDto,
+  })
   @ApiResponse({
     status: 201,
     description: '로그아웃 성공',
     type: LogoutResponseDto,
   })
   @Post('logout')
-  async logOut(@User() user: AuthorizedUserDto): Promise<LogoutResponseDto> {
-    return await this.authService.logout(user);
+  async logOut(
+    @User() user: AuthorizedUserDto,
+    @Body() body: LogoutRequestDto,
+  ): Promise<LogoutResponseDto> {
+    return await this.authService.logout(user, body.deviceCode);
   }
 
   @ApiOperation({
@@ -232,11 +238,11 @@ export class AuthController {
     type: VerifyScreenshotResponseDto,
   })
   @Post('admin/request/:id')
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     @Param('id') id: number,
     @Body() body: VerifyScreenshotRequestDto,
   ): Promise<VerifyScreenshotResponseDto> {
-    return await this.authService.verifyScreenshotReqeust(id, body.verify);
+    return await this.authService.verifyScreenshotRequest(id, body.verify);
   }
 
   @ApiOperation({
