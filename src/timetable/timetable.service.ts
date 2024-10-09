@@ -49,6 +49,14 @@ export class TimetableService {
       throwKukeyException('COURSE_NOT_FOUND');
     }
 
+    // 시간표의 학기와 강의의 학기가 일치하는지 확인
+    if (
+      timetable.year !== course.year ||
+      timetable.semester !== course.semester
+    ) {
+      throwKukeyException('TIMETABLE_COURSE_MISMATCH');
+    }
+
     // TimetableCourse 테이블에 이미 동일한 레코드가 존재하는지 확인
     const existingTimetableCourse =
       await this.timetableCourseRepository.findOne({
