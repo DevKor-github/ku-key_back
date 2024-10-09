@@ -30,6 +30,7 @@ import { VerifyScreenshotResponseDto } from 'src/auth/dto/verify-screenshot-resp
 import { MethodNames } from 'src/common/types/method';
 import { checkPossibleResponseDto } from 'src/user/dto/check-possible-response.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { LogoutRequestDto } from 'src/auth/dto/logout-request.dto';
 
 type AuthEndPoints = MethodNames<AuthController>;
 
@@ -70,6 +71,9 @@ const AuthDocsMap: Record<AuthEndPoints, MethodDecorator[]> = {
       description: '서버에 저장된 Refresh Token을 삭제합니다.',
     }),
     ApiBearerAuth('accessToken'),
+    ApiBody({
+      type: LogoutRequestDto,
+    }),
     ApiResponse({
       status: 201,
       description: '로그아웃 성공',
@@ -135,7 +139,7 @@ const AuthDocsMap: Record<AuthEndPoints, MethodDecorator[]> = {
       type: [GetScreenshotVerificationsResponseDto],
     }),
   ],
-  verifyScreenshotReqeust: [
+  verifyScreenshotRequest: [
     ApiOperation({
       summary: '학교인증 요청 승인/거절',
       description: '학교 인증 요청을 승인 혹은 거절합니다.',

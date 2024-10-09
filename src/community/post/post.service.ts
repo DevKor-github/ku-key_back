@@ -101,9 +101,9 @@ export class PostService {
       throwKukeyException('POST_DELETED');
     }
 
-    if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
+    if (!(await this.cacheManager.get(`postview-${postId}-${user.id}`))) {
       await this.cacheManager.set(
-        `${postId}-${user.id}`,
+        `postview-${postId}-${user.id}`,
         new Date(),
         1000 * 60 * 30,
       );

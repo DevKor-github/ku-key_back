@@ -64,9 +64,6 @@ export class UserEntity extends CommonEntity {
   @Column('int', { default: 0 })
   point: number;
 
-  @Column('varchar', { nullable: true })
-  refreshToken: string | null;
-
   @Column('timestamp', { nullable: false })
   viewableUntil: Date;
 

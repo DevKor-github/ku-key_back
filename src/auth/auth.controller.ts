@@ -48,6 +48,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { LogoutRequestDto } from './dto/logout-request.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
 import { AuthDocs } from 'src/decorators/docs/auth.decorator';
 
@@ -66,8 +67,11 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    const keepingLogin = body.keepingLogin;
-    return await this.authService.logIn(user, keepingLogin);
+    return await this.authService.logIn(
+      user,
+      body.keepingLogin,
+      body.deviceCode,
+    );
   }
 
   @UseGuards(RefreshAuthGuard)
@@ -78,8 +82,11 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logOut(@User() user: AuthorizedUserDto): Promise<LogoutResponseDto> {
-    return await this.authService.logout(user);
+  async logOut(
+    @User() user: AuthorizedUserDto,
+    @Body() body: LogoutRequestDto,
+  ): Promise<LogoutResponseDto> {
+    return await this.authService.logout(user, body.deviceCode);
   }
 
   @Post('request-email-verification')
@@ -128,11 +135,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.admin)
   @Post('admin/request/:id')
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     @Param('id') id: number,
     @Body() body: VerifyScreenshotRequestDto,
   ): Promise<VerifyScreenshotResponseDto> {
-    return await this.authService.verifyScreenshotReqeust(id, body.verify);
+    return await this.authService.verifyScreenshotRequest(id, body.verify);
   }
 
   @Post('student-number/:studentNumber')
