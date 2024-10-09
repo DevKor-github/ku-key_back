@@ -63,7 +63,15 @@ const AuthDocsMap: Record<AuthEndPoints, MethodDecorator[]> = {
       description: 'Token 재발급 성공',
       type: JwtTokenDto,
     }),
-    ApiKukeyExceptionResponse(['REFRESH_TOKEN_UPDATE_FAILED']),
+    ApiKukeyExceptionResponse([
+      'MISSING_AUTHORIZATION_HEADER',
+      'INVALID_TOKEN_TYPE',
+      'MISSING_TOKEN',
+      'REFRESH_TOKEN_EXPIRED',
+      'INVALID_REFRESH_TOKEN',
+      'LOGIN_REQUIRED',
+      'REFRESH_TOKEN_UPDATE_FAILED',
+    ]),
   ],
   logOut: [
     ApiOperation({
