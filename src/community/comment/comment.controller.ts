@@ -10,15 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CommentService } from './comment.service';
 import { User } from 'src/decorators/user.decorator';
@@ -39,11 +31,13 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { CommentDocs } from 'src/decorators/docs/comment.decorator';
 
 @Controller('comment')
 @ApiTags('comment')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
+@CommentDocs
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,
@@ -51,15 +45,6 @@ export class CommentController {
   ) {}
 
   @Get('/my')
-  @ApiOperation({
-    summary: '내가 쓴 댓글 목록 조회',
-    description: '내가 쓴 댓글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '내가 쓴 댓글 목록 조회 성공',
-    type: GetMyCommentListResponseDto,
-  })
   async getMyCommentList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: CursorPageOptionsDto,
@@ -69,27 +54,6 @@ export class CommentController {
 
   @Post()
   @UseInterceptors(TransactionInterceptor)
-  @ApiOperation({
-    summary: '댓글 작성',
-    description: '댓글을 작성합니다.',
-  })
-  @ApiQuery({
-    name: 'postId',
-    description: '댓글을 달고자 하는 게시글 ID',
-  })
-  @ApiQuery({
-    name: 'parentCommentId',
-    required: false,
-    description: '답글을 달고자 하는 댓글 ID',
-  })
-  @ApiBody({
-    type: CreateCommentRequestDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '댓글 생성 성공',
-    type: GetCommentResponseDto,
-  })
   async createComment(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -113,22 +77,6 @@ export class CommentController {
   }
 
   @Patch('/:commentId')
-  @ApiOperation({
-    summary: '댓글 수정',
-    description: '댓글을 수정합니다.',
-  })
-  @ApiParam({
-    name: 'commentId',
-    description: '댓글의 고유 ID',
-  })
-  @ApiBody({
-    type: UpdateCommentRequestDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '댓글 수정 성공',
-    type: GetCommentResponseDto,
-  })
   async updateComment(
     @User() user: AuthorizedUserDto,
     @Param('commentId') commentId: number,
@@ -139,19 +87,6 @@ export class CommentController {
 
   @Delete('/:commentId')
   @UseInterceptors(TransactionInterceptor)
-  @ApiOperation({
-    summary: '댓글 삭제',
-    description: '댓글을 삭제합니다.',
-  })
-  @ApiParam({
-    name: 'commentId',
-    description: '댓글의 고유 ID',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '댓글 삭제 성공',
-    type: DeleteCommentResponseDto,
-  })
   async deleteComment(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -166,19 +101,6 @@ export class CommentController {
 
   @Post('/:commentId/like')
   @UseInterceptors(TransactionInterceptor)
-  @ApiOperation({
-    summary: '댓글 좋아요',
-    description: '댓글을 좋아요 합니다. 이미 눌렀다면 취소합니다.',
-  })
-  @ApiParam({
-    name: 'commentId',
-    description: '댓글의 고유 ID',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '댓글 좋아요(취소) 성공',
-    type: LikeCommentResponseDto,
-  })
   async likeComment(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -192,23 +114,7 @@ export class CommentController {
   }
 
   @Post('/:commentId/report')
-  @ApiOperation({
-    summary: '댓글 신고',
-    description: '댓글을 신고합니다',
-  })
-  @ApiParam({
-    name: 'commentId',
-    description: '댓글의 고유 ID',
-  })
-  @ApiBody({
-    type: CreateReportRequestDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '댓글 신고 성공',
-    type: CreateReportResponseDto,
-  })
-  async reportPost(
+  async reportComment(
     @User() user: AuthorizedUserDto,
     @Param('commentId') commentId: number,
     @Body() body: CreateReportRequestDto,
