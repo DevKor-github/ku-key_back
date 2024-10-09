@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class SearchCourseDto {
   @ApiProperty({ description: '학수 번호' })
@@ -21,4 +27,14 @@ export class SearchCourseDto {
   @IsInt()
   @IsOptional()
   cursorId?: number;
+
+  @ApiProperty({ description: '연도' })
+  @IsString()
+  @Length(4)
+  year: string;
+
+  @ApiProperty({ description: '학기' })
+  @IsString()
+  @Length(1)
+  semester: string;
 }
