@@ -57,13 +57,23 @@ export class TimetableService {
       throwKukeyException('TIMETABLE_COURSE_MISMATCH');
     }
 
-    // TimetableCourse 테이블에 이미 동일한 레코드가 존재하는지 확인
-    const existingTimetableCourse =
-      await this.timetableCourseRepository.findOne({
-        where: { timetableId, courseId },
-      });
-    if (existingTimetableCourse) {
-      throwKukeyException('COURSE_ALREADY_EXIST');
+    // TimetableCourse 테이블에 이미 동일한 과목이 존재하는지 확인 (학수번호 체크)
+    const existingTimetableCourse = await this.timetableCourseRepository.find({
+      where: { timetableId },
+      relations: {
+        course: true,
+      },
+    });
+
+    // 같은 학수번호의 과목이 존재하는지 확인
+    const splitedCourseCode = course.courseCode.slice(0, 7); // 추가하려는 강의 학수번호 앞 7자리
+    const existingCourseCodes = existingTimetableCourse.map((timetableCourse) =>
+      timetableCourse.course.courseCode.slice(0, 7),
+    );
+    for (const courseCode of existingCourseCodes) {
+      if (courseCode === splitedCourseCode) {
+        throwKukeyException('COURSE_ALREADY_EXIST');
+      }
     }
 
     // 시간표에 존재하는 강의, 스케쥴과 추가하려는 강의가 시간이 겹치는 지 확인
