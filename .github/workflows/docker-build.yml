@@ -72,6 +72,9 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> .env.test
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.test
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.test
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env.test
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.test
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env.test
 
           cat .env.test
 
@@ -106,6 +109,9 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> .env.prod
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.prod
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.prod
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env.prod
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.prod
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env.prod
 
           cat .env.prod
 
