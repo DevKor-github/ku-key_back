@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from './user.repository';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { hash, compare } from 'bcrypt';
-import * as argon2 from 'argon2';
 import { checkPossibleResponseDto } from './dto/check-possible-response.dto';
 import { SetResponseDto } from './dto/set-response.dto';
 import { GetProfileResponseDto } from './dto/get-profile-response.dto';
@@ -154,19 +153,6 @@ export class UserService {
   async checkUserVerified(userId: number): Promise<boolean> {
     const user = await this.userRepository.findUserById(userId);
     return user.isVerified;
-  }
-
-  async setCurrentRefresthToken(
-    id: number,
-    refreshToken?: string,
-  ): Promise<boolean> {
-    if (refreshToken === null) {
-      return await this.userRepository.setCurrentRefreshToken(id, refreshToken);
-    }
-
-    const hashedToken = await argon2.hash(refreshToken);
-
-    return await this.userRepository.setCurrentRefreshToken(id, hashedToken);
   }
 
   async verifyUser(userId: number, verify: boolean): Promise<boolean> {
