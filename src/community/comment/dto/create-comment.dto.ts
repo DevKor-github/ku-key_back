@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class CreateCommentRequestDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(1000)
   @ApiProperty({ description: '댓글 내용' })
   content: string;
 

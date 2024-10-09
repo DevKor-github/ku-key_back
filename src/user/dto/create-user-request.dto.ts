@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class CreateUserRequestDto {
   @IsNotEmpty()
@@ -15,6 +15,7 @@ export class CreateUserRequestDto {
 
   @IsNotEmpty()
   @IsString()
+  @Length(5, 10)
   @ApiProperty({ description: '중복확인 완료된 userId' })
   username: string;
 

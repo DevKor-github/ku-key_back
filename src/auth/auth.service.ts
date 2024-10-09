@@ -61,19 +61,21 @@ export class AuthService {
   async createToken(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
+    deviceCode: string,
   ): Promise<JwtTokenDto> {
     const id = user.id;
+
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id, keepingLogin),
+      this.createRefreshToken(user, keepingLogin, deviceCode),
     );
-    const isSet = await this.userService.setCurrentRefresthToken(
-      id,
-      tokenDto.refreshToken,
+
+    const hashedToken = await argon2.hash(tokenDto.refreshToken);
+    await this.cacheManager.set(
+      `token-${id}-${deviceCode}`,
+      hashedToken,
+      1000 * 60 * 60 * 24 * (keepingLogin ? 14 : 2),
     );
-    if (!isSet) {
-      throwKukeyException('REFRESH_TOKEN_UPDATE_FAILED');
-    }
     return tokenDto;
   }
 
@@ -88,10 +90,19 @@ export class AuthService {
     });
   }
 
-  createRefreshToken(id: number, keepingLogin: boolean): string {
+  createRefreshToken(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+    deviceCode: string,
+  ): string {
     const expiresIn = keepingLogin ? '14d' : '2d';
     return this.jwtService.sign(
-      { id, keepingLogin },
+      {
+        id: user.id,
+        username: user.username,
+        keepingLogin: keepingLogin,
+        deviceCode: deviceCode,
+      },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
@@ -102,41 +113,54 @@ export class AuthService {
   async refreshTokenMatches(
     refreshToken: string,
     id: number,
-  ): Promise<AuthorizedUserDto> {
-    const user = await this.userService.findUserById(id);
+    deviceCode: string,
+  ): Promise<void> {
+    const existingToken: string = await this.cacheManager.get(
+      `token-${id}-${deviceCode}`,
+    );
 
-    if (user.refreshToken === null) {
+    if (!existingToken) {
       throwKukeyException('LOGIN_REQUIRED');
     }
 
-    const isMatches = await argon2.verify(user.refreshToken, refreshToken);
+    const isMatches = await argon2.verify(existingToken, refreshToken);
 
     if (!isMatches) {
       throwKukeyException('REFRESH_TOKEN_NOT_MATCHED');
     }
-
-    return new AuthorizedUserDto(user.id, user.username);
   }
 
   async logIn(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
+    deviceCode?: string,
   ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    const token = await this.createToken(user, keepingLogin);
-    return new LoginResponseDto(token, verified);
+    if (!(await this.cacheManager.get(`token-${user.id}-${deviceCode}`))) {
+      deviceCode = this.generateRandomString(10) + Date.now().toString();
+    }
+    const token = await this.createToken(user, keepingLogin, deviceCode);
+    return new LoginResponseDto(token, verified, deviceCode);
   }
 
-  async logout(user: AuthorizedUserDto) {
-    const result = await this.userService.setCurrentRefresthToken(
-      user.id,
-      null,
-    );
-    return new LogoutResponseDto(result);
+  async logout(user: AuthorizedUserDto, deviceCode: string) {
+    if (deviceCode) {
+      await this.cacheManager.del(`token-${user.id}-${deviceCode}`);
+    } else {
+      const keys = await this.cacheManager.store.keys(`token-${user.id}-*`);
+      for (const key of keys) {
+        await this.cacheManager.del(key);
+      }
+    }
+    return new LogoutResponseDto(true);
   }
 
   async refreshToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
-    const jwtToken = await this.createToken(user, user.keepingLogin);
+    const jwtToken = await this.createToken(
+      user,
+      user.keepingLogin,
+      user.deviceCode,
+    );
     return jwtToken;
   }
 
@@ -145,7 +169,11 @@ export class AuthService {
   ): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
-    await this.cacheManager.set(email, verifyToken);
+    await this.cacheManager.set(
+      `emailverify-${email}`,
+      verifyToken,
+      1000 * 60 * 5,
+    );
     await this.emailService.sendVerityToken(email, verifyToken);
     return new VerificationResponseDto(true);
   }
@@ -154,13 +182,15 @@ export class AuthService {
     email: string,
     verifyToken: number,
   ): Promise<VerifyEmailResponseDto> {
-    const cache_verifyToken = await this.cacheManager.get(email);
+    const cache_verifyToken = await this.cacheManager.get(
+      `emailverify-${email}`,
+    );
     if (!cache_verifyToken) {
       throwKukeyException('VERIFY_TOKEN_NOT_FOUND');
     } else if (cache_verifyToken !== verifyToken) {
       throwKukeyException('INVALID_VERIFY_TOKEN');
     } else {
-      await this.cacheManager.del(email);
+      await this.cacheManager.del(`emailverify-${email}`);
       return new VerifyEmailResponseDto(true);
     }
   }
@@ -255,7 +285,7 @@ export class AuthService {
     return results;
   }
 
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
@@ -267,6 +297,8 @@ export class AuthService {
       if (!isVerified) {
         throwKukeyException('USER_VERIFICATION_FAILED');
       }
+
+      // 동일 학번의 다른 요청 reject
       const requests =
         await this.kuVerificationRepository.findRequestsByStudentNumber(
           request.studentNumber,
@@ -277,6 +309,7 @@ export class AuthService {
         }
 
         await this.deleteRequest(otherRequest.id);
+        await this.emailService.sendVerifyCompleteEmail(user.email, false);
       }
     } else {
       await this.deleteRequest(request.id);
@@ -313,7 +346,7 @@ export class AuthService {
     email: string,
   ): Promise<SendTempPasswordResponseDto> {
     const user = await this.userService.findUserByEmail(email);
-    const tempPassword = this.generateTempPassword(10);
+    const tempPassword = this.generateRandomString(10);
 
     const isUpdated = await this.userService.updatePassword(
       user.id,
@@ -326,7 +359,7 @@ export class AuthService {
     return new SendTempPasswordResponseDto(true);
   }
 
-  generateTempPassword(len: number): string {
+  generateRandomString(len: number): string {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
