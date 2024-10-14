@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  MaxLength,
 } from 'class-validator';
 
 export class SetProfileRequestDto {
@@ -21,11 +22,13 @@ export class SetProfileRequestDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '모교' })
   homeUniversity: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '전공' })
   major: string;
 }

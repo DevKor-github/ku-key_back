@@ -5,12 +5,13 @@ import { ToBoolean } from 'src/decorators/to-boolean.decorator';
 export class CreatePostRequestDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(250)
   @ApiProperty({ description: '게시글 제목' })
   title: string;
 
   @IsNotEmpty()
   @IsString()
+  @MaxLength(5000)
   @ApiProperty({ description: '게시글 내용' })
   content: string;
 
