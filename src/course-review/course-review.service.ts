@@ -269,7 +269,7 @@ export class CourseReviewService {
 
     // 해당 과목의 강의평들 조회 (유저가 열람권 구매 안했으면 열람 불가 )
     const viewableUser = await this.userService.findUserById(user.id);
-    if (viewableUser.viewableUntil.getDate() < universalTime.getDate()) {
+    if (viewableUser.viewableUntil < universalTime) {
       throwKukeyException('COURSE_REVIEW_NOT_VIEWABLE');
     }
 
