@@ -57,6 +57,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { PasswordDto } from './dto/password.dto';
+import { loginLogger } from 'src/utils/winston.utils';
 import { LogoutRequestDto } from './dto/logout-request.dto';
 
 @ApiTags('Auth')
@@ -86,11 +87,15 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    return await this.authService.logIn(
-      user,
-      body.keepingLogin,
-      body.deviceCode,
-    );
+    const isLogin = await this.authService.logIn(user, body.keepingLogin,body.deviceCode);
+
+    if (isLogin) {
+      loginLogger.log(
+        `[User logged in successfully - email: ${body.email}, userId: ${user.id}]`,
+      );
+    }
+
+    return isLogin;
   }
 
   @UseGuards(RefreshAuthGuard)
