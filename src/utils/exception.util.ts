@@ -118,13 +118,13 @@ export const kukeyExceptions = createKukeyExceptions({
   },
   USER_VERIFICATION_FAILED: {
     name: 'USER_VERIFICATION_FAILED',
-    message: 'Verify user screenshot failed.',
+    message: 'User screenshot verification failed.',
     errorCode: 2002,
     statusCode: 500,
   },
   PASSWORD_UPDATE_FAILED: {
     name: 'PASSWORD_UPDATE_FAILED',
-    message: 'Update user password failed.',
+    message: 'User password update failed.',
     errorCode: 2003,
     statusCode: 500,
   },
@@ -154,7 +154,8 @@ export const kukeyExceptions = createKukeyExceptions({
   },
   RE_REGISTRATION_NOT_ALLOWED: {
     name: 'RE_REGISTRATION_NOT_ALLOWED',
-    message: 'Re-registration with the same email is not allowed within 7 days',
+    message:
+      'Re-registration with the same email is not allowed within 7 days.',
     errorCode: 2008,
     statusCode: 409,
   },
@@ -350,7 +351,7 @@ export const kukeyExceptions = createKukeyExceptions({
   // - 33xx : CourseReview
   VIEWABLE_UNTIL_UPDATE_FAILED: {
     name: 'VIEWABLE_UNTIL_UPDATE_FAILED',
-    message: 'Failed to update course review reading key.',
+    message: 'Course review reading key update failed.',
     errorCode: 3300,
     statusCode: 500,
   },
@@ -442,7 +443,7 @@ export const kukeyExceptions = createKukeyExceptions({
   },
   FRIEND_TIMETABLE_NOT_FOUND: {
     name: 'FRIEND_TIMETABLE_NOT_FOUND',
-    message: "Friend's timtable not found",
+    message: "Friend's timetable not found.",
     errorCode: 3410,
     statusCode: 404,
   },
@@ -547,7 +548,7 @@ export const kukeyExceptions = createKukeyExceptions({
     statusCode: 400,
   },
   REPLY_TO_DIFFERENT_POST: {
-    name: 'INVALID_PARENT_COMMENT_REQUEST',
+    name: 'REPLY_TO_DIFFERENT_POST',
     message: "Cannot create other post's reply.",
     errorCode: 4201,
     statusCode: 400,
@@ -651,19 +652,19 @@ export const kukeyExceptions = createKukeyExceptions({
     name: 'NOT_IMAGE_FILE',
     message: 'Only image file can be uploaded.',
     errorCode: 6000,
-    statusCode: 400,
+    statusCode: 500,
   },
   FILE_UPLOAD_FAILED: {
     name: 'FILE_UPLOAD_FAILED',
     message: 'File upload failed.',
     errorCode: 6001,
-    statusCode: 400,
+    statusCode: 500,
   },
   FILE_DELETE_FAILED: {
     name: 'FILE_DELETE_FAILED',
     message: 'File delete failed.',
     errorCode: 6002,
-    statusCode: 400,
+    statusCode: 500,
   },
   FILE_METADATA_GET_FAILED: {
     name: 'FILE_METADATA_GET_FAILED',
