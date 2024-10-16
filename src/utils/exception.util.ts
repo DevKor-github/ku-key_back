@@ -347,6 +347,13 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 3202,
     statusCode: 409,
   },
+  TIMETABLE_COURSE_MISMATCH: {
+    name: 'TIMETABLE_COURSE_MISMATCH',
+    message:
+      "The year or semester in the timetable doesn't match the year or semester in the course.",
+    errorCode: 3203,
+    statusCode: 400,
+  },
   // - 33xx : CourseReview
   VIEWABLE_UNTIL_UPDATE_FAILED: {
     name: 'VIEWABLE_UNTIL_UPDATE_FAILED',

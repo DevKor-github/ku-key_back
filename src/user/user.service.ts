@@ -224,12 +224,11 @@ export class UserService {
     user: UserEntity,
     daysToAdd: number,
   ): Promise<Date> {
-    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
-    const koreaTime = new Date(Date.now() + offset); // 현재 시간
+    const universalTime = new Date(); // 현재 시간
     let newExpireDate: Date;
 
-    if (user.viewableUntil < koreaTime) {
-      newExpireDate = koreaTime;
+    if (user.viewableUntil < universalTime) {
+      newExpireDate = universalTime;
     } else {
       newExpireDate = user.viewableUntil;
     }
@@ -406,10 +405,9 @@ export class UserService {
 
     if (!user) throwKukeyException('USER_NOT_FOUND');
 
-    const offset = 1000 * 60 * 60 * 9; // 9시간 밀리세컨드 값
-    const koreaTime = new Date(Date.now() + offset); // 현재 시간
+    const universalTime = new Date();
 
-    if (user.viewableUntil <= koreaTime) {
+    if (user.viewableUntil <= universalTime) {
       // 강의평 열람기간이 같을때도 만료되었다고 처리
       return null;
     }
