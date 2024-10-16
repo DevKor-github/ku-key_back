@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReportRepository } from './report.repository';
 import { CreateReportResponseDto } from './dto/create-report.dto';
 import { GetReportListResponseDto } from './dto/get-report-list.dto';
 import { GetReportResponseDto } from './dto/get-report.dto';
 import { FileService } from 'src/common/file.service';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class ReportService {
@@ -25,7 +26,7 @@ export class ReportService {
         commentId,
       )
     ) {
-      throw new BadRequestException('Already Reported!');
+      throwKukeyException('ALREADY_REPORTED');
     }
     await this.reportRepository.createReport(
       reporterId,
