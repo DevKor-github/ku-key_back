@@ -350,7 +350,7 @@ export const kukeyExceptions = createKukeyExceptions({
   TIMETABLE_COURSE_MISMATCH: {
     name: 'TIMETABLE_COURSE_MISMATCH',
     message:
-      '시간표의 연도 또는 학기가 강의의 연도 또는 학기와 일치하지 않습니다.',
+      "The year or semester in the timetable doesn't match the year or semester in the course.",
     errorCode: 3203,
     statusCode: 400,
   },
