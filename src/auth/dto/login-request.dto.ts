@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginRequestDto {
   @ApiProperty({ description: '사용자 이메일' })
@@ -16,9 +16,4 @@ export class LoginRequestDto {
   @IsNotEmpty()
   @IsBoolean()
   keepingLogin: boolean;
-
-  @ApiPropertyOptional({ description: '기기 코드(없으면 새로 발급)' })
-  @IsOptional()
-  @IsString()
-  deviceCode?: string;
 }
