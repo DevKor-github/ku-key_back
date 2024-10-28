@@ -1,5 +1,4 @@
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { MethodNames } from 'src/common/types/method';
 import { GetNoticeResponseDto } from 'src/notice/dto/get-notice.dto';
 import { NoticeController } from 'src/notice/notice.controller';
@@ -29,7 +28,7 @@ const NoticeDocsMap: Record<NoticeEndPoints, MethodDecorator[]> = {
     ApiResponse({
       status: 200,
       description: '알림 조회 성공',
-      type: CursorPageResponseDto<GetNoticeResponseDto>,
+      type: GetNoticeResponseDto,
     }),
   ],
 };

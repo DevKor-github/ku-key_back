@@ -7,7 +7,6 @@ import { User } from 'src/decorators/user.decorator';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { GetNoticeResponseDto } from './dto/get-notice.dto';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
-import { CursorPageResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { NoticeDocs } from 'src/decorators/docs/notice.decorator';
 
 @Controller('notice')
@@ -33,7 +32,7 @@ export class NoticeController {
   async getNotices(
     @User() user: AuthorizedUserDto,
     @Query() pageOption: CursorPageOptionsDto,
-  ): Promise<CursorPageResponseDto<GetNoticeResponseDto>> {
+  ): Promise<GetNoticeResponseDto> {
     return await this.noticeService.getNotices(user, pageOption);
   }
 }
