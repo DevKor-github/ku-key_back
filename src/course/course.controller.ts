@@ -8,6 +8,9 @@ import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 import { CourseDocs } from 'src/decorators/docs/course.decorator';
+import { GetGeneralCourseDto } from './dto/get-general-course.dto';
+import { GetMajorCourseDto } from './dto/get-major-course.dto';
+import { GetAcademicFoundationCourseDto } from './dto/get-academic-foundation-course.dto';
 
 @ApiTags('course')
 @CourseDocs
@@ -76,31 +79,28 @@ export class CourseController {
   @UseGuards(JwtAuthGuard)
   @Get('general')
   async getGeneralCourses(
-    @Query('cursorId') cursorId?: number,
+    @Query() getGeneralCourseDto: GetGeneralCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    return await this.courseService.getGeneralCourses(cursorId);
+    return await this.courseService.getGeneralCourses(getGeneralCourseDto);
   }
 
   // 전공 리스트 (학부별)
   @UseGuards(JwtAuthGuard)
   @Get('major')
   async getMajorCourses(
-    @Query('major') major: string,
-    @Query('cursorId') cursorId?: number,
+    @Query() getMajorCourseDto: GetMajorCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    return await this.courseService.getMajorCourses(major, cursorId);
+    return await this.courseService.getMajorCourses(getMajorCourseDto);
   }
 
   // 학문의 기초 리스트
   @UseGuards(JwtAuthGuard)
   @Get('academic-foundation')
   async getAcademicFoundationCourses(
-    @Query('college') college: string,
-    @Query('cursorId') cursorId?: number,
+    @Query() getAcademicFoundationCourseDto: GetAcademicFoundationCourseDto,
   ): Promise<PaginatedCoursesDto> {
     return await this.courseService.getAcademicFoundationCourses(
-      college,
-      cursorId,
+      getAcademicFoundationCourseDto,
     );
   }
 

@@ -133,12 +133,9 @@ export class AuthService {
   async logIn(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
-    deviceCode?: string,
   ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    if (!(await this.cacheManager.get(`token-${user.id}-${deviceCode}`))) {
-      deviceCode = this.generateRandomString(10) + Date.now().toString();
-    }
+    const deviceCode = this.generateRandomString(10) + Date.now().toString();
     const token = await this.createToken(user, keepingLogin, deviceCode);
     return new LoginResponseDto(token, verified, deviceCode);
   }
@@ -285,7 +282,7 @@ export class AuthService {
     return results;
   }
 
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {

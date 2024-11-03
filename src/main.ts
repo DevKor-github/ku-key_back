@@ -3,10 +3,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
+import { winstonLogger } from './utils/winston.utils';
 import { throwKukeyException } from './utils/exception.util';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: winstonLogger });
 
   app.enableCors({
     origin: true,
@@ -36,7 +37,7 @@ async function bootstrap() {
         );
         throwKukeyException(
           'VALIDATION_ERROR',
-          `올바르지 않은 입력 값입니다. 세부 정보: ${messages.join(', ')}`,
+          `Invalid input values. Details: ${messages.join(', ')}`,
         );
       },
     }),

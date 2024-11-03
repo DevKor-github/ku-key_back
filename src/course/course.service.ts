@@ -10,6 +10,9 @@ import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { GetGeneralCourseDto } from './dto/get-general-course.dto';
+import { GetMajorCourseDto } from './dto/get-major-course.dto';
+import { GetAcademicFoundationCourseDto } from './dto/get-academic-foundation-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -78,6 +81,8 @@ export class CourseService {
         where: {
           courseCode: Like(`${searchCourseCodeDto.courseCode}%`),
           id: MoreThan(searchCourseCodeDto.cursorId),
+          year: searchCourseCodeDto.year,
+          semester: searchCourseCodeDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -85,7 +90,11 @@ export class CourseService {
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
+        where: {
+          courseCode: Like(`${searchCourseCodeDto.courseCode}%`),
+          year: searchCourseCodeDto.year,
+          semester: searchCourseCodeDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -110,6 +119,8 @@ export class CourseService {
           major: major,
           category: 'Major',
           id: MoreThan(searchCourseNameDto.cursorId),
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -121,6 +132,8 @@ export class CourseService {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           major: major,
           category: 'Major',
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -129,30 +142,6 @@ export class CourseService {
     }
 
     return await this.mappingCourseDetailsToCourses(courses);
-
-    // try {
-    //   const words = searchCourseNameDto.courseName
-    //     .split(/\s+/)
-    //     .filter((word) => word.length);
-    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    //   const queryBuilder = this.courseRepository
-    //     .createQueryBuilder('course')
-    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-    //     .where(`course.courseName REGEXP :pattern`, {
-    //       pattern: `^${searchPattern}.*$`,
-    //     })
-    //     .andWhere('course.major = :major', { major })
-    //     .andWhere('course.category = :category', { category: 'Major' })
-    //     .orderBy('course.id', 'ASC')
-    //     .limit(21);
-
-    //   if (searchCourseNameDto.cursorId) {
-    //     queryBuilder.andWhere('course.id > :cursorId', {
-    //       cursorId: searchCourseNameDto.cursorId,
-    //     });
-    //   }
-    //   const majorCourses = await queryBuilder.getMany();
-    //   return await this.mappingCourseDetailsToCourses(majorCourses);
   }
 
   // 전공 교수님 성함 검색
@@ -172,6 +161,8 @@ export class CourseService {
           major: major,
           category: 'Major',
           id: MoreThan(searchProfessorNameDto.cursorId),
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -183,6 +174,8 @@ export class CourseService {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           major: major,
           category: 'Major',
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -205,6 +198,8 @@ export class CourseService {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           category: 'General Studies',
           id: MoreThan(searchCourseNameDto.cursorId),
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -215,6 +210,8 @@ export class CourseService {
         where: {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           category: 'General Studies',
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -223,30 +220,6 @@ export class CourseService {
     }
 
     return await this.mappingCourseDetailsToCourses(courses);
-    // try {
-    //   const words = searchCourseNameDto.courseName
-    //     .split(/\s+/)
-    //     .filter((word) => word.length);
-    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    //   const queryBuilder = await this.courseRepository
-    //     .createQueryBuilder('course')
-    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-    //     .where(`course.courseName REGEXP :pattern`, {
-    //       pattern: `^${searchPattern}.*$`,
-    //     })
-    //     .andWhere('course.category = :category', {
-    //       category: 'General Studies',
-    //     })
-    //     .orderBy('course.id', 'ASC')
-    //     .limit(21);
-
-    //   if (searchCourseNameDto.cursorId) {
-    //     queryBuilder.andWhere('course.id > :cursorId', {
-    //       cursorId: searchCourseNameDto.cursorId,
-    //     });
-    //   }
-    //   const generalCourses = await queryBuilder.getMany();
-    //   return await this.mappingCourseDetailsToCourses(generalCourses);
   }
 
   // 교양 교수님 성함 검색
@@ -261,6 +234,8 @@ export class CourseService {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           category: 'General Studies',
           id: MoreThan(searchProfessorNameDto.cursorId),
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -271,6 +246,8 @@ export class CourseService {
         where: {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           category: 'General Studies',
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -282,18 +259,29 @@ export class CourseService {
   }
 
   // 교양 리스트 반환
-  async getGeneralCourses(cursorId: number): Promise<PaginatedCoursesDto> {
+  async getGeneralCourses(
+    getGeneralCourseDto: GetGeneralCourseDto,
+  ): Promise<PaginatedCoursesDto> {
     let courses = [];
-    if (cursorId) {
+    if (getGeneralCourseDto.cursorId) {
       courses = await this.courseRepository.find({
-        where: { category: 'General Studies', id: MoreThan(cursorId) },
+        where: {
+          category: 'General Studies',
+          id: MoreThan(getGeneralCourseDto.cursorId),
+          year: getGeneralCourseDto.year,
+          semester: getGeneralCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'General Studies' },
+        where: {
+          category: 'General Studies',
+          year: getGeneralCourseDto.year,
+          semester: getGeneralCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -305,21 +293,31 @@ export class CourseService {
 
   // 전공 리스트 반환
   async getMajorCourses(
-    major: string,
-    cursorId: number,
+    getMajorCourseDto: GetMajorCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!major) throwKukeyException('MAJOR_REQUIRED');
+    if (!getMajorCourseDto.major) throwKukeyException('MAJOR_REQUIRED');
     let courses = [];
-    if (cursorId) {
+    if (getMajorCourseDto.cursorId) {
       courses = await this.courseRepository.find({
-        where: { category: 'Major', major: major, id: MoreThan(cursorId) },
+        where: {
+          category: 'Major',
+          major: getMajorCourseDto.major,
+          id: MoreThan(getMajorCourseDto.cursorId),
+          year: getMajorCourseDto.year,
+          semester: getMajorCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'Major', major: major },
+        where: {
+          category: 'Major',
+          major: getMajorCourseDto.major,
+          year: getMajorCourseDto.year,
+          semester: getMajorCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -331,17 +329,19 @@ export class CourseService {
 
   // 학문의 기초 리스트 반환
   async getAcademicFoundationCourses(
-    college: string,
-    cursorId: number,
+    getAcademicFoundationCourseDto: GetAcademicFoundationCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!college) throwKukeyException('COLLEGE_REQUIRED');
+    if (!getAcademicFoundationCourseDto.college)
+      throwKukeyException('COLLEGE_REQUIRED');
     let courses = [];
-    if (cursorId) {
+    if (getAcademicFoundationCourseDto.cursorId) {
       courses = await this.courseRepository.find({
         where: {
           category: 'Academic Foundations',
-          college: college,
-          id: MoreThan(cursorId),
+          college: getAcademicFoundationCourseDto.college,
+          id: MoreThan(getAcademicFoundationCourseDto.cursorId),
+          year: getAcademicFoundationCourseDto.year,
+          semester: getAcademicFoundationCourseDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -349,7 +349,12 @@ export class CourseService {
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'Academic Foundations', college: college },
+        where: {
+          category: 'Academic Foundations',
+          college: getAcademicFoundationCourseDto.college,
+          year: getAcademicFoundationCourseDto.year,
+          semester: getAcademicFoundationCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],

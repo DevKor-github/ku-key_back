@@ -6,6 +6,7 @@ import { DeleteScheduleResponseDto } from 'src/schedule/dto/delete-schedule-resp
 import { UpdateScheduleRequestDto } from 'src/schedule/dto/update-schedule-request.dto';
 import { UpdateScheduleResponseDto } from 'src/schedule/dto/update-schedule-response.dto';
 import { ScheduleController } from 'src/schedule/schedule.controller';
+import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type ScheduleEndPoints = MethodNames<ScheduleController>;
 
@@ -24,6 +25,11 @@ const ScheduleDocsMap: Record<ScheduleEndPoints, MethodDecorator[]> = {
       description: '스케쥴 추가 성공',
       type: CreateScheduleResponseDto,
     }),
+    ApiKukeyExceptionResponse([
+      'TIMETABLE_NOT_FOUND',
+      'INVALID_TIME_RANGE',
+      'SCHEDULE_CONFLICT',
+    ]),
   ],
   updateSchedule: [
     ApiOperation({
@@ -44,6 +50,11 @@ const ScheduleDocsMap: Record<ScheduleEndPoints, MethodDecorator[]> = {
       description: '스케쥴 수정 성공 시',
       type: UpdateScheduleResponseDto,
     }),
+    ApiKukeyExceptionResponse([
+      'SCHEDULE_NOT_FOUND',
+      'INVALID_TIME_RANGE',
+      'SCHEDULE_CONFLICT',
+    ]),
   ],
   deleteSchedule: [
     ApiOperation({
@@ -61,6 +72,7 @@ const ScheduleDocsMap: Record<ScheduleEndPoints, MethodDecorator[]> = {
       description: '스케쥴 삭제 성공 시',
       type: DeleteScheduleResponseDto,
     }),
+    ApiKukeyExceptionResponse(['SCHEDULE_NOT_FOUND']),
   ],
 };
 

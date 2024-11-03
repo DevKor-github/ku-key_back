@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateUserRequestDto {
   @IsNotEmpty()
@@ -15,6 +21,7 @@ export class CreateUserRequestDto {
 
   @IsNotEmpty()
   @IsString()
+  @Length(5, 10)
   @ApiProperty({ description: '중복확인 완료된 userId' })
   username: string;
 
@@ -30,11 +37,13 @@ export class CreateUserRequestDto {
 
   @IsNotEmpty()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '모교' })
   homeUniversity: string;
 
   @IsNotEmpty()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '전공' })
   major: string;
 }
