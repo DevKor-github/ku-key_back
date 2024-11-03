@@ -2,10 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { JwtTokenDto } from './jwtToken.dto';
 
 export class LoginResponseDto {
-  constructor(token: JwtTokenDto, verified: boolean, deviceCode: string) {
+  constructor(
+    token: JwtTokenDto,
+    verified: boolean,
+    deviceCode: string,
+    userId: number,
+  ) {
     this.token = token;
     this.verified = verified;
     this.deviceCode = deviceCode;
+    this.userId = userId;
   }
 
   @ApiProperty({ description: 'JWT 토큰' })
@@ -16,4 +22,7 @@ export class LoginResponseDto {
 
   @ApiProperty({ description: '기기 코드' })
   deviceCode: string;
+
+  @ApiProperty({ description: '사용자 ID' })
+  userId: number;
 }

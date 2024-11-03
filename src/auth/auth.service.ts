@@ -137,7 +137,7 @@ export class AuthService {
     const verified = await this.userService.checkUserVerified(user.id);
     const deviceCode = this.generateRandomString(10) + Date.now().toString();
     const token = await this.createToken(user, keepingLogin, deviceCode);
-    return new LoginResponseDto(token, verified, deviceCode);
+    return new LoginResponseDto(token, verified, deviceCode, user.id);
   }
 
   async logout(user: AuthorizedUserDto, deviceCode: string) {
