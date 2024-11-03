@@ -68,7 +68,7 @@ export class AuthController {
     @User() user: AuthorizedUserDto,
     @Body() body: LoginRequestDto,
   ): Promise<LoginResponseDto> {
-    const isLogin = await this.authService.logIn(user, body.keepingLogin,body.deviceCode);
+    const isLogin = await this.authService.logIn(user, body.keepingLogin);
 
     if (isLogin) {
       loginLogger.log(
