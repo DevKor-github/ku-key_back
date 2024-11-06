@@ -1,8 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NoticeEntity } from 'src/entities/notice.entity';
 import { Notice } from '../enum/notice.enum';
+import {
+  CursorPageMetaResponseDto,
+  CursorPageResponseDto,
+} from 'src/common/dto/CursorPageResponse.dto';
 
-export class GetNoticeResponseDto {
+export class NoticeDto {
   constructor(noticeEntity: NoticeEntity) {
     this.id = noticeEntity.id;
     this.content = noticeEntity.content;
@@ -31,4 +35,16 @@ export class GetNoticeResponseDto {
 
   @ApiProperty({ description: '연결 핸들러' })
   handler?: number;
+}
+
+export class GetNoticeResponseDto extends CursorPageResponseDto<NoticeDto> {
+  @ApiProperty({ type: [NoticeDto], description: '알림 목록' })
+  data: NoticeDto[];
+
+  constructor(noticeEntities: NoticeEntity[], meta: CursorPageMetaResponseDto) {
+    super(meta);
+    this.data = noticeEntities.map(
+      (noticeEntity) => new NoticeDto(noticeEntity),
+    );
+  }
 }
