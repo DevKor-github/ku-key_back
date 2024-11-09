@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as sharp from 'sharp';
 import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
@@ -41,6 +42,59 @@ export class FileService {
     };
     const command = new PutObjectCommand(params);
 
+    const uploadFile = await this.s3.send(command);
+
+    if (uploadFile.$metadata.httpStatusCode !== 200) {
+      throwKukeyException('FILE_UPLOAD_FAILED');
+    }
+
+    return filename;
+  }
+
+  async uploadCompressedImage(
+    file: Express.Multer.File,
+    resource: string,
+    path: string,
+  ): Promise<string> {
+    const image = sharp(file.buffer);
+
+    const minWidth = 777;
+    const minHeight = 437;
+
+    const metadata = await image.metadata();
+    const { width, height } = metadata;
+    const resizeOptions =
+      width > minWidth || height > minHeight
+        ? { width: minWidth, height: minHeight, fit: sharp.fit.inside }
+        : null;
+
+    const isLargeImage = width > 2000 || height > 2000;
+    const webpOptions = isLargeImage ? { quality: 75 } : { lossless: true };
+
+    let processingImage = image;
+    if (resizeOptions) {
+      processingImage = processingImage.resize(resizeOptions);
+    }
+
+    const compressedBuffer = await processingImage.webp(webpOptions).toBuffer();
+
+    const originalSize = file.buffer.length;
+    const compressedSize = compressedBuffer.length;
+
+    const finalBuffer =
+      compressedSize < originalSize ? compressedBuffer : file.buffer;
+    const finalContentType =
+      compressedSize < originalSize ? 'image/webp' : file.mimetype;
+
+    const filename = `${this.mode}/${resource}/${path}/${new Date().getTime()}.webp`;
+    const params = {
+      Key: filename,
+      Body: finalBuffer,
+      Bucket: this.bucketName,
+      ContentType: finalContentType,
+    };
+
+    const command = new PutObjectCommand(params);
     const uploadFile = await this.s3.send(command);
 
     if (uploadFile.$metadata.httpStatusCode !== 200) {

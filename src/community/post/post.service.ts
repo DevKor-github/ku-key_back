@@ -152,7 +152,7 @@ export class PostService {
     const newPostId = (await transactionManager.save(post)).id;
 
     for (const image of images) {
-      const imgDir = await this.fileService.uploadFile(
+      const imgDir = await this.fileService.uploadCompressedImage(
         image,
         'PostImage',
         `${newPostId}`,
@@ -234,7 +234,7 @@ export class PostService {
       }
 
       for (const image of images) {
-        const imgDir = await this.fileService.uploadFile(
+        const imgDir = await this.fileService.uploadCompressedImage(
           image,
           'PostImage',
           `${postId}`,
