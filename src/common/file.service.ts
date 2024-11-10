@@ -68,8 +68,7 @@ export class FileService {
         ? { width: minWidth, height: minHeight, fit: sharp.fit.inside }
         : null;
 
-    const isLargeImage = width > 2000 || height > 2000;
-    const webpOptions = isLargeImage ? { quality: 75 } : { lossless: true };
+    const webpOptions = { lossless: true };
 
     let processingImage = image;
     if (resizeOptions) {
@@ -80,13 +79,15 @@ export class FileService {
 
     const originalSize = file.buffer.length;
     const compressedSize = compressedBuffer.length;
+    const isCompressed = compressedSize < originalSize;
 
-    const finalBuffer =
-      compressedSize < originalSize ? compressedBuffer : file.buffer;
-    const finalContentType =
-      compressedSize < originalSize ? 'image/webp' : file.mimetype;
+    const finalBuffer = isCompressed ? compressedBuffer : file.buffer;
+    const finalContentType = isCompressed ? 'image/webp' : file.mimetype;
+    const finalExtension = isCompressed
+      ? 'webp'
+      : file.originalname.split('.').pop();
 
-    const filename = `${this.mode}/${resource}/${path}/${new Date().getTime()}.webp`;
+    const filename = `${this.mode}/${resource}/${path}/${new Date().getTime()}.${finalExtension}`;
     const params = {
       Key: filename,
       Body: finalBuffer,
