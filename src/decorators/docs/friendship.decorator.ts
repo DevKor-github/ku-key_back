@@ -38,7 +38,7 @@ const FriendshipDocsMap: Record<FriendshipEndPoints, MethodDecorator[]> = {
     ApiOperation({
       summary: '친구 추가를 위한 유저 검색',
       description:
-        'username(친구 추가용 id)를 query로 받아 해당하는 유저를 검색합니다.',
+        'username(친구 추가용 id)를 query로 받아 해당하는 유저를 검색합니다. 검색 결과가 없는 경우 null을 반환합니다.',
     }),
     ApiQuery({
       name: 'username',
@@ -46,14 +46,11 @@ const FriendshipDocsMap: Record<FriendshipEndPoints, MethodDecorator[]> = {
       required: true,
     }),
     ApiOkResponse({
-      description: '검색된 유저 정보 반환',
+      description:
+        '검색된 유저 정보 반환, 유저가 존재하지 않거나 verify 되지 않은 경우 null 반환',
       type: SearchUserResponseDto,
     }),
-    ApiKukeyExceptionResponse([
-      'USER_NOT_FOUND',
-      'USER_NOT_VERIFIED',
-      'CHARACTER_NOT_FOUND',
-    ]),
+    ApiKukeyExceptionResponse(['CHARACTER_NOT_FOUND']),
   ],
   getFriendTimetable: [
     ApiOperation({

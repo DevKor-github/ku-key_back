@@ -71,12 +71,8 @@ export class FriendshipService {
 
     const user = await this.userService.findUserByUsername(username);
 
-    if (!user) {
-      throwKukeyException('USER_NOT_FOUND');
-    }
-
-    if (!user.isVerified) {
-      throwKukeyException('USER_NOT_VERIFIED');
+    if (!user || !user.isVerified) {
+      return null;
     }
 
     const character = await this.userService.findCharacterByUserId(user.id);
