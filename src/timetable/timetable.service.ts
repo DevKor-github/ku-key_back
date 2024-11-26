@@ -17,6 +17,7 @@ import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { isConflictingTime } from 'src/utils/time-utils';
 import { DayType } from 'src/common/types/day-type.utils';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { DeleteTimetableResponseDto } from './dto/delete-timetable-response.dto';
 
 @Injectable()
 export class TimetableService {
@@ -360,7 +361,7 @@ export class TimetableService {
     transactionManager: EntityManager,
     timetableId: number,
     user: AuthorizedUserDto,
-  ): Promise<CommonDeleteResponseDto> {
+  ): Promise<DeleteTimetableResponseDto> {
     const timetable = await transactionManager.findOne(TimetableEntity, {
       where: { id: timetableId, userId: user.id },
       relations: ['timetableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
@@ -391,7 +392,26 @@ export class TimetableService {
       }
     }
     await transactionManager.softRemove(timetable);
-    return new CommonDeleteResponseDto(true);
+
+    // 삭제 후에 해당 학기에 시간표가 하나도 존재하지 않으면 추가로 하나 생성 (그 시간표가 대표시간표)
+    const remainingTimetables = await transactionManager.find(TimetableEntity, {
+      where: { userId: user.id },
+    });
+
+    if (remainingTimetables.length === 0) {
+      const newTimetable = transactionManager.create(TimetableEntity, {
+        userId: user.id,
+        timetableName: 'timetable 1',
+        semester: timetable.semester,
+        year: timetable.year,
+        mainTimetable: true,
+      });
+
+      await transactionManager.save(newTimetable);
+      return new DeleteTimetableResponseDto(true, newTimetable.id);
+    }
+
+    return new DeleteTimetableResponseDto(true, null);
   }
 
   async getMainTimetable(
