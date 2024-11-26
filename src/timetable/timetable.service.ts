@@ -401,7 +401,7 @@ export class TimetableService {
       },
     );
 
-    if (remainingTimetable) {
+    if (!remainingTimetable) {
       const newTimetable = transactionManager.create(TimetableEntity, {
         userId: user.id,
         timetableName: 'timetable 1',
