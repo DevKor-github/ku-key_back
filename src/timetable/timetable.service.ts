@@ -394,11 +394,14 @@ export class TimetableService {
     await transactionManager.softRemove(timetable);
 
     // 삭제 후에 해당 학기에 시간표가 하나도 존재하지 않으면 추가로 하나 생성 (그 시간표가 대표시간표)
-    const remainingTimetables = await transactionManager.find(TimetableEntity, {
-      where: { userId: user.id },
-    });
+    const remainingTimetable = await transactionManager.findOne(
+      TimetableEntity,
+      {
+        where: { userId: user.id },
+      },
+    );
 
-    if (remainingTimetables.length === 0) {
+    if (remainingTimetable) {
       const newTimetable = transactionManager.create(TimetableEntity, {
         userId: user.id,
         timetableName: 'timetable 1',
