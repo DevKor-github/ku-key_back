@@ -428,7 +428,16 @@ export class TimetableService {
     });
 
     if (!mainTimetable) {
-      throwKukeyException('TIMETABLE_NOT_FOUND');
+      // 대표 시간표 없으면 시간표 하나 바로 생성
+      return await this.createTimetable(
+        this.timetableRepository.manager,
+        {
+          timetableName: 'timetable 1',
+          semester: timetableDto.semester,
+          year: timetableDto.year,
+        },
+        user,
+      );
     }
     return mainTimetable;
   }
