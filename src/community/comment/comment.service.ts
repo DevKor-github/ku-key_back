@@ -50,8 +50,7 @@ export class CommentService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetMyCommentListResponseDto(comments);
-    result.meta = meta;
+    const result = new GetMyCommentListResponseDto(comments, meta);
 
     return result;
   }

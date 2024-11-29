@@ -81,8 +81,12 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListWithBoardResponseDto(board, posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListWithBoardResponseDto(
+      board,
+      posts,
+      user.id,
+      meta,
+    );
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -152,7 +156,7 @@ export class PostService {
     const newPostId = (await transactionManager.save(post)).id;
 
     for (const image of images) {
-      const imgDir = await this.fileService.uploadFile(
+      const imgDir = await this.fileService.uploadCompressedImage(
         image,
         'PostImage',
         `${newPostId}`,
@@ -234,7 +238,7 @@ export class PostService {
       }
 
       for (const image of images) {
-        const imgDir = await this.fileService.uploadFile(
+        const imgDir = await this.fileService.uploadCompressedImage(
           image,
           'PostImage',
           `${postId}`,
@@ -375,8 +379,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -403,8 +406,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -429,8 +431,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -460,8 +461,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -492,8 +492,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
