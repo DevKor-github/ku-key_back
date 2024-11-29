@@ -14,6 +14,67 @@ import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 type CourseEndPoints = MethodNames<CourseController>;
 
 const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
+  searchAllCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 전체 강의 검색',
+      description: 'keyword를 입력하여 전체 강의에서 검색합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+  ],
+  searchMajorCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 전공 강의 검색',
+      description: 'keyword를 입력하여 전공 강의에서 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'major',
+      required: true,
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
+  ],
+  searchGeneralCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 교양 강의 검색',
+      description: 'keyword를 입력하여 교양 강의에서 검색합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+  ],
+  searchAcademicFoundationCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 학문의 기초 강의 검색',
+      description:
+        'keyword를 입력하여 단과대 별 학문의 기초 강의에서 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'college',
+      required: true,
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+    ApiKukeyExceptionResponse(['COLLEGE_REQUIRED']),
+  ],
   searchCourseCode: [
     ApiBearerAuth('accessToken'),
     ApiOperation({
