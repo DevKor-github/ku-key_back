@@ -397,7 +397,11 @@ export class TimetableService {
     const remainingTimetable = await transactionManager.findOne(
       TimetableEntity,
       {
-        where: { userId: user.id },
+        where: {
+          userId: user.id,
+          semester: timetable.semester,
+          year: timetable.year,
+        },
       },
     );
 
