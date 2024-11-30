@@ -140,7 +140,7 @@ jobs:
           OLD_SERVICE_NAME=${{ env.DOCKER_CONTAINER_MAIN }}-$CURRENT_PORT
 
           sudo docker pull ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG }}
-          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
+          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network kukey_network --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
 
           for i in {1..20}; do
             HEALTH_CHECK=$(curl -v -s -o /dev/null -w '%{http_code}' http://localhost:$NEW_PORT || true)
