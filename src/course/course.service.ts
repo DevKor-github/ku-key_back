@@ -1,18 +1,19 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { EntityManager, Like, MoreThan } from 'typeorm';
+import { Brackets, EntityManager, Like, MoreThan } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
 import { SearchProfessorNameDto } from './dto/search-professor-name.dto';
 import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
+import { throwKukeyException } from 'src/utils/exception.util';
+import { GetGeneralCourseDto } from './dto/get-general-course.dto';
+import { GetMajorCourseDto } from './dto/get-major-course.dto';
+import { GetAcademicFoundationCourseDto } from './dto/get-academic-foundation-course.dto';
+import { SearchCoursesWithKeywordDto } from './dto/search-courses-with-keyword.dto';
 
 @Injectable()
 export class CourseService {
@@ -21,6 +22,58 @@ export class CourseService {
     private courseDetailRepository: CourseDetailRepository,
   ) {}
 
+  async searchAllCourses(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchMajorCourses(
+    major: string,
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    if (!major) throwKukeyException('MAJOR_REQUIRED');
+
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        major,
+        category: 'Major',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchGeneralCourses(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        category: 'General Studies',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchAcademicFoundationCourses(
+    college: string,
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    if (!college) throwKukeyException('COLLEGE_REQUIRED');
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        college,
+        category: 'Academic Foundations',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
@@ -28,7 +81,7 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new NotFoundException('Course not found!');
+      throwKukeyException('COURSE_NOT_FOUND');
     }
 
     return new CommonCourseResponseDto(course);
@@ -81,6 +134,8 @@ export class CourseService {
         where: {
           courseCode: Like(`${searchCourseCodeDto.courseCode}%`),
           id: MoreThan(searchCourseCodeDto.cursorId),
+          year: searchCourseCodeDto.year,
+          semester: searchCourseCodeDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -88,7 +143,11 @@ export class CourseService {
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { courseCode: Like(`${searchCourseCodeDto.courseCode}%`) },
+        where: {
+          courseCode: Like(`${searchCourseCodeDto.courseCode}%`),
+          year: searchCourseCodeDto.year,
+          semester: searchCourseCodeDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -102,7 +161,7 @@ export class CourseService {
     major: string,
     searchCourseNameDto: SearchCourseNameDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!major) throw new BadRequestException('전공을 입력하세요!');
+    if (!major) throwKukeyException('MAJOR_REQUIRED');
 
     let courses = [];
 
@@ -113,6 +172,8 @@ export class CourseService {
           major: major,
           category: 'Major',
           id: MoreThan(searchCourseNameDto.cursorId),
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -124,6 +185,8 @@ export class CourseService {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           major: major,
           category: 'Major',
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -132,30 +195,6 @@ export class CourseService {
     }
 
     return await this.mappingCourseDetailsToCourses(courses);
-
-    // try {
-    //   const words = searchCourseNameDto.courseName
-    //     .split(/\s+/)
-    //     .filter((word) => word.length);
-    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    //   const queryBuilder = this.courseRepository
-    //     .createQueryBuilder('course')
-    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-    //     .where(`course.courseName REGEXP :pattern`, {
-    //       pattern: `^${searchPattern}.*$`,
-    //     })
-    //     .andWhere('course.major = :major', { major })
-    //     .andWhere('course.category = :category', { category: 'Major' })
-    //     .orderBy('course.id', 'ASC')
-    //     .limit(21);
-
-    //   if (searchCourseNameDto.cursorId) {
-    //     queryBuilder.andWhere('course.id > :cursorId', {
-    //       cursorId: searchCourseNameDto.cursorId,
-    //     });
-    //   }
-    //   const majorCourses = await queryBuilder.getMany();
-    //   return await this.mappingCourseDetailsToCourses(majorCourses);
   }
 
   // 전공 교수님 성함 검색
@@ -164,7 +203,7 @@ export class CourseService {
     searchProfessorNameDto: SearchProfessorNameDto,
   ): Promise<PaginatedCoursesDto> {
     if (!major) {
-      throw new BadRequestException('전공을 입력하세요!');
+      throwKukeyException('MAJOR_REQUIRED');
     }
     let courses = [];
 
@@ -175,6 +214,8 @@ export class CourseService {
           major: major,
           category: 'Major',
           id: MoreThan(searchProfessorNameDto.cursorId),
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -186,6 +227,8 @@ export class CourseService {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           major: major,
           category: 'Major',
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -208,6 +251,8 @@ export class CourseService {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           category: 'General Studies',
           id: MoreThan(searchCourseNameDto.cursorId),
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -218,6 +263,8 @@ export class CourseService {
         where: {
           courseName: Like(`%${searchCourseNameDto.courseName}%`),
           category: 'General Studies',
+          year: searchCourseNameDto.year,
+          semester: searchCourseNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -226,30 +273,6 @@ export class CourseService {
     }
 
     return await this.mappingCourseDetailsToCourses(courses);
-    // try {
-    //   const words = searchCourseNameDto.courseName
-    //     .split(/\s+/)
-    //     .filter((word) => word.length);
-    //   const searchPattern = words.map((word) => `(?=.*\\b${word}\\b)`).join('');
-    //   const queryBuilder = await this.courseRepository
-    //     .createQueryBuilder('course')
-    //     .leftJoinAndSelect('course.courseDetails', 'courseDetails')
-    //     .where(`course.courseName REGEXP :pattern`, {
-    //       pattern: `^${searchPattern}.*$`,
-    //     })
-    //     .andWhere('course.category = :category', {
-    //       category: 'General Studies',
-    //     })
-    //     .orderBy('course.id', 'ASC')
-    //     .limit(21);
-
-    //   if (searchCourseNameDto.cursorId) {
-    //     queryBuilder.andWhere('course.id > :cursorId', {
-    //       cursorId: searchCourseNameDto.cursorId,
-    //     });
-    //   }
-    //   const generalCourses = await queryBuilder.getMany();
-    //   return await this.mappingCourseDetailsToCourses(generalCourses);
   }
 
   // 교양 교수님 성함 검색
@@ -264,6 +287,8 @@ export class CourseService {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           category: 'General Studies',
           id: MoreThan(searchProfessorNameDto.cursorId),
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -274,6 +299,8 @@ export class CourseService {
         where: {
           professorName: Like(`%${searchProfessorNameDto.professorName}%`),
           category: 'General Studies',
+          year: searchProfessorNameDto.year,
+          semester: searchProfessorNameDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -285,18 +312,29 @@ export class CourseService {
   }
 
   // 교양 리스트 반환
-  async getGeneralCourses(cursorId: number): Promise<PaginatedCoursesDto> {
+  async getGeneralCourses(
+    getGeneralCourseDto: GetGeneralCourseDto,
+  ): Promise<PaginatedCoursesDto> {
     let courses = [];
-    if (cursorId) {
+    if (getGeneralCourseDto.cursorId) {
       courses = await this.courseRepository.find({
-        where: { category: 'General Studies', id: MoreThan(cursorId) },
+        where: {
+          category: 'General Studies',
+          id: MoreThan(getGeneralCourseDto.cursorId),
+          year: getGeneralCourseDto.year,
+          semester: getGeneralCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'General Studies' },
+        where: {
+          category: 'General Studies',
+          year: getGeneralCourseDto.year,
+          semester: getGeneralCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -308,21 +346,31 @@ export class CourseService {
 
   // 전공 리스트 반환
   async getMajorCourses(
-    major: string,
-    cursorId: number,
+    getMajorCourseDto: GetMajorCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!major) throw new BadRequestException('Major is required!');
+    if (!getMajorCourseDto.major) throwKukeyException('MAJOR_REQUIRED');
     let courses = [];
-    if (cursorId) {
+    if (getMajorCourseDto.cursorId) {
       courses = await this.courseRepository.find({
-        where: { category: 'Major', major: major, id: MoreThan(cursorId) },
+        where: {
+          category: 'Major',
+          major: getMajorCourseDto.major,
+          id: MoreThan(getMajorCourseDto.cursorId),
+          year: getMajorCourseDto.year,
+          semester: getMajorCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'Major', major: major },
+        where: {
+          category: 'Major',
+          major: getMajorCourseDto.major,
+          year: getMajorCourseDto.year,
+          semester: getMajorCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -334,17 +382,19 @@ export class CourseService {
 
   // 학문의 기초 리스트 반환
   async getAcademicFoundationCourses(
-    college: string,
-    cursorId: number,
+    getAcademicFoundationCourseDto: GetAcademicFoundationCourseDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!college) throw new BadRequestException('College is required!');
+    if (!getAcademicFoundationCourseDto.college)
+      throwKukeyException('COLLEGE_REQUIRED');
     let courses = [];
-    if (cursorId) {
+    if (getAcademicFoundationCourseDto.cursorId) {
       courses = await this.courseRepository.find({
         where: {
           category: 'Academic Foundations',
-          college: college,
-          id: MoreThan(cursorId),
+          college: getAcademicFoundationCourseDto.college,
+          id: MoreThan(getAcademicFoundationCourseDto.cursorId),
+          year: getAcademicFoundationCourseDto.year,
+          semester: getAcademicFoundationCourseDto.semester,
         },
         order: { id: 'ASC' },
         take: 21,
@@ -352,7 +402,12 @@ export class CourseService {
       });
     } else {
       courses = await this.courseRepository.find({
-        where: { category: 'Academic Foundations', college: college },
+        where: {
+          category: 'Academic Foundations',
+          college: getAcademicFoundationCourseDto.college,
+          year: getAcademicFoundationCourseDto.year,
+          semester: getAcademicFoundationCourseDto.semester,
+        },
         order: { id: 'ASC' },
         take: 21,
         relations: ['courseDetails'],
@@ -380,5 +435,62 @@ export class CourseService {
       (course) => new CommonCourseResponseDto(course),
     );
     return new PaginatedCoursesDto(courseInformations);
+  }
+
+  private async runSearchCoursesQuery(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+    options?: { major?: string; college?: string; category?: string },
+  ): Promise<CourseEntity[]> {
+    const { keyword, cursorId, year, semester } = searchCoursesWithKeywordDto;
+
+    const LIMIT = PaginatedCoursesDto.LIMIT;
+
+    let queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetails')
+      .where('course.year = :year', { year })
+      .andWhere('course.semester = :semester', { semester });
+
+    // Optional: 추가 조건 적용
+    if (options?.major) {
+      queryBuilder = queryBuilder.andWhere('course.major = :major', {
+        major: options.major,
+      });
+    }
+
+    if (options?.college) {
+      queryBuilder = queryBuilder.andWhere('course.college = :college', {
+        college: options.college,
+      });
+    }
+
+    if (options?.category) {
+      queryBuilder = queryBuilder.andWhere('course.category = :category', {
+        category: options.category,
+      });
+    }
+
+    // 검색 조건(LIKE)
+    queryBuilder = queryBuilder.andWhere(
+      new Brackets((qb) => {
+        qb.where('course.courseName LIKE :keyword', { keyword: `%${keyword}%` })
+          .orWhere('course.professorName LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          })
+          .orWhere('course.courseCode LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          });
+      }),
+    );
+
+    if (cursorId) {
+      queryBuilder = queryBuilder.andWhere('course.id > :cursorId', {
+        cursorId,
+      });
+    }
+
+    queryBuilder = queryBuilder.orderBy('course.id', 'ASC').take(LIMIT);
+
+    return await queryBuilder.getMany();
   }
 }

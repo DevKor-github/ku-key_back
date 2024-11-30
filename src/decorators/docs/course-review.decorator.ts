@@ -11,6 +11,7 @@ import { CourseReviewResponseDto } from 'src/course-review/dto/course-review-res
 import { CreateCourseReviewRequestDto } from 'src/course-review/dto/create-course-review-request.dto';
 import { GetCourseReviewSummaryResponseDto } from 'src/course-review/dto/get-course-review-summary-response.dto';
 import { GetCourseReviewsResponseDto } from 'src/course-review/dto/get-course-reviews-response.dto';
+import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type CourseReviewEndPoints = MethodNames<CourseReviewController>;
 
@@ -29,6 +30,11 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       description: '강의평 등록 성공',
       type: CourseReviewResponseDto,
     }),
+    ApiKukeyExceptionResponse([
+      'COURSE_NOT_FOUND',
+      'COURSE_REVIEW_ALREADY_EXIST',
+      'USER_NOT_FOUND',
+    ]),
   ],
   getCourseReviewSummary: [
     ApiOperation({
@@ -51,6 +57,7 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       description: '종합 강의평 조회 성공',
       type: GetCourseReviewSummaryResponseDto,
     }),
+    ApiKukeyExceptionResponse(['COURSE_NOT_FOUND']),
   ],
   getMyCourseReviews: [
     ApiOperation({
@@ -107,6 +114,10 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       description: '강의평 조회 성공',
       type: GetCourseReviewsResponseDto,
     }),
+    ApiKukeyExceptionResponse([
+      'COURSE_NOT_FOUND',
+      'COURSE_REVIEW_NOT_VIEWABLE',
+    ]),
   ],
   toggleRecommendCourseReview: [
     ApiOperation({
@@ -124,6 +135,11 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       description: '강의평 추천/추천 취소 성공',
       type: CourseReviewResponseDto,
     }),
+    ApiKukeyExceptionResponse([
+      'COURSE_REVIEW_NOT_FOUND',
+      'COURSE_REVIEW_NOT_VIEWABLE',
+      'SELF_REVIEW_RECOMMENDATION_FORBIDDEN',
+    ]),
   ],
 };
 

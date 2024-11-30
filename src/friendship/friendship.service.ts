@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
 import { SendFriendshipResponseDto } from './dto/send-friendship-response.dto';
@@ -22,6 +17,7 @@ import { NoticeService } from 'src/notice/notice.service';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class FriendshipService {
@@ -50,10 +46,6 @@ export class FriendshipService {
         await this.friendshipRepository.findFriendshipsByUserId(userId);
     }
 
-    if (!friendships) {
-      throw new NotFoundException('친구 목록을 불러오는데 실패했습니다.');
-    }
-
     // 현재 친구가 없는 경우
     if (friendships.length === 0) {
       return [];
@@ -80,12 +72,12 @@ export class FriendshipService {
     const user = await this.userService.findUserByUsername(username);
 
     if (!user || !user.isVerified) {
-      throw new BadRequestException('올바르지 않은 상대입니다.');
+      return null;
     }
 
     const character = await this.userService.findCharacterByUserId(user.id);
     if (!character) {
-      throw new NotFoundException('캐릭터 정보를 찾을 수 없습니다.');
+      throwKukeyException('CHARACTER_NOT_FOUND');
     }
 
     if (myId == user.id) {
@@ -127,15 +119,13 @@ export class FriendshipService {
     const toUser = await this.userService.findUserByUsername(toUsername);
 
     if (!toUser) {
-      throw new BadRequestException('해당 유저를 찾을 수 없습니다.');
+      throwKukeyException('USER_NOT_FOUND');
     }
 
     const toUserId = toUser.id;
 
     if (fromUserId === toUserId) {
-      throw new BadRequestException(
-        '자기 자신에게는 친구 요청을 보낼 수 없습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_REQUEST_TO_SELF');
     }
 
     const checkFriendship = await transactionManager.findOne(FriendshipEntity, {
@@ -146,11 +136,7 @@ export class FriendshipService {
     });
 
     if (checkFriendship) {
-      if (!checkFriendship.areWeFriend) {
-        throw new BadRequestException('이미 친구 요청을 보냈거나 받았습니다.');
-      } else {
-        throw new BadRequestException('이미 친구인 유저입니다.');
-      }
+      throwKukeyException('FRIENDSHIP_ALREADY_EXIST');
     }
 
     const friendship = transactionManager.create(FriendshipEntity, {
@@ -159,21 +145,14 @@ export class FriendshipService {
       areWeFriend: false,
     });
 
-    const savedFriendship = await transactionManager.save(
-      FriendshipEntity,
-      friendship,
-    );
+    await transactionManager.save(FriendshipEntity, friendship);
 
-    if (!savedFriendship) {
-      throw new BadRequestException('친구 요청 보내기에 실패했습니다.');
-    } else {
-      await this.noticeService.emitNotice(
-        toUserId,
-        `${fromUsername} sent you a friend request!`,
-        Notice.friendRequest,
-      );
-      return new SendFriendshipResponseDto(true);
-    }
+    await this.noticeService.emitNotice(
+      toUserId,
+      `${fromUsername} sent you a friend request!`,
+      Notice.friendRequest,
+    );
+    return new SendFriendshipResponseDto(true);
   }
 
   async getReceivedWaitingFriendList(
@@ -231,17 +210,15 @@ export class FriendshipService {
     });
 
     if (!friendship) {
-      throw new BadRequestException('받은 친구 요청을 찾을 수 없습니다.');
+      throwKukeyException('FRIENDSHIP_NOT_FOUND');
     }
 
     if (friendship.toUserId !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 수락할 수 있습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_ACCESS_FORBIDDEN');
     }
 
     if (friendship.areWeFriend) {
-      throw new BadRequestException('이미 수락한 요청입니다.');
+      throwKukeyException('FRIENDSHIP_REQUEST_ALREADY_ACCEPTED');
     }
     const updatedResult = await transactionManager.update(
       FriendshipEntity,
@@ -250,7 +227,7 @@ export class FriendshipService {
     );
 
     if (updatedResult.affected === 0) {
-      throw new InternalServerErrorException('친구 요청 수락에 실패했습니다.');
+      throwKukeyException('FRIENDSHIP_REQUEST_ACCEPT_FAILED');
     } else {
       await this.noticeService.emitNotice(
         friendship.fromUserId,
@@ -271,26 +248,22 @@ export class FriendshipService {
     });
 
     if (!friendship) {
-      throw new NotFoundException('받은 친구 요청을 찾을 수 없습니다.');
+      throwKukeyException('FRIENDSHIP_NOT_FOUND');
     }
 
     if (friendship.toUserId !== userId) {
-      throw new BadRequestException(
-        '나에게 온 친구 요청만 거절할 수 있습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_ACCESS_FORBIDDEN');
     }
 
     if (friendship.areWeFriend) {
-      throw new BadRequestException(
-        '아직 수락하지 않은 친구 요청에 대해서만 거절할 수 있습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_REQUEST_ALREADY_ACCEPTED');
     }
     const deleteResult = await transactionManager.softDelete(
       FriendshipEntity,
       friendshipId,
     );
     if (deleteResult.affected === 0) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
+      throwKukeyException('FRIENDSHIP_REQUEST_REJECT_FAILED');
     } else {
       return new DeleteFriendshipResponseDto(true);
     }
@@ -306,26 +279,22 @@ export class FriendshipService {
     });
 
     if (!friendship) {
-      throw new NotFoundException('보낸 친구 요청을 찾을 수 없습니다.');
+      throwKukeyException('FRIENDSHIP_NOT_FOUND');
     }
 
     if (friendship.fromUserId !== userId) {
-      throw new BadRequestException(
-        '내가 보낸 친구 요청만 취소할 수 있습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_ACCESS_FORBIDDEN');
     }
 
     if (friendship.areWeFriend) {
-      throw new BadRequestException(
-        '아직 수락되지 않은 친구 요청에 대해서만 취소할 수 있습니다.',
-      );
+      throwKukeyException('FRIENDSHIP_REQUEST_ALREADY_ACCEPTED');
     }
     const deleteResult = await transactionManager.softDelete(
       FriendshipEntity,
       friendshipId,
     );
     if (deleteResult.affected === 0) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
+      throwKukeyException('FRIENDSHIP_REQUEST_CANCEL_FAILED');
     } else {
       return new DeleteFriendshipResponseDto(true);
     }
@@ -341,22 +310,22 @@ export class FriendshipService {
     });
 
     if (!friendship) {
-      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+      throwKukeyException('FRIENDSHIP_NOT_FOUND');
     }
 
     if (friendship.toUserId !== userId && friendship.fromUserId !== userId) {
-      throw new BadRequestException('내 친구 목록에서만 삭제할 수 있습니다.');
+      throwKukeyException('FRIENDSHIP_ACCESS_FORBIDDEN');
     }
 
     if (!friendship.areWeFriend) {
-      throw new BadRequestException('이미 친구인 경우에만 삭제할 수 있습니다.');
+      throwKukeyException('FRIENDSHIP_REQUEST_NOT_ACCEPTED');
     }
     const deleteResult = await transactionMangager.softDelete(
       FriendshipEntity,
       friendshipId,
     );
     if (deleteResult.affected === 0) {
-      throw new InternalServerErrorException('친구 요청 거절에 실패했습니다.');
+      throwKukeyException('FRIENDSHIP_DELETE_FAILED');
     } else {
       return new DeleteFriendshipResponseDto(true);
     }
@@ -372,7 +341,7 @@ export class FriendshipService {
     );
 
     if (!friend) {
-      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+      throwKukeyException('USER_NOT_FOUND');
     }
     // 친구인지 아닌지 체크
     const checkFriendship =
@@ -381,8 +350,12 @@ export class FriendshipService {
         friend.id,
       );
 
-    if (!checkFriendship || !checkFriendship.areWeFriend) {
-      throw new NotFoundException('친구 정보를 찾을 수 없습니다.');
+    if (!checkFriendship) {
+      throwKukeyException('FRIENDSHIP_NOT_FOUND');
+    }
+
+    if (!checkFriendship.areWeFriend) {
+      throwKukeyException('FRIENDSHIP_REQUEST_NOT_ACCEPTED');
     }
 
     const friendTimetable = await this.timetableService.getFriendTimetable(
@@ -392,7 +365,7 @@ export class FriendshipService {
     );
 
     if (!friendTimetable) {
-      throw new NotFoundException('친구의 시간표를 찾을 수 없습니다.');
+      throwKukeyException('FRIEND_TIMETABLE_NOT_FOUND');
     }
     return friendTimetable;
   }

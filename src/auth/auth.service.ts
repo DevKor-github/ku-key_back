@@ -1,12 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  NotImplementedException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compare } from 'bcrypt';
 import * as argon2 from 'argon2';
@@ -32,6 +24,7 @@ import { LogoutResponseDto } from './dto/logout-response.dto';
 import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 import { SendTempPasswordResponseDto } from './dto/send-temporary-password.dto';
 import { EntityManager } from 'typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class AuthService {
@@ -53,13 +46,13 @@ export class AuthService {
     const user = await this.userService.findUserByEmail(email);
 
     if (!user) {
-      throw new BadRequestException('이메일이 잘못되었습니다.');
+      throwKukeyException('INVALID_EMAIL');
     }
 
     const isPasswordMatch = await compare(password, user.password);
 
     if (!isPasswordMatch) {
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+      throwKukeyException('INVALID_PASSWORD');
     }
 
     return new AuthorizedUserDto(user.id, user.username);
@@ -68,19 +61,21 @@ export class AuthService {
   async createToken(
     user: AuthorizedUserDto,
     keepingLogin: boolean,
+    deviceCode: string,
   ): Promise<JwtTokenDto> {
     const id = user.id;
+
     const tokenDto = new JwtTokenDto(
       this.createAccessToken(user),
-      this.createRefreshToken(id, keepingLogin),
+      this.createRefreshToken(user, keepingLogin, deviceCode),
     );
-    const isSet = await this.userService.setCurrentRefresthToken(
-      id,
-      tokenDto.refreshToken,
+
+    const hashedToken = await argon2.hash(tokenDto.refreshToken);
+    await this.cacheManager.set(
+      `token-${id}-${deviceCode}`,
+      hashedToken,
+      1000 * 60 * 60 * 24 * (keepingLogin ? 14 : 2),
     );
-    if (!isSet) {
-      throw new NotImplementedException('update refresh token failed!');
-    }
     return tokenDto;
   }
 
@@ -95,10 +90,19 @@ export class AuthService {
     });
   }
 
-  createRefreshToken(id: number, keepingLogin: boolean): string {
+  createRefreshToken(
+    user: AuthorizedUserDto,
+    keepingLogin: boolean,
+    deviceCode: string,
+  ): string {
     const expiresIn = keepingLogin ? '14d' : '2d';
     return this.jwtService.sign(
-      { id, keepingLogin },
+      {
+        id: user.id,
+        username: user.username,
+        keepingLogin: keepingLogin,
+        deviceCode: deviceCode,
+      },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: expiresIn,
@@ -109,22 +113,21 @@ export class AuthService {
   async refreshTokenMatches(
     refreshToken: string,
     id: number,
-  ): Promise<AuthorizedUserDto> {
-    const user = await this.userService.findUserById(id);
+    deviceCode: string,
+  ): Promise<void> {
+    const existingToken: string = await this.cacheManager.get(
+      `token-${id}-${deviceCode}`,
+    );
 
-    if (user.refreshToken === null) {
-      throw new BadRequestException(
-        "There's no refresh token! Please login first",
-      );
+    if (!existingToken) {
+      throwKukeyException('LOGIN_REQUIRED');
     }
 
-    const isMatches = await argon2.verify(user.refreshToken, refreshToken);
+    const isMatches = await argon2.verify(existingToken, refreshToken);
 
     if (!isMatches) {
-      throw new BadRequestException('refreshToken is not matched!');
+      throwKukeyException('REFRESH_TOKEN_NOT_MATCHED');
     }
-
-    return new AuthorizedUserDto(user.id, user.username);
   }
 
   async logIn(
@@ -132,20 +135,29 @@ export class AuthService {
     keepingLogin: boolean,
   ): Promise<LoginResponseDto> {
     const verified = await this.userService.checkUserVerified(user.id);
-    const token = await this.createToken(user, keepingLogin);
-    return new LoginResponseDto(token, verified);
+    const deviceCode = this.generateRandomString(10) + Date.now().toString();
+    const token = await this.createToken(user, keepingLogin, deviceCode);
+    return new LoginResponseDto(token, verified, deviceCode, user.id);
   }
 
-  async logout(user: AuthorizedUserDto) {
-    const result = await this.userService.setCurrentRefresthToken(
-      user.id,
-      null,
-    );
-    return new LogoutResponseDto(result);
+  async logout(user: AuthorizedUserDto, deviceCode: string) {
+    if (deviceCode) {
+      await this.cacheManager.del(`token-${user.id}-${deviceCode}`);
+    } else {
+      const keys = await this.cacheManager.store.keys(`token-${user.id}-*`);
+      for (const key of keys) {
+        await this.cacheManager.del(key);
+      }
+    }
+    return new LogoutResponseDto(true);
   }
 
   async refreshToken(user: AuthorizedUserDto): Promise<JwtTokenDto> {
-    const jwtToken = await this.createToken(user, user.keepingLogin);
+    const jwtToken = await this.createToken(
+      user,
+      user.keepingLogin,
+      user.deviceCode,
+    );
     return jwtToken;
   }
 
@@ -154,7 +166,11 @@ export class AuthService {
   ): Promise<VerificationResponseDto> {
     const verifyToken = this.generateRandomNumber();
     console.log('caching data: ', email, verifyToken);
-    await this.cacheManager.set(email, verifyToken);
+    await this.cacheManager.set(
+      `emailverify-${email}`,
+      verifyToken,
+      1000 * 60 * 5,
+    );
     await this.emailService.sendVerityToken(email, verifyToken);
     return new VerificationResponseDto(true);
   }
@@ -163,13 +179,15 @@ export class AuthService {
     email: string,
     verifyToken: number,
   ): Promise<VerifyEmailResponseDto> {
-    const cache_verifyToken = await this.cacheManager.get(email);
+    const cache_verifyToken = await this.cacheManager.get(
+      `emailverify-${email}`,
+    );
     if (!cache_verifyToken) {
-      throw new NotFoundException('해당 메일로 전송된 인증번호가 없습니다.');
+      throwKukeyException('VERIFY_TOKEN_NOT_FOUND');
     } else if (cache_verifyToken !== verifyToken) {
-      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+      throwKukeyException('INVALID_VERIFY_TOKEN');
     } else {
-      await this.cacheManager.del(email);
+      await this.cacheManager.del(`emailverify-${email}`);
       return new VerifyEmailResponseDto(true);
     }
   }
@@ -204,7 +222,7 @@ export class AuthService {
     requestDto: SignUpRequestDto,
   ): Promise<SignUpResponseDto> {
     if (!this.fileService.imagefilter(screenshot)) {
-      throw new BadRequestException('Only image file can be uploaded!');
+      throwKukeyException('NOT_IMAGE_FILE');
     }
 
     //유저생성
@@ -218,14 +236,7 @@ export class AuthService {
       major: requestDto.major,
     });
 
-    const character = await this.userService.createUserCharacter(
-      transactionManager,
-      user.id,
-    );
-
-    if (!character) {
-      throw new InternalServerErrorException('캐릭터 생성에 실패했습니다.');
-    }
+    await this.userService.createUserCharacter(transactionManager, user.id);
 
     const studentNumber = requestDto.studentNumber;
 
@@ -271,7 +282,7 @@ export class AuthService {
     return results;
   }
 
-  async verifyScreenshotReqeust(
+  async verifyScreenshotRequest(
     id: number,
     verify: boolean,
   ): Promise<VerifyScreenshotResponseDto> {
@@ -281,8 +292,10 @@ export class AuthService {
     if (verify) {
       const isVerified = await this.userService.verifyUser(userId, verify);
       if (!isVerified) {
-        throw new NotImplementedException('reqeust allow failed!');
+        throwKukeyException('USER_VERIFICATION_FAILED');
       }
+
+      // 동일 학번의 다른 요청 reject
       const requests =
         await this.kuVerificationRepository.findRequestsByStudentNumber(
           request.studentNumber,
@@ -293,6 +306,7 @@ export class AuthService {
         }
 
         await this.deleteRequest(otherRequest.id);
+        await this.emailService.sendVerifyCompleteEmail(user.email, false);
       }
     } else {
       await this.deleteRequest(request.id);
@@ -319,7 +333,7 @@ export class AuthService {
       newPassword,
     );
     if (!updateResult) {
-      throw new NotImplementedException('Change password failed!');
+      throwKukeyException('PASSWORD_UPDATE_FAILED');
     }
 
     return new ChangePasswordResponseDto(updateResult);
@@ -329,20 +343,20 @@ export class AuthService {
     email: string,
   ): Promise<SendTempPasswordResponseDto> {
     const user = await this.userService.findUserByEmail(email);
-    const tempPassword = this.generateTempPassword(10);
+    const tempPassword = this.generateRandomString(10);
 
     const isUpdated = await this.userService.updatePassword(
       user.id,
       tempPassword,
     );
     if (!isUpdated) {
-      throw new NotImplementedException('Change password failed!');
+      throwKukeyException('PASSWORD_UPDATE_FAILED');
     }
     await this.emailService.sendTempPassword(email, tempPassword);
     return new SendTempPasswordResponseDto(true);
   }
 
-  generateTempPassword(len: number): string {
+  generateRandomString(len: number): string {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';

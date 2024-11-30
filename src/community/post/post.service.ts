@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { BoardService } from '../board/board.service';
 import {
@@ -40,6 +35,7 @@ import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto
 import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointService } from 'src/user/point.service';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class PostService {
@@ -61,7 +57,7 @@ export class PostService {
   ): Promise<GetPostListWithBoardResponseDto> {
     const board = await this.boardService.getBoardById(requestDto.boardId);
     if (!board) {
-      throw new BadRequestException('Wrong BoardId!');
+      throwKukeyException('BOARD_NOT_FOUND');
     }
     const cursor = new Date('9999-12-31');
     if (requestDto.cursor) cursor.setTime(Number(requestDto.cursor));
@@ -85,8 +81,12 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListWithBoardResponseDto(board, posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListWithBoardResponseDto(
+      board,
+      posts,
+      user.id,
+      meta,
+    );
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -99,15 +99,15 @@ export class PostService {
     const post =
       await this.postRepository.getPostByPostIdWithDeletedComment(postId);
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     if (post.deletedAt) {
-      throw new BadRequestException('Deleted Post!');
+      throwKukeyException('POST_DELETED');
     }
 
-    if (!(await this.cacheManager.get(`${postId}-${user.id}`))) {
+    if (!(await this.cacheManager.get(`postview-${postId}-${user.id}`))) {
       await this.cacheManager.set(
-        `${postId}-${user.id}`,
+        `postview-${postId}-${user.id}`,
         new Date(),
         1000 * 60 * 30,
       );
@@ -133,17 +133,17 @@ export class PostService {
   ): Promise<GetPostResponseDto> {
     for (const image of images) {
       if (!this.fileService.imagefilter(image)) {
-        throw new BadRequestException('Only image file can be uploaded!');
+        throwKukeyException('NOT_IMAGE_FILE');
       }
     }
 
     if (images.length > 5) {
-      throw new BadRequestException('Only up to five images can be uploaded.');
+      throwKukeyException('TOO_MANY_IMAGES');
     }
 
     const board = await this.boardService.getBoardById(boardId);
     if (!board) {
-      throw new BadRequestException('Wrong BoardId!');
+      throwKukeyException('BOARD_NOT_FOUND');
     }
 
     const post = transactionManager.create(PostEntity, {
@@ -156,7 +156,7 @@ export class PostService {
     const newPostId = (await transactionManager.save(post)).id;
 
     for (const image of images) {
-      const imgDir = await this.fileService.uploadFile(
+      const imgDir = await this.fileService.uploadCompressedImage(
         image,
         'PostImage',
         `${newPostId}`,
@@ -197,27 +197,25 @@ export class PostService {
   ): Promise<GetPostResponseDto> {
     const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     if (post.userId !== user.id) {
-      throw new BadRequestException("Other user's post!");
+      throwKukeyException('POST_OWNERSHIP_REQUIRED');
     }
 
     if (post.boardId == 2 && post.commentCount > 0) {
-      throw new BadRequestException('Cannot update answered post!');
+      throwKukeyException('POST_IN_QUESTION_BOARD');
     }
 
     if (requestDto.imageUpdate) {
       for (const image of images) {
         if (!this.fileService.imagefilter(image)) {
-          throw new BadRequestException('Only image file can be uploaded!');
+          throwKukeyException('NOT_IMAGE_FILE');
         }
       }
 
       if (images.length > 5) {
-        throw new BadRequestException(
-          'Only up to five images can be uploaded.',
-        );
+        throwKukeyException('TOO_MANY_IMAGES');
       }
     }
 
@@ -240,7 +238,7 @@ export class PostService {
       }
 
       for (const image of images) {
-        const imgDir = await this.fileService.uploadFile(
+        const imgDir = await this.fileService.uploadCompressedImage(
           image,
           'PostImage',
           `${postId}`,
@@ -278,14 +276,14 @@ export class PostService {
   ): Promise<DeletePostResponseDto> {
     const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     if (post.userId !== user.id) {
-      throw new BadRequestException("Other user's post!");
+      throwKukeyException('POST_OWNERSHIP_REQUIRED');
     }
 
     if (post.boardId == 2 && post.commentCount > 0) {
-      throw new BadRequestException('Cannot delete answered post!');
+      throwKukeyException('POST_IN_QUESTION_BOARD');
     }
 
     for (const image of post.postImages) {
@@ -294,7 +292,7 @@ export class PostService {
 
     const isDeleted = await this.postRepository.deletePost(postId);
     if (!isDeleted) {
-      throw new InternalServerErrorException('Post Delete Failed!');
+      throwKukeyException('POST_DELETE_FAILED');
     }
 
     return new DeletePostResponseDto(true);
@@ -308,11 +306,11 @@ export class PostService {
     const post = await this.postRepository.isExistingPostId(postId);
 
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
 
     if (post.userId === user.id) {
-      throw new BadRequestException('Cannot scrap my post!');
+      throwKukeyException('SELF_POST_SCRAP_FORBIDDEN');
     }
 
     const scrap = await transactionManager.findOne(PostScrapEntity, {
@@ -328,7 +326,7 @@ export class PostService {
         postId: postId,
       });
       if (!deleteResult.affected) {
-        throw new InternalServerErrorException('Scrap Cancel Failed!');
+        throwKukeyException('SCRAP_CANCEL_FAILED');
       }
 
       const updateResult = await transactionManager.decrement(
@@ -338,7 +336,7 @@ export class PostService {
         1,
       );
       if (!updateResult.affected) {
-        throw new InternalServerErrorException('Scrap Cancel Failed!');
+        throwKukeyException('SCRAP_CANCEL_FAILED');
       }
     } else {
       const newScrap = transactionManager.create(PostScrapEntity, {
@@ -354,7 +352,7 @@ export class PostService {
         1,
       );
       if (!updateResult.affected) {
-        throw new InternalServerErrorException('Scrap Failed!');
+        throwKukeyException('SCRAP_FAILED');
       }
     }
 
@@ -381,8 +379,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -409,8 +406,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -435,8 +431,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -466,8 +461,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -498,8 +492,7 @@ export class PostService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result = new GetPostListResponseDto(posts, user.id);
-    result.meta = meta;
+    const result = new GetPostListResponseDto(posts, user.id, meta);
     this.makeThumbnailDirUrlInPostList(result.data);
 
     return result;
@@ -513,11 +506,11 @@ export class PostService {
   ): Promise<ReactPostResponseDto> {
     const post = await this.postRepository.isExistingPostId(postId);
     if (!post) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
 
     if (post.userId === user.id) {
-      throw new BadRequestException('Cannot react my post!');
+      throwKukeyException('SELF_POST_REACTION_FORBIDDEN');
     }
 
     const ReactionColumn = [
@@ -548,7 +541,7 @@ export class PostService {
         1,
       );
       if (!updateResult.affected) {
-        throw new InternalServerErrorException('React Failed!');
+        throwKukeyException('REACT_FAILED');
       }
 
       const allReactionCountUpdateResult = await transactionManager.increment(
@@ -558,7 +551,7 @@ export class PostService {
         1,
       );
       if (!allReactionCountUpdateResult.affected) {
-        throw new InternalServerErrorException('React Failed!');
+        throwKukeyException('REACT_FAILED');
       }
 
       if (post.allReactionCount + 1 === 10) {
@@ -578,7 +571,7 @@ export class PostService {
       }
     } else {
       if (existingReaction.reaction === requestDto.reaction) {
-        throw new BadRequestException('Same Reaction!');
+        throwKukeyException('SAME_REACTION');
       }
 
       const decreasingUpdateResult = await transactionManager.decrement(
@@ -588,7 +581,7 @@ export class PostService {
         1,
       );
       if (!decreasingUpdateResult.affected) {
-        throw new InternalServerErrorException('Reaction Change Failed!');
+        throwKukeyException('REACTION_CHANGE_FAILED');
       }
 
       const updateReactionResult = await transactionManager.update(
@@ -597,7 +590,7 @@ export class PostService {
         { reaction: requestDto.reaction },
       );
       if (!updateReactionResult.affected) {
-        throw new InternalServerErrorException('Reaction Change Failed!');
+        throwKukeyException('REACTION_CHANGE_FAILED');
       }
 
       const increasingUpdateResult = await transactionManager.increment(
@@ -607,7 +600,7 @@ export class PostService {
         1,
       );
       if (!increasingUpdateResult.affected) {
-        throw new InternalServerErrorException('Reaction Change Failed!');
+        throwKukeyException('REACTION_CHANGE_FAILED');
       }
     }
 

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -14,16 +13,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PostService } from './post.service';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetPostListWithBoardRequestDto,
   GetPostListWithBoardResponseDto,
@@ -53,10 +43,13 @@ import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
+import { throwKukeyException } from 'src/utils/exception.util';
+import { PostDocs } from 'src/decorators/docs/post.decorator';
 
 @Controller('post')
 @ApiTags('post')
 @UseGuards(JwtAuthGuard)
+@PostDocs
 @ApiBearerAuth('accessToken')
 export class PostController {
   constructor(
@@ -65,15 +58,6 @@ export class PostController {
   ) {}
 
   @Get()
-  @ApiOperation({
-    summary: '게시판 별 게시글 목록 조회',
-    description: '게시판 별로 게시글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 목록 조회 성공',
-    type: GetPostListWithBoardResponseDto,
-  })
   async getPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListWithBoardRequestDto,
@@ -82,15 +66,6 @@ export class PostController {
   }
 
   @Get('/my')
-  @ApiOperation({
-    summary: '내가 쓴 글 목록 조회',
-    description: '내가 쓴 글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '내가 쓴 글 목록 조회 성공',
-    type: GetPostListResponseDto,
-  })
   async getMyPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
@@ -99,15 +74,6 @@ export class PostController {
   }
 
   @Get('/all')
-  @ApiOperation({
-    summary: '전체 게시글 목록 조회',
-    description: '전체 게시글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '전체 게시글 목록 조회 성공',
-    type: GetPostListResponseDto,
-  })
   async getAllPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: getAllPostListRequestDto,
@@ -116,15 +82,6 @@ export class PostController {
   }
 
   @Get('/hot')
-  @ApiOperation({
-    summary: 'hot 게시글 목록 조회',
-    description: 'hot 게시글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'hot 게시글 목록 조회 성공',
-    type: GetPostListResponseDto,
-  })
   async getHotPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
@@ -133,15 +90,6 @@ export class PostController {
   }
 
   @Get('/scrap')
-  @ApiOperation({
-    summary: '스크랩한 글 목록 조회',
-    description: '스크랩한 글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '스크랩한 글 목록 조회 성공',
-    type: GetPostListResponseDto,
-  })
   async getScrapPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
@@ -150,15 +98,6 @@ export class PostController {
   }
 
   @Get('/react')
-  @ApiOperation({
-    summary: '반응 남긴 글 목록 조회',
-    description: '반응을 남긴 글 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '반응 남긴 글 목록 조회 성공',
-    type: GetPostListResponseDto,
-  })
   async getReactedPostList(
     @User() user: AuthorizedUserDto,
     @Query() requestDto: GetPostListRequestDto,
@@ -167,19 +106,6 @@ export class PostController {
   }
 
   @Get('/:postId')
-  @ApiOperation({
-    summary: '게시글 조회',
-    description: '게시글 내용을 조회합니다.',
-  })
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 조회 성공',
-    type: GetPostResponseDto,
-  })
   async getPost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
@@ -190,23 +116,6 @@ export class PostController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   @UseInterceptors(FilesInterceptor('images'))
-  @ApiOperation({
-    summary: '게시글 생성',
-    description: '게시글을 생성합니다.',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiQuery({
-    name: 'boardId',
-    description: '게시글을 생성하고자 하는 게시판 ID',
-  })
-  @ApiBody({
-    type: CreatePostRequestDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '게시글 생성 성공',
-    type: GetPostResponseDto,
-  })
   async createPost(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -215,7 +124,10 @@ export class PostController {
     @Body() body: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
     if (!boardId) {
-      throw new BadRequestException('No BoardId!');
+      throwKukeyException(
+        'VALIDATION_ERROR',
+        'Invalid input value. Details: {No boardId.}',
+      );
     }
     return await this.postService.createPost(
       transactionManager,
@@ -229,23 +141,6 @@ export class PostController {
   @Patch('/:postId')
   @UseInterceptors(TransactionInterceptor)
   @UseInterceptors(FilesInterceptor('images'))
-  @ApiOperation({
-    summary: '게시글 수정',
-    description: '게시글을 수정합니다.',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiBody({
-    type: UpdatePostRequestDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 수정 성공',
-    type: GetPostResponseDto,
-  })
   async updatePost(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -263,19 +158,6 @@ export class PostController {
   }
 
   @Delete('/:postId')
-  @ApiOperation({
-    summary: '게시글 삭제',
-    description: '게시글을 삭제합니다.',
-  })
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 삭제 성공',
-    type: DeletePostResponseDto,
-  })
   async deletePost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
@@ -285,20 +167,6 @@ export class PostController {
 
   @Post('/:postId/scrap')
   @UseInterceptors(TransactionInterceptor)
-  @ApiOperation({
-    summary: '게시글 스크랩',
-    description:
-      '게시글을 스크랩합니다. 만일 이미 스크랩한 게시글이라면 스크랩을 취소합니다.',
-  })
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '게시글 스크랩(취소) 성공',
-    type: ScrapPostResponseDto,
-  })
   async scrapPost(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -309,23 +177,6 @@ export class PostController {
 
   @Post('/:postId/reaction')
   @UseInterceptors(TransactionInterceptor)
-  @ApiOperation({
-    summary: '게시글 반응',
-    description:
-      '게시글에 반응을 남깁니다. 만일 이미 반응을 남긴 게시글이라면 반응을 변경합니다.',
-  })
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiBody({
-    type: ReactPostRequestDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '게시글 반응(변경) 성공',
-    type: ReactPostResponseDto,
-  })
   async reactPost(
     @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
@@ -341,29 +192,13 @@ export class PostController {
   }
 
   @Post('/:postId/report')
-  @ApiOperation({
-    summary: '게시글 신고',
-    description: '게시글을 신고합니다',
-  })
-  @ApiParam({
-    name: 'postId',
-    description: '게시글의 고유 ID',
-  })
-  @ApiBody({
-    type: CreateReportRequestDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: '게시글 신고 성공',
-    type: CreateReportResponseDto,
-  })
   async reportPost(
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
     @Body() body: CreateReportRequestDto,
   ): Promise<CreateReportResponseDto> {
     if (!(await this.postService.isExistingPostId(postId))) {
-      throw new BadRequestException('Wrong PostId!');
+      throwKukeyException('POST_NOT_FOUND');
     }
     return await this.reportService.createReport(user.id, body.reason, postId);
   }

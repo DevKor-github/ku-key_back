@@ -4,8 +4,10 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as sharp from 'sharp';
+import { throwKukeyException } from 'src/utils/exception.util';
 
 @Injectable()
 export class FileService {
@@ -43,7 +45,61 @@ export class FileService {
     const uploadFile = await this.s3.send(command);
 
     if (uploadFile.$metadata.httpStatusCode !== 200) {
-      throw new BadRequestException('Failed upload file');
+      throwKukeyException('FILE_UPLOAD_FAILED');
+    }
+
+    return filename;
+  }
+
+  async uploadCompressedImage(
+    file: Express.Multer.File,
+    resource: string,
+    path: string,
+  ): Promise<string> {
+    const image = sharp(file.buffer);
+
+    const minWidth = 777;
+    const minHeight = 437;
+
+    const metadata = await image.metadata();
+    const { width, height } = metadata;
+    const resizeOptions =
+      width > minWidth || height > minHeight
+        ? { width: minWidth, height: minHeight, fit: sharp.fit.inside }
+        : null;
+
+    const webpOptions = { lossless: true };
+
+    let processingImage = image;
+    if (resizeOptions) {
+      processingImage = processingImage.resize(resizeOptions);
+    }
+
+    const compressedBuffer = await processingImage.webp(webpOptions).toBuffer();
+
+    const originalSize = file.buffer.length;
+    const compressedSize = compressedBuffer.length;
+    const isCompressed = compressedSize < originalSize;
+
+    const finalBuffer = isCompressed ? compressedBuffer : file.buffer;
+    const finalContentType = isCompressed ? 'image/webp' : file.mimetype;
+    const finalExtension = isCompressed
+      ? 'webp'
+      : file.originalname.split('.').pop();
+
+    const filename = `${this.mode}/${resource}/${path}/${new Date().getTime()}.${finalExtension}`;
+    const params = {
+      Key: filename,
+      Body: finalBuffer,
+      Bucket: this.bucketName,
+      ContentType: finalContentType,
+    };
+
+    const command = new PutObjectCommand(params);
+    const uploadFile = await this.s3.send(command);
+
+    if (uploadFile.$metadata.httpStatusCode !== 200) {
+      throwKukeyException('FILE_UPLOAD_FAILED');
     }
 
     return filename;
@@ -61,7 +117,7 @@ export class FileService {
     console.log(deleteFile);
 
     if (deleteFile.$metadata.httpStatusCode !== 204) {
-      throw new BadRequestException('Failed delete file');
+      throwKukeyException('FILE_DELETE_FAILED');
     }
   }
 
@@ -75,7 +131,7 @@ export class FileService {
     const response = await this.s3.send(command);
 
     if (response.$metadata.httpStatusCode !== 200) {
-      throw new BadRequestException('Failed get file metadata');
+      throwKukeyException('FILE_METADATA_GET_FAILED');
     }
 
     if (!response.Contents) {

@@ -2,6 +2,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AttendanceCheckController } from 'src/attendance-check/attendance-check.controller';
 import { TakeAttendanceResponseDto } from 'src/attendance-check/dto/take-attendance.dto';
 import { MethodNames } from 'src/common/types/method';
+import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type AttendanceCheckEndPoints = MethodNames<AttendanceCheckController>;
 
@@ -19,6 +20,7 @@ const AttendanceCheckDocsMap: Record<
       description: '출석 체크 성공',
       type: TakeAttendanceResponseDto,
     }),
+    ApiKukeyExceptionResponse(['ATTENDANCE_ALREADY_CHECKED']),
   ],
   isTodayAttendanceChecked: [
     ApiOperation({

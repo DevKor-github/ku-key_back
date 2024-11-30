@@ -7,10 +7,7 @@ import { EntityManager, LessThanOrEqual, Repository } from 'typeorm';
 import { GetNoticeResponseDto } from './dto/get-notice.dto';
 import { Notice } from './enum/notice.enum';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
-import {
-  CursorPageMetaResponseDto,
-  CursorPageResponseDto,
-} from 'src/common/dto/CursorPageResponse.dto';
+import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 
 interface user {
   userId: number;
@@ -63,7 +60,7 @@ export class NoticeService {
   async getNotices(
     user: AuthorizedUserDto,
     pageOption: CursorPageOptionsDto,
-  ): Promise<CursorPageResponseDto<GetNoticeResponseDto>> {
+  ): Promise<GetNoticeResponseDto> {
     const cursor = new Date('9999-12-31');
     if (pageOption.cursor) {
       cursor.setTime(Number(pageOption.cursor));
@@ -88,10 +85,7 @@ export class NoticeService {
         ? (lastData.createdAt.getTime() + 1).toString().padStart(14, '0')
         : null,
     };
-    const result: CursorPageResponseDto<GetNoticeResponseDto> = {
-      data: notices.map((notice) => new GetNoticeResponseDto(notice)),
-      meta: meta,
-    };
+    const result = new GetNoticeResponseDto(notices, meta);
 
     await this.noticeRepository.update({ userId: user.id }, { isNew: false });
 

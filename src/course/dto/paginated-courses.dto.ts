@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CommonCourseResponseDto } from './common-course-response.dto';
 
 export class PaginatedCoursesDto {
+  static readonly LIMIT = 21;
+
   @ApiProperty({ description: '다음 페이지 존재 여부' })
   hasNextPage: boolean;
 

@@ -1,9 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 export class SetProfileRequestDto {
   @IsOptional()
   @IsString()
+  @Length(5, 10)
   @ApiProperty({ description: '유저아이디' })
   username: string;
 
@@ -14,11 +22,13 @@ export class SetProfileRequestDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '모교' })
   homeUniversity: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(70)
   @ApiProperty({ description: '전공' })
   major: string;
 }

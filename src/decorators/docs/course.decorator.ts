@@ -1,6 +1,5 @@
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -10,16 +9,72 @@ import { MethodNames } from 'src/common/types/method';
 import { CourseController } from 'src/course/course.controller';
 import { CommonCourseResponseDto } from 'src/course/dto/common-course-response.dto';
 import { PaginatedCoursesDto } from 'src/course/dto/paginated-courses.dto';
-import { CreateScheduleRequestDto } from 'src/schedule/dto/create-schedule-request.dto';
-import { CreateScheduleResponseDto } from 'src/schedule/dto/create-schedule-response.dto';
-import { DeleteScheduleResponseDto } from 'src/schedule/dto/delete-schedule-response.dto';
-import { UpdateScheduleRequestDto } from 'src/schedule/dto/update-schedule-request.dto';
-import { UpdateScheduleResponseDto } from 'src/schedule/dto/update-schedule-response.dto';
-import { ScheduleController } from 'src/schedule/schedule.controller';
+import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type CourseEndPoints = MethodNames<CourseController>;
 
 const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
+  searchAllCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 전체 강의 검색',
+      description: 'keyword를 입력하여 전체 강의에서 검색합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+  ],
+  searchMajorCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 전공 강의 검색',
+      description: 'keyword를 입력하여 전공 강의에서 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'major',
+      required: true,
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
+  ],
+  searchGeneralCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 교양 강의 검색',
+      description: 'keyword를 입력하여 교양 강의에서 검색합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+  ],
+  searchAcademicFoundationCourses: [
+    ApiBearerAuth('accessToken'),
+    ApiOperation({
+      summary: 'keyword로 학문의 기초 강의 검색',
+      description:
+        'keyword를 입력하여 단과대 별 학문의 기초 강의에서 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'college',
+      required: true,
+      type: 'string',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'keyword로 강의 검색 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+    ApiKukeyExceptionResponse(['COLLEGE_REQUIRED']),
+  ],
   searchCourseCode: [
     ApiBearerAuth('accessToken'),
     ApiOperation({
@@ -68,6 +123,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '전공 과목명으로 강의 검색 성공 시',
       type: PaginatedCoursesDto,
     }),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
   ],
   searchGeneralCourseName: [
     ApiBearerAuth('accessToken'),
@@ -117,6 +173,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '전공 과목 담당 교수님 성함으로 강의 검색 성공 시',
       type: PaginatedCoursesDto,
     }),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
   ],
   searchGeneralProfessorName: [
     ApiBearerAuth('accessToken'),
@@ -178,6 +235,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '전공 강의 조회 성공 시',
       type: PaginatedCoursesDto,
     }),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
   ],
   getAcademicFoundationCourses: [
     ApiBearerAuth('accessToken'),
@@ -200,6 +258,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '학문의 기초 강의 조회 성공 시',
       type: PaginatedCoursesDto,
     }),
+    ApiKukeyExceptionResponse(['COLLEGE_REQUIRED']),
   ],
   getCourse: [
     ApiOperation({
@@ -215,6 +274,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '특정 강의 조회 성공 시',
       type: CommonCourseResponseDto,
     }),
+    ApiKukeyExceptionResponse(['COURSE_NOT_FOUND']),
   ],
 };
 
