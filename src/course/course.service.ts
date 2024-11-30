@@ -443,7 +443,7 @@ export class CourseService {
   ): Promise<CourseEntity[]> {
     const { keyword, cursorId, year, semester } = searchCoursesWithKeywordDto;
 
-    const LIMIT = 21;
+    const LIMIT = PaginatedCoursesDto.LIMIT;
 
     let queryBuilder = this.courseRepository
       .createQueryBuilder('course')
