@@ -3,7 +3,7 @@ import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { EntityManager, Like, MoreThan } from 'typeorm';
+import { Brackets, EntityManager, Like, MoreThan } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { SearchCourseCodeDto } from './dto/search-course-code.dto';
 import { SearchCourseNameDto } from './dto/search-course-name.dto';
@@ -13,6 +13,7 @@ import { throwKukeyException } from 'src/utils/exception.util';
 import { GetGeneralCourseDto } from './dto/get-general-course.dto';
 import { GetMajorCourseDto } from './dto/get-major-course.dto';
 import { GetAcademicFoundationCourseDto } from './dto/get-academic-foundation-course.dto';
+import { SearchCoursesWithKeywordDto } from './dto/search-courses-with-keyword.dto';
 
 @Injectable()
 export class CourseService {
@@ -20,6 +21,58 @@ export class CourseService {
     private courseRepository: CourseRepository,
     private courseDetailRepository: CourseDetailRepository,
   ) {}
+
+  async searchAllCourses(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchMajorCourses(
+    major: string,
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    if (!major) throwKukeyException('MAJOR_REQUIRED');
+
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        major,
+        category: 'Major',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchGeneralCourses(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        category: 'General Studies',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async searchAcademicFoundationCourses(
+    college: string,
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+  ): Promise<PaginatedCoursesDto> {
+    if (!college) throwKukeyException('COLLEGE_REQUIRED');
+    const courses = await this.runSearchCoursesQuery(
+      searchCoursesWithKeywordDto,
+      {
+        college,
+        category: 'Academic Foundations',
+      },
+    );
+    return await this.mappingCourseDetailsToCourses(courses);
+  }
 
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
     const course = await this.courseRepository.findOne({
@@ -382,5 +435,62 @@ export class CourseService {
       (course) => new CommonCourseResponseDto(course),
     );
     return new PaginatedCoursesDto(courseInformations);
+  }
+
+  private async runSearchCoursesQuery(
+    searchCoursesWithKeywordDto: SearchCoursesWithKeywordDto,
+    options?: { major?: string; college?: string; category?: string },
+  ): Promise<CourseEntity[]> {
+    const { keyword, cursorId, year, semester } = searchCoursesWithKeywordDto;
+
+    const LIMIT = PaginatedCoursesDto.LIMIT;
+
+    let queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetails')
+      .where('course.year = :year', { year })
+      .andWhere('course.semester = :semester', { semester });
+
+    // Optional: 추가 조건 적용
+    if (options?.major) {
+      queryBuilder = queryBuilder.andWhere('course.major = :major', {
+        major: options.major,
+      });
+    }
+
+    if (options?.college) {
+      queryBuilder = queryBuilder.andWhere('course.college = :college', {
+        college: options.college,
+      });
+    }
+
+    if (options?.category) {
+      queryBuilder = queryBuilder.andWhere('course.category = :category', {
+        category: options.category,
+      });
+    }
+
+    // 검색 조건(LIKE)
+    queryBuilder = queryBuilder.andWhere(
+      new Brackets((qb) => {
+        qb.where('course.courseName LIKE :keyword', { keyword: `%${keyword}%` })
+          .orWhere('course.professorName LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          })
+          .orWhere('course.courseCode LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          });
+      }),
+    );
+
+    if (cursorId) {
+      queryBuilder = queryBuilder.andWhere('course.id > :cursorId', {
+        cursorId,
+      });
+    }
+
+    queryBuilder = queryBuilder.orderBy('course.id', 'ASC').take(LIMIT);
+
+    return await queryBuilder.getMany();
   }
 }
