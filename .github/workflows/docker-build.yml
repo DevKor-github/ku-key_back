@@ -82,7 +82,6 @@ jobs:
         run: |
           sudo docker stop ${{ env.DOCKER_CONTAINER }} && sudo docker rm ${{ env.DOCKER_CONTAINER }} && sudo docker rmi ${{ env.DOCKER_IMAGE }}:latest
           sudo docker run --env-file ./.env.test --platform linux/amd64 -d --name ${{ env.DOCKER_CONTAINER }} --network host --restart always ${{ env.DOCKER_IMAGE }}:latest
-          sudo docker run --env-file ./.env.prod --platform linux/amd64 -d -p $NEW_PORT:${{secrets.PORT}} --name $NEW_SERVICE_NAME --network bridge --restart always ${{ env.DOCKER_IMAGE_MAIN }}:${{ env.DOCKER_TAG}}
 
   deploy_main:
     needs: build
