@@ -247,7 +247,7 @@ export class TimetableService {
       color: timetable.color,
       timetableName: timetable.timetableName,
     };
-    timetable.timetableCourses.forEach((courseEntry) => {
+    for (const courseEntry of timetable.timetableCourses) {
       const {
         id: courseId,
         professorName,
@@ -256,7 +256,25 @@ export class TimetableService {
         syllabus,
       } = courseEntry.course;
 
-      courseEntry.course.courseDetails.forEach((detailEntry) => {
+      if (
+        !courseEntry.course.courseDetails ||
+        courseEntry.course.courseDetails.length === 0
+      ) {
+        getTimetableByTimetableIdResponse.courses.push({
+          courseId,
+          professorName,
+          courseName,
+          courseCode,
+          syllabus,
+          day: null,
+          startTime: null,
+          endTime: null,
+          classroom: null,
+        });
+        continue;
+      }
+
+      for (const detailEntry of courseEntry.course.courseDetails) {
         const { day, startTime, endTime, classroom } = detailEntry;
 
         // 강의 정보 객체
@@ -271,8 +289,8 @@ export class TimetableService {
           endTime,
           classroom,
         });
-      });
-    });
+      }
+    }
 
     // 스케줄 정보 객체
     schedules.forEach((schedule) => {
