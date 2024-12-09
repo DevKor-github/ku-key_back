@@ -124,4 +124,8 @@ export class UserRepository extends Repository<UserEntity> {
 
     return updateResult.affected ? true : false;
   }
+
+  async getTotalUsersCount(): Promise<number> {
+    return await this.count();
+  }
 }
