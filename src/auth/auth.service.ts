@@ -25,6 +25,7 @@ import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
 import { SendTempPasswordResponseDto } from './dto/send-temporary-password.dto';
 import { EntityManager } from 'typeorm';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { Webhook } from 'discord-webhook-node';
 
 @Injectable()
 export class AuthService {
@@ -253,6 +254,21 @@ export class AuthService {
       studentNumber,
       user,
     );
+
+    const discordUrl = await this.configService.get('DISCORD_WEBHOOK_URL');
+    const hook = new Webhook(discordUrl);
+    const totalUsers = await this.userService.getTotalUsersCount();
+
+    await hook
+      .send(
+        'The ' +
+          totalUsers +
+          'th user has signed up for KU-KEY! (' +
+          studentNumber +
+          ')',
+      )
+      .then(() => console.log('Sent new user request to discord'))
+      .catch((err) => console.log(err.message));
 
     return new SignUpResponseDto(true, studentNumber);
   }
