@@ -75,6 +75,7 @@ jobs:
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env.test
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.test
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env.test
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env.test
 
           cat .env.test
 
@@ -112,6 +113,7 @@ jobs:
           echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env.prod
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.prod
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env.prod
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env.prod
 
           cat .env.prod
 
