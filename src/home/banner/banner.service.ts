@@ -22,11 +22,15 @@ export class BannerService {
       return {
         id: banner.id,
         imageUrl: banner.imageUrl,
+        title: banner.title,
       };
     });
   }
 
-  async createBannerImage(image: Express.Multer.File): Promise<bannerDto> {
+  async createBannerImage(
+    image: Express.Multer.File,
+    title: string,
+  ): Promise<bannerDto> {
     if (!image) {
       throwKukeyException('BANNER_IMAGE_REQUIRED');
     }
@@ -37,11 +41,13 @@ export class BannerService {
     const imageUrl = this.fileService.makeUrlByFileDir(fileDir);
     const banner = this.bannerRepository.create({
       imageUrl,
+      title,
     });
     const savedBanner = await this.bannerRepository.save(banner);
     return {
       id: savedBanner.id,
       imageUrl: savedBanner.imageUrl,
+      title: savedBanner.title,
     };
   }
 
