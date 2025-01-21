@@ -309,6 +309,12 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 3004,
     statusCode: 409,
   },
+  COURSE_SEARCH_STRATEGY_NOT_FOUND: {
+    name: 'COURSE_SEARCH_STRATEGY_NOT_FOUND',
+    message: 'Course search strategy not found.',
+    errorCode: 3005,
+    statusCode: 404,
+  },
   // - 31xx : Schedule
   INVALID_TIME_RANGE: {
     name: 'INVALID_TIME_RANGE',
