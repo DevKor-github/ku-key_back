@@ -33,4 +33,7 @@ export class FriendshipEntity extends CommonEntity {
 
   @Column('boolean', { nullable: false })
   areWeFriend: boolean;
+
+  @Column('boolean', { nullable: false, default: false })
+  isRead: boolean;
 }

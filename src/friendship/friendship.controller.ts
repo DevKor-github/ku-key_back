@@ -29,6 +29,7 @@ import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
 import { FriendshipDocs } from 'src/decorators/docs/friendship.decorator';
+import { GetReceivedFriendshipRequestCountDto } from './dto/get-received-friendship-request-count.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -91,6 +92,16 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
     return await this.friendshipService.getReceivedWaitingFriendList(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('received/count')
+  async getReceivedFriendshipRequestCount(
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetReceivedFriendshipRequestCountDto> {
+    return await this.friendshipService.getReceivedFriendshipRequestCount(
+      user.id,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

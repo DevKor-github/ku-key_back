@@ -1,3 +1,4 @@
+import { GetReceivedFriendshipRequestCountDto } from './dto/get-received-friendship-request-count.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
@@ -174,6 +175,15 @@ export class FriendshipService {
     });
 
     return waitingFriendList;
+  }
+
+  async getReceivedFriendshipRequestCount(
+    userId: number,
+  ): Promise<GetReceivedFriendshipRequestCountDto> {
+    const { totalCount, unreadCount } =
+      await this.friendshipRepository.countReceivedFriendships(userId);
+
+    return new GetReceivedFriendshipRequestCountDto(totalCount, unreadCount);
   }
 
   async getSentWaitingFriendList(
