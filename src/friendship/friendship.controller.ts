@@ -43,19 +43,17 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Query('keyword') keyword?: string,
   ): Promise<GetFriendResponseDto[]> {
-    const userId = user.id;
-    return await this.friendshipService.getFriendList(userId, keyword);
+    return await this.friendshipService.getFriendList(user.id, keyword);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('search-user')
   async searchUserForFriendshipRequest(
-    @Query() searchUserRequestDto: SearchUserRequestDto,
     @User() user: AuthorizedUserDto,
+    @Query() searchUserRequestDto: SearchUserRequestDto,
   ): Promise<SearchUserResponseDto> {
-    const myId = user.id;
     return await this.friendshipService.searchUserForFriendshipRequest(
-      myId,
+      user.id,
       searchUserRequestDto,
     );
   }
@@ -63,8 +61,8 @@ export class FriendshipController {
   @UseGuards(JwtAuthGuard)
   @Get('friend-timetable')
   async getFriendTimetable(
-    @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
     @User() user: AuthorizedUserDto,
+    @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
   ): Promise<GetTimetableByTimetableIdDto> {
     return await this.friendshipService.getFriendTimetable(
       user.id,
@@ -77,14 +75,13 @@ export class FriendshipController {
   @UseInterceptors(TransactionInterceptor)
   async sendFriendshipRequest(
     @TransactionManager() transactionManager: EntityManager,
-    @Body() sendFriendDto: SendFriendshipRequestDto,
     @User() user: AuthorizedUserDto,
+    @Body() sendFriendDto: SendFriendshipRequestDto,
   ): Promise<SendFriendshipResponseDto> {
-    const toUsername = sendFriendDto.toUsername;
     return await this.friendshipService.sendFriendshipRequest(
       transactionManager,
       user,
-      toUsername,
+      sendFriendDto.toUsername,
     );
   }
 
@@ -93,8 +90,7 @@ export class FriendshipController {
   async getReceivedWaitingFriendList(
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    const userId = user.id;
-    return await this.friendshipService.getReceivedWaitingFriendList(userId);
+    return await this.friendshipService.getReceivedWaitingFriendList(user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -102,8 +98,7 @@ export class FriendshipController {
   async getSentWaitingFriendList(
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    const userId = user.id;
-    return await this.friendshipService.getSentWaitingFriendList(userId);
+    return await this.friendshipService.getSentWaitingFriendList(user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -129,10 +124,9 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const userId = user.id;
     return await this.friendshipService.rejectFriendshipRequest(
       transactionManager,
-      userId,
+      user.id,
       friendshipId,
     );
   }
@@ -145,10 +139,9 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const userId = user.id;
     return await this.friendshipService.cancelFriendshipRequest(
       transactionManager,
-      userId,
+      user.id,
       friendshipId,
     );
   }
@@ -161,10 +154,9 @@ export class FriendshipController {
     @User() user: AuthorizedUserDto,
     @Param('friendshipId') friendshipId: number,
   ): Promise<DeleteFriendshipResponseDto> {
-    const userId = user.id;
     return await this.friendshipService.deleteFriendship(
       transactionManager,
-      userId,
+      user.id,
       friendshipId,
     );
   }

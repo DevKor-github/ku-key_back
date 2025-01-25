@@ -44,7 +44,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     });
   }
 
-  async findFriendshipByUserIdAndKeyword(
+  async findFriendshipsByUserIdAndKeyword(
     userId: number,
     keyword: string,
   ): Promise<FriendshipEntity[]> {

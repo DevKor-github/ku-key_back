@@ -37,7 +37,7 @@ export class FriendshipService {
 
     if (keyword) {
       friendships =
-        await this.friendshipRepository.findFriendshipByUserIdAndKeyword(
+        await this.friendshipRepository.findFriendshipsByUserIdAndKeyword(
           userId,
           keyword,
         );
