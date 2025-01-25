@@ -157,24 +157,30 @@ export class FriendshipService {
   }
 
   async getReceivedWaitingFriendList(
+    transactionManager: EntityManager,
     userId: number,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    const friendshipRequests =
-      await this.friendshipRepository.findReceivedFriendshipsByUserId(userId);
+    const receivedFriendshipRequests = await transactionManager.find(
+      FriendshipEntity,
+      {
+        where: { toUserId: userId, areWeFriend: false },
+        relations: ['fromUser', 'fromUser.character'],
+      },
+    );
 
-    if (friendshipRequests.length === 0) {
+    if (receivedFriendshipRequests.length === 0) {
       return [];
     }
 
-    const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
-      const waitingFriend = friendshipRequest.fromUser;
-      return new GetWaitingFriendResponseDto(
-        friendshipRequest.id,
-        waitingFriend,
-      );
-    });
+    await transactionManager.update(
+      FriendshipEntity,
+      { toUserId: userId, areWeFriend: false, isRead: false },
+      { isRead: true },
+    );
 
-    return waitingFriendList;
+    return receivedFriendshipRequests.map((r) => {
+      return new GetWaitingFriendResponseDto(r.id, r.fromUser);
+    });
   }
 
   async getReceivedFriendshipRequestCount(

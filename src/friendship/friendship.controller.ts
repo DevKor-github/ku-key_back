@@ -88,10 +88,15 @@ export class FriendshipController {
 
   @UseGuards(JwtAuthGuard)
   @Get('received')
+  @UseInterceptors(TransactionInterceptor)
   async getReceivedWaitingFriendList(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    return await this.friendshipService.getReceivedWaitingFriendList(user.id);
+    return await this.friendshipService.getReceivedWaitingFriendList(
+      transactionManager,
+      user.id,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
