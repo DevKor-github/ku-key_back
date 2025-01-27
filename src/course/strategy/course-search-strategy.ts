@@ -1,9 +1,13 @@
 import { CourseCategory } from 'src/enums/course-category.enum';
-import { PaginatedCoursesDto } from '../dto/paginated-courses.dto';
 import { SearchCourseNewDto } from '../dto/search-course-new.dto';
+import { SelectQueryBuilder } from 'typeorm';
+import { CourseEntity } from 'src/entities/course.entity';
 
 export interface CourseSearchStrategy {
   supports(category: CourseCategory): boolean;
 
-  search(searchCourseNewDto: SearchCourseNewDto): Promise<PaginatedCoursesDto>;
+  buildQuery(
+    queryBuilder: SelectQueryBuilder<CourseEntity>,
+    searchCourseNewDto?: SearchCourseNewDto,
+  ): Promise<SelectQueryBuilder<CourseEntity>>;
 }

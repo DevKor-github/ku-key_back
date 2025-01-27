@@ -3,7 +3,7 @@ import { CourseRepository } from './course.repository';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { CourseDetailRepository } from './course-detail.repository';
-import { EntityManager, Like } from 'typeorm';
+import { Brackets, EntityManager, Like } from 'typeorm';
 import { CommonCourseResponseDto } from './dto/common-course-response.dto';
 import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
@@ -97,9 +97,50 @@ export class CourseService {
   async searchCourses(
     searchCourseNewDto: SearchCourseNewDto,
   ): Promise<PaginatedCoursesDto> {
+    const { keyword, cursorId } = searchCourseNewDto;
+    const LIMIT = PaginatedCoursesDto.LIMIT;
     // 해당하는 검색 전략 찾아오기
     const searchStrategy = await this.findSearchStrategy(searchCourseNewDto);
-    return await searchStrategy.search(searchCourseNewDto);
+
+    let queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetails')
+      .where('course.year = :year', { year: searchCourseNewDto.year })
+      .andWhere('course.semester = :semester', {
+        semester: searchCourseNewDto.semester,
+      });
+
+    queryBuilder = await searchStrategy.buildQuery(
+      queryBuilder,
+      searchCourseNewDto,
+    );
+
+    if (keyword) {
+      queryBuilder = queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('course.courseName LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          })
+            .orWhere('course.professorName LIKE :keyword', {
+              keyword: `%${keyword}%`,
+            })
+            .orWhere('course.courseCode LIKE :keyword', {
+              keyword: `%${keyword}%`,
+            });
+        }),
+      );
+    }
+
+    if (cursorId) {
+      queryBuilder = queryBuilder.andWhere('course.id > :cursorId', {
+        cursorId,
+      });
+    }
+
+    queryBuilder = queryBuilder.orderBy('course.id', 'ASC').take(LIMIT);
+
+    const courses = await queryBuilder.getMany();
+    return await this.mappingCourseDetailsToCourses(courses);
   }
 
   private async findSearchStrategy(

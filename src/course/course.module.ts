@@ -7,9 +7,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourseEntity } from 'src/entities/course.entity';
 import { CourseDetailEntity } from 'src/entities/course-detail.entity';
 import { AcademicFoundationSearchStrategy } from './strategy/academic-foundation-search-strategy';
-import { AllCoursesSearchStrategy } from './strategy/all-courses-search-strategy';
 import { GeneralSearchStrategy } from './strategy/general-search-strategy';
 import { MajorSearchStrategy } from './strategy/major-search-strategy';
+import { AllCoursesSearchStrategy } from './strategy/all-courses-search-strategy';
 
 @Module({
   imports: [TypeOrmModule.forFeature([CourseEntity, CourseDetailEntity])],
@@ -19,27 +19,27 @@ import { MajorSearchStrategy } from './strategy/major-search-strategy';
     CourseRepository,
     CourseDetailRepository,
     AcademicFoundationSearchStrategy,
-    AllCoursesSearchStrategy,
     GeneralSearchStrategy,
     MajorSearchStrategy,
+    AllCoursesSearchStrategy,
     {
       provide: 'CourseSearchStrategy',
       useFactory: (
         academicFoundationSearchStrategy: AcademicFoundationSearchStrategy,
-        allCoursesSearchStrategy: AllCoursesSearchStrategy,
         generalSearchStrategy: GeneralSearchStrategy,
         majorSearchStrategy: MajorSearchStrategy,
+        allCoursesSearchStrategy: AllCoursesSearchStrategy,
       ) => [
         academicFoundationSearchStrategy,
-        allCoursesSearchStrategy,
         generalSearchStrategy,
         majorSearchStrategy,
+        allCoursesSearchStrategy,
       ],
       inject: [
         AcademicFoundationSearchStrategy,
-        AllCoursesSearchStrategy,
         GeneralSearchStrategy,
         MajorSearchStrategy,
+        AllCoursesSearchStrategy,
       ],
     },
   ],
