@@ -36,7 +36,7 @@ export class SearchCourseNewDto {
 
   @ApiPropertyOptional({
     description:
-      'Major일때 major를, Academic Foundation일 때 college를 넣어주세요.',
+      'cateogry가 Major일때 특정 과를, category가 Academic Foundation일 때 특정 단과대를 넣어주세요.',
   })
   @IsString()
   @IsOptional()
