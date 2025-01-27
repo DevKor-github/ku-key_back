@@ -1,25 +1,22 @@
-import { Injectable } from '@nestjs/common';
 import { CourseCategory } from 'src/enums/course-category.enum';
+import { Injectable } from '@nestjs/common';
 import { CourseSearchStrategy } from './course-search-strategy';
-import { SearchCourseNewDto } from '../dto/search-course-new.dto';
 import { PaginatedCoursesDto } from '../dto/paginated-courses.dto';
+import { SearchCourseNewDto } from '../dto/search-course-new.dto';
 import { CourseService } from '../course.service';
-import { throwKukeyException } from 'src/utils/exception.util';
 import { Brackets } from 'typeorm';
 
 @Injectable()
-export class MajorSearchStrategy implements CourseSearchStrategy {
+export class AllCoursesSearchStrategy implements CourseSearchStrategy {
   constructor(private readonly courseService: CourseService) {}
+
   supports(category: CourseCategory): boolean {
-    return category === CourseCategory.MAJOR;
+    return category === CourseCategory.ALL_CLASS;
   }
 
   async search(
     searchCourseNewDto: SearchCourseNewDto,
   ): Promise<PaginatedCoursesDto> {
-    if (!searchCourseNewDto.classification) {
-      throwKukeyException('MAJOR_REQUIRED');
-    }
     const courseRepository = await this.courseService.getCourseRepository();
     const { keyword, cursorId, year, semester } = searchCourseNewDto;
 
@@ -29,13 +26,7 @@ export class MajorSearchStrategy implements CourseSearchStrategy {
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.courseDetails', 'courseDetails')
       .where('course.year = :year', { year })
-      .andWhere('course.semester = :semester', { semester })
-      .andWhere('course.category = :category', {
-        category: CourseCategory.MAJOR,
-      })
-      .andWhere('course.major = :major', {
-        major: searchCourseNewDto.classification,
-      });
+      .andWhere('course.semester = :semester', { semester });
 
     queryBuilder = queryBuilder.andWhere(
       new Brackets((qb) => {
