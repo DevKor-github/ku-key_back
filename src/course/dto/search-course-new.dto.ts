@@ -20,12 +20,15 @@ export class SearchCourseNewDto {
   @Length(1)
   semester: string;
 
-  @ApiProperty({
-    description: '강의 카테고리 (모든 강의, 전공, 교양, 학문의 기초)',
+  @ApiPropertyOptional({
+    description:
+      '강의 카테고리 (모든 강의, 전공, 교양, 학문의 기초), 모든 강의는 값을 넘겨주지 않음',
     enum: CourseCategory,
+    nullable: true,
   })
+  @IsOptional()
   @IsEnum(CourseCategory)
-  category: CourseCategory;
+  category?: CourseCategory;
 
   @ApiPropertyOptional({
     description: '검색 키워드 (강의명, 교수명, 학수번호)',
