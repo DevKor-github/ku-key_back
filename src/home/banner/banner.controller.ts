@@ -18,7 +18,7 @@ import { Role } from 'src/enums/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { BannerDocs } from 'src/decorators/docs/banner.decorator';
-import { createBannerRequestDto } from 'src/home/banner/dto/createBannerRequest.dto';
+import { CreateBannerRequestDto } from 'src/home/banner/dto/create-banner-request.dto';
 
 @Controller('banner')
 @ApiTags('banner')
@@ -37,7 +37,7 @@ export class BannerController {
   @Post()
   async createBannerImage(
     @UploadedFile() image: Express.Multer.File,
-    @Body() body: createBannerRequestDto,
+    @Body() body: CreateBannerRequestDto,
   ): Promise<bannerDto> {
     return await this.bannerService.createBannerImage(image, body.title);
   }

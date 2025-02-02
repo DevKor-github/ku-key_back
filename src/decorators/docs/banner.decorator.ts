@@ -9,7 +9,7 @@ import {
 import { MethodNames } from 'src/common/types/method';
 import { BannerController } from 'src/home/banner/banner.controller';
 import { bannerDto } from 'src/home/banner/dto/banner.dto';
-import { createBannerRequestDto } from 'src/home/banner/dto/createBannerRequest.dto';
+import { CreateBannerRequestDto } from 'src/home/banner/dto/create-banner-request.dto';
 
 type BannerEndPoints = MethodNames<BannerController>;
 
@@ -34,7 +34,7 @@ const BannerDocsMap: Record<BannerEndPoints, MethodDecorator[]> = {
     }),
     ApiConsumes('multipart/form-data'),
     ApiBody({
-      type: createBannerRequestDto,
+      type: CreateBannerRequestDto,
     }),
     ApiResponse({
       status: 201,
