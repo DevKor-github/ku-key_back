@@ -36,7 +36,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
     }),
     ApiQuery({
       name: 'category',
-      required: true,
+      required: false,
       type: 'enum',
       enum: CourseCategory,
     }),
