@@ -18,11 +18,6 @@ export class CourseService {
     @Inject('CourseSearchStrategy')
     private readonly strategies: CourseSearchStrategy[],
   ) {}
-
-  async getCourseRepository(): Promise<CourseRepository> {
-    return this.courseRepository;
-  }
-
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
     const course = await this.courseRepository.findOne({
       where: { id: courseId },

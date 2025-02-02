@@ -8,6 +8,7 @@ import { MethodNames } from 'src/common/types/method';
 import { CourseController } from 'src/course/course.controller';
 import { PaginatedCoursesDto } from 'src/course/dto/paginated-courses.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { CourseCategory } from 'src/enums/course-category.enum';
 
 type CourseEndPoints = MethodNames<CourseController>;
 
@@ -37,6 +38,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       name: 'category',
       required: true,
       type: 'enum',
+      enum: CourseCategory,
     }),
     ApiQuery({
       name: 'keyword',

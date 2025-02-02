@@ -12,12 +12,12 @@ export class SearchCourseNewDto {
 
   @ApiProperty({ description: '연도' })
   @IsString()
-  @Length(4)
+  @Length(4, 4)
   year: string;
 
   @ApiProperty({ description: '학기' })
   @IsString()
-  @Length(1)
+  @Length(1, 1)
   semester: string;
 
   @ApiPropertyOptional({
