@@ -55,8 +55,7 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       description: '강의 검색 성공 시',
       type: PaginatedCoursesDto,
     }),
-    ApiKukeyExceptionResponse(['MAJOR_REQUIRED']),
-    ApiKukeyExceptionResponse(['COLLEGE_REQUIRED']),
+    ApiKukeyExceptionResponse(['MAJOR_REQUIRED', 'COLLEGE_REQUIRED']),
   ],
 };
 
