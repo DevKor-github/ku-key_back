@@ -17,6 +17,7 @@ import { UpdateFriendshipResponseDto } from 'src/friendship/dto/update-friendshi
 import { FriendshipController } from 'src/friendship/friendship.controller';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { GetReceivedFriendshipRequestCountDto } from 'src/friendship/dto/get-received-friendship-request-count.dto';
 
 type FriendshipEndPoints = MethodNames<FriendshipController>;
 
@@ -116,6 +117,17 @@ const FriendshipDocsMap: Record<FriendshipEndPoints, MethodDecorator[]> = {
       description: '나에게 친구 요청을 보낸 유저 목록',
       isArray: true,
       type: GetWaitingFriendResponseDto,
+    }),
+  ],
+  getReceivedFriendshipRequestCount: [
+    ApiOperation({
+      summary: '나에게 온 친구 요청 개수 조회',
+      description:
+        '나에게 온 친구 요청 전체 개수 / 아직 확인하지 않은 개수를 조회합니다.',
+    }),
+    ApiOkResponse({
+      description: '나에게 온 친구 요청 전체 개수 / 아직 확인하지 않은 개수',
+      type: GetReceivedFriendshipRequestCountDto,
     }),
   ],
   getSentWaitingFriendList: [
