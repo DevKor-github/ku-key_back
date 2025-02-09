@@ -5,12 +5,15 @@ import { GetReportListResponseDto } from './dto/get-report-list.dto';
 import { GetReportResponseDto } from './dto/get-report.dto';
 import { FileService } from 'src/common/file.service';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { UserBanService } from 'src/user/user-ban.service';
+import { AcceptReportRequestDto } from 'src/community/report/dto/accept-report.dto';
 
 @Injectable()
 export class ReportService {
   constructor(
     private readonly reportRepository: ReportRepository,
     private readonly fileService: FileService,
+    private readonly userBanService: UserBanService,
   ) {}
 
   async createReport(
@@ -55,5 +58,23 @@ export class ReportService {
     }
 
     return response;
+  }
+
+  async acceptReport(
+    reportId: number,
+    dto: AcceptReportRequestDto,
+  ): Promise<void> {
+    const report = await this.reportRepository.getReport(reportId);
+    const userId = report.commentId
+      ? report.comment.userId
+      : report.post.userId;
+    if (userId) {
+      await this.userBanService.banUser(userId, report.reason, dto.banDays);
+    }
+    await this.reportRepository.acceptReport(reportId);
+  }
+
+  async rejectReport(reportId: number): Promise<void> {
+    await this.reportRepository.acceptReport(reportId);
   }
 }

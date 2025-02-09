@@ -1,5 +1,6 @@
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { MethodNames } from 'src/common/types/method';
+import { AcceptReportRequestDto } from 'src/community/report/dto/accept-report.dto';
 import { GetReportListResponseDto } from 'src/community/report/dto/get-report-list.dto';
 import { GetReportResponseDto } from 'src/community/report/dto/get-report.dto';
 import { ReportController } from 'src/community/report/report.controller';
@@ -31,6 +32,37 @@ const ReportDocsMap: Record<ReportEndPoints, MethodDecorator[]> = {
       status: 201,
       description: '신고 목록 조회 성공',
       type: GetReportResponseDto,
+    }),
+  ],
+  acceptReport: [
+    ApiOperation({
+      summary: '신고 승인',
+      description: '신고를 승인합니다.',
+    }),
+    ApiParam({
+      name: 'reportId',
+      description: '신고 고유 ID',
+    }),
+    ApiBody({
+      type: AcceptReportRequestDto,
+    }),
+    ApiResponse({
+      status: 201,
+      description: '신고 승인 성공',
+    }),
+  ],
+  rejectReport: [
+    ApiOperation({
+      summary: '신고 거부',
+      description: '신고를 거부합니다.',
+    }),
+    ApiParam({
+      name: 'reportId',
+      description: '신고 고유 ID',
+    }),
+    ApiResponse({
+      status: 201,
+      description: '신고 거부 성공',
     }),
   ],
 };
