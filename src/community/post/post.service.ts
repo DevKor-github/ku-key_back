@@ -281,10 +281,20 @@ export class PostService {
   }
 
   async deletePost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<DeletePostResponseDto> {
-    const post = await this.postRepository.getPostByPostId(postId);
+    const post = await transactionManager.findOne(PostEntity, {
+      where: { id: postId },
+      relations: [
+        'postImages',
+        'comments.commentLikes',
+        'postScraps',
+        'postReactions',
+        'commentAnonymousNumbers',
+      ],
+    });
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
     }
@@ -300,7 +310,7 @@ export class PostService {
       await this.fileService.deleteFile(image.imgDir);
     }
 
-    const isDeleted = await this.postRepository.deletePost(postId);
+    const isDeleted = await transactionManager.softRemove(post);
     if (!isDeleted) {
       throwKukeyException('POST_DELETE_FAILED');
     }

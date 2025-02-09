@@ -150,11 +150,13 @@ export class PostController {
   }
 
   @Delete('/:postId')
+  @UseInterceptors(TransactionInterceptor)
   async deletePost(
+    @TransactionManager() transactionManager: EntityManager,
     @User() user: AuthorizedUserDto,
     @Param('postId') postId: number,
   ): Promise<DeletePostResponseDto> {
-    return await this.postService.deletePost(user, postId);
+    return await this.postService.deletePost(transactionManager, user, postId);
   }
 
   @Post('/:postId/scrap')
