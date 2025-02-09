@@ -36,6 +36,7 @@ import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointService } from 'src/user/point.service';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { UserBanService } from 'src/user/user-ban.service';
 
 @Injectable()
 export class PostService {
@@ -48,6 +49,7 @@ export class PostService {
     private readonly fileService: FileService,
     private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
+    private readonly userBanService: UserBanService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -131,6 +133,10 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     for (const image of images) {
       if (!this.fileService.imagefilter(image)) {
         throwKukeyException('NOT_IMAGE_FILE');
@@ -195,6 +201,10 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');

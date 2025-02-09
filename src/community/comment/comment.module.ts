@@ -9,6 +9,7 @@ import { CommentLikeEntity } from 'src/entities/comment-like.entity';
 import { CommentAnonymousNumberEntity } from 'src/entities/comment-anonymous-number.entity';
 import { NoticeModule } from 'src/notice/notice.module';
 import { ReportModule } from '../report/report.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReportModule } from '../report/report.module';
     PostModule,
     NoticeModule,
     ReportModule,
+    UserModule,
   ],
   controllers: [CommentController],
   providers: [CommentService, CommentRepository],

@@ -19,6 +19,7 @@ import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { UserBanService } from 'src/user/user-ban.service';
 
 @Injectable()
 export class CommentService {
@@ -28,6 +29,7 @@ export class CommentService {
     @InjectRepository(CommentAnonymousNumberEntity)
     private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
     private readonly noticeService: NoticeService,
+    private readonly userBanService: UserBanService,
   ) {}
 
   async getMyCommentList(
@@ -62,6 +64,10 @@ export class CommentService {
     requestDto: CreateCommentRequestDto,
     parentCommentId?: number,
   ) {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const post = await this.postService.isExistingPostId(postId);
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
@@ -171,6 +177,10 @@ export class CommentService {
     commentId: number,
     requestDto: UpdateCommentRequestDto,
   ): Promise<GetCommentResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const comment =
       await this.commentRepository.getCommentByCommentId(commentId);
     if (!comment) {
