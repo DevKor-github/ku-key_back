@@ -7,6 +7,9 @@ import { FileService } from 'src/common/file.service';
 import { throwKukeyException } from 'src/utils/exception.util';
 import { UserBanService } from 'src/user/user-ban.service';
 import { AcceptReportRequestDto } from 'src/community/report/dto/accept-report.dto';
+import { PostService } from 'src/community/post/post.service';
+import { CommentService } from 'src/community/comment/comment.service';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class ReportService {
@@ -14,29 +17,29 @@ export class ReportService {
     private readonly reportRepository: ReportRepository,
     private readonly fileService: FileService,
     private readonly userBanService: UserBanService,
+    private readonly postService: PostService,
+    private readonly commentService: CommentService,
   ) {}
 
   async createReport(
-    reporterId: number,
+    userId: number,
     reason: string,
     postId: number,
     commentId?: number,
   ): Promise<CreateReportResponseDto> {
     if (
-      await this.reportRepository.checkAlreadyReport(
-        reporterId,
-        postId,
-        commentId,
-      )
+      await this.reportRepository.checkAlreadyReport(userId, postId, commentId)
     ) {
       throwKukeyException('ALREADY_REPORTED');
     }
-    await this.reportRepository.createReport(
-      reporterId,
-      reason,
-      postId,
-      commentId,
-    );
+    if (!(await this.postService.isExistingPostId(postId))) {
+      throwKukeyException('POST_NOT_FOUND');
+    }
+    if (commentId && !(await this.commentService.getComment(commentId))) {
+      throwKukeyException('COMMENT_NOT_FOUND');
+    }
+
+    await this.reportRepository.createReport(userId, reason, postId, commentId);
     return new CreateReportResponseDto(true);
   }
 
@@ -61,15 +64,32 @@ export class ReportService {
   }
 
   async acceptReport(
+    transactionManager: EntityManager,
     reportId: number,
     dto: AcceptReportRequestDto,
   ): Promise<void> {
     const report = await this.reportRepository.getReport(reportId);
-    const userId = report.commentId
-      ? report.comment.userId
-      : report.post.userId;
+    const isComment = report.commentId ? true : false;
+    const userId = isComment ? report.comment.userId : report.post.userId;
     if (userId) {
-      await this.userBanService.banUser(userId, report.reason, dto.banDays);
+      await this.userBanService.banUser(
+        transactionManager,
+        userId,
+        report.reason,
+        dto.banDays,
+      );
+    }
+    if (isComment) {
+      await this.commentService.deleteComment(
+        transactionManager,
+        { id: userId, username: '' },
+        report.commentId,
+      );
+    } else {
+      await this.postService.deletePost(
+        { id: userId, username: '' },
+        report.postId,
+      );
     }
     await this.reportRepository.acceptReport(reportId);
   }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserBanEntity } from 'src/entities/user-ban.entity';
 import { Notice } from 'src/notice/enum/notice.enum';
 import { NoticeService } from 'src/notice/notice.service';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { EntityManager, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class UserBanService {
@@ -14,6 +14,7 @@ export class UserBanService {
   ) {}
 
   async banUser(
+    transactionManager: EntityManager,
     userId: number,
     reason: string,
     expireDays: number,
@@ -23,7 +24,7 @@ export class UserBanService {
       bannedAt.getTime() + expireDays * 24 * 60 * 60 * 1000,
     );
 
-    await this.userBanRepository.save({
+    await transactionManager.save(UserBanEntity, {
       userId,
       bannedAt,
       expiredAt,
@@ -36,7 +37,7 @@ export class UserBanService {
       'You have been banned!',
       Notice.ban,
       null,
-      null,
+      transactionManager,
     );
   }
 

@@ -13,10 +13,6 @@ import { GetCommentResponseDto } from 'src/community/comment/dto/get-comment.dto
 import { GetMyCommentListResponseDto } from 'src/community/comment/dto/get-myComment-list.dto';
 import { LikeCommentResponseDto } from 'src/community/comment/dto/like-comment.dto';
 import { UpdateCommentRequestDto } from 'src/community/comment/dto/update-comment.dto';
-import {
-  CreateReportRequestDto,
-  CreateReportResponseDto,
-} from 'src/community/report/dto/create-report.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type CommentEndPoints = MethodNames<CommentController>;
@@ -129,25 +125,6 @@ const CommentDocsMap: Record<CommentEndPoints, MethodDecorator[]> = {
       'SELF_COMMENT_LIKE_FORBIDDEN',
       'COMMENT_LIKE_CANCEL_FAILED',
     ]),
-  ],
-  reportComment: [
-    ApiOperation({
-      summary: '댓글 신고',
-      description: '댓글을 신고합니다',
-    }),
-    ApiParam({
-      name: 'commentId',
-      description: '댓글의 고유 ID',
-    }),
-    ApiBody({
-      type: CreateReportRequestDto,
-    }),
-    ApiResponse({
-      status: 201,
-      description: '댓글 신고 성공',
-      type: CreateReportResponseDto,
-    }),
-    ApiKukeyExceptionResponse(['COMMENT_NOT_FOUND', 'ALREADY_REPORTED']),
   ],
 };
 

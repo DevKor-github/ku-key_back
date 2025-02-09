@@ -35,11 +35,6 @@ import {
   ReactPostRequestDto,
   ReactPostResponseDto,
 } from './dto/react-post.dto';
-import {
-  CreateReportRequestDto,
-  CreateReportResponseDto,
-} from '../report/dto/create-report.dto';
-import { ReportService } from '../report/report.service';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
@@ -52,10 +47,7 @@ import { PostDocs } from 'src/decorators/docs/post.decorator';
 @PostDocs
 @ApiBearerAuth('accessToken')
 export class PostController {
-  constructor(
-    private readonly postService: PostService,
-    private readonly reportService: ReportService,
-  ) {}
+  constructor(private readonly postService: PostService) {}
 
   @Get()
   async getPostList(
@@ -189,17 +181,5 @@ export class PostController {
       postId,
       body,
     );
-  }
-
-  @Post('/:postId/report')
-  async reportPost(
-    @User() user: AuthorizedUserDto,
-    @Param('postId') postId: number,
-    @Body() body: CreateReportRequestDto,
-  ): Promise<CreateReportResponseDto> {
-    if (!(await this.postService.isExistingPostId(postId))) {
-      throwKukeyException('POST_NOT_FOUND');
-    }
-    return await this.reportService.createReport(user.id, body.reason, postId);
   }
 }
