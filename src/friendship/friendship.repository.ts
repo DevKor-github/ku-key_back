@@ -96,6 +96,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
         'fromUser.character',
         'toUser.character',
       ],
+      order: { createdAt: 'DESC' },
     });
   }
 

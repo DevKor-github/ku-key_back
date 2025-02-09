@@ -165,6 +165,7 @@ export class FriendshipService {
       {
         where: { toUserId: userId, areWeFriend: false },
         relations: ['fromUser', 'fromUser.character'],
+        order: { createdAt: 'DESC' },
       },
     );
 
