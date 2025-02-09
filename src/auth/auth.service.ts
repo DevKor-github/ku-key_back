@@ -359,6 +359,11 @@ export class AuthService {
     email: string,
   ): Promise<SendTempPasswordResponseDto> {
     const user = await this.userService.findUserByEmail(email);
+
+    if (!user) {
+      throwKukeyException('USER_NOT_FOUND');
+    }
+
     const tempPassword = this.generateRandomString(10);
 
     const isUpdated = await this.userService.updatePassword(
