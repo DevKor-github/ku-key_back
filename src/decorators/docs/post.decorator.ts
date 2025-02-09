@@ -134,6 +134,7 @@ const PostDocsMap: Record<PostEndPoints, MethodDecorator[]> = {
       'TOO_MANY_IMAGES',
       'BOARD_NOT_FOUND',
       'FILE_UPLOAD_FAILED',
+      'USER_BANNED',
     ]),
   ],
   updatePost: [
@@ -162,6 +163,7 @@ const PostDocsMap: Record<PostEndPoints, MethodDecorator[]> = {
       'TOO_MANY_IMAGES',
       'FILE_UPLOAD_FAILED',
       'FILE_DELETE_FAILED',
+      'USER_BANNED',
     ]),
   ],
   deletePost: [

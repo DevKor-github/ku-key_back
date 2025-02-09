@@ -60,6 +60,7 @@ const CommentDocsMap: Record<CommentEndPoints, MethodDecorator[]> = {
       'INVALID_PARENT_COMMENT_REQUEST',
       'REPLY_TO_DIFFERENT_POST',
       'POST_UPDATE_FAILED',
+      'USER_BANNED',
     ]),
   ],
   updateComment: [
@@ -84,6 +85,7 @@ const CommentDocsMap: Record<CommentEndPoints, MethodDecorator[]> = {
       'COMMENT_OWNERSHIP_REQUIRED',
       'COMMENT_IN_QUESTION_BOARD',
       'COMMENT_UPDATE_FAILED',
+      'USER_BANNED',
     ]),
   ],
   deleteComment: [
