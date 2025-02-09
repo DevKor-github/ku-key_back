@@ -233,8 +233,20 @@ export class CommentService {
     }
 
     const post = await this.postService.isExistingPostId(comment.postId);
-    if (Number(post.boardId) === 2) {
-      throwKukeyException('COMMENT_IN_QUESTION_BOARD');
+    if (post) {
+      if (Number(post.boardId) === 2) {
+        throwKukeyException('COMMENT_IN_QUESTION_BOARD');
+      }
+
+      const updateResult = await transactionManager.decrement(
+        PostEntity,
+        { id: comment.postId },
+        'commentCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throwKukeyException('POST_UPDATE_FAILED');
+      }
     }
 
     const deleteResult = await transactionManager.softRemove(
@@ -243,16 +255,6 @@ export class CommentService {
     );
     if (!deleteResult.deletedAt) {
       throwKukeyException('COMMENT_DELETE_FAILED');
-    }
-
-    const updateResult = await transactionManager.decrement(
-      PostEntity,
-      { id: comment.postId },
-      'commentCount',
-      1,
-    );
-    if (!updateResult.affected) {
-      throwKukeyException('POST_UPDATE_FAILED');
     }
 
     return new DeleteCommentResponseDto(true);
