@@ -289,7 +289,8 @@ export class PostService {
       where: { id: postId },
       relations: [
         'postImages',
-        'comments.commentLikes',
+        // 댓글에 대해 신고가 들어왔을때 대비해서 삭제x
+        // 'comments.commentLikes',
         'postScraps',
         'postReactions',
         'commentAnonymousNumbers',
