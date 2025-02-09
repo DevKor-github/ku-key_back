@@ -189,7 +189,23 @@ export class FriendshipService {
     const { totalCount, unreadCount } =
       await this.friendshipRepository.countReceivedFriendships(userId);
 
-    return new GetReceivedFriendshipRequestCountDto(totalCount, unreadCount);
+    const recentRequests = await this.friendshipRepository.find({
+      where: { toUserId: userId, areWeFriend: false },
+      relations: ['fromUser', 'fromUser.character'],
+      order: { createdAt: 'DESC' },
+      select: ['fromUser'],
+      take: 2,
+    });
+
+    const recentCharacters = recentRequests.map((req) => {
+      return req.fromUser.character;
+    });
+
+    return new GetReceivedFriendshipRequestCountDto(
+      totalCount,
+      unreadCount,
+      recentCharacters,
+    );
   }
 
   async getSentWaitingFriendList(
