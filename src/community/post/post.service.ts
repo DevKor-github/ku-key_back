@@ -299,13 +299,8 @@ export class PostService {
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
     }
-    if (post.userId !== user.id) {
-      throwKukeyException('POST_OWNERSHIP_REQUIRED');
-    }
 
-    if (post.boardId == 2 && post.commentCount > 0) {
-      throwKukeyException('POST_IN_QUESTION_BOARD');
-    }
+    this.checkDeleteAuthority(post, user);
 
     for (const image of post.postImages) {
       await this.fileService.deleteFile(image.imgDir);
@@ -317,6 +312,17 @@ export class PostService {
     }
 
     return new DeletePostResponseDto(true);
+  }
+
+  private checkDeleteAuthority(post: PostEntity, user: AuthorizedUserDto) {
+    if (user.id !== -1) {
+      if (post.userId !== user.id) {
+        throwKukeyException('POST_OWNERSHIP_REQUIRED');
+      }
+      if (post.boardId == 2 && post.commentCount > 0) {
+        throwKukeyException('POST_IN_QUESTION_BOARD');
+      }
+    }
   }
 
   async scrapPost(

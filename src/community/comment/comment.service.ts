@@ -228,16 +228,11 @@ export class CommentService {
     if (!comment) {
       throwKukeyException('COMMENT_NOT_FOUND');
     }
-    if (comment.userId !== user.id) {
-      throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
-    }
-
     const post = await this.postService.isExistingPostId(comment.postId);
-    if (post) {
-      if (Number(post.boardId) === 2) {
-        throwKukeyException('COMMENT_IN_QUESTION_BOARD');
-      }
 
+    this.checkDeleteAuthority(comment, post, user);
+
+    if (post) {
       const updateResult = await transactionManager.decrement(
         PostEntity,
         { id: comment.postId },
@@ -258,6 +253,23 @@ export class CommentService {
     }
 
     return new DeleteCommentResponseDto(true);
+  }
+
+  private checkDeleteAuthority(
+    comment: CommentEntity,
+    post: PostEntity,
+    user: AuthorizedUserDto,
+  ) {
+    if (user.id !== -1) {
+      if (comment.userId !== user.id) {
+        throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
+      }
+      if (post) {
+        if (Number(post.boardId) === 2) {
+          throwKukeyException('COMMENT_IN_QUESTION_BOARD');
+        }
+      }
+    }
   }
 
   async likeComment(

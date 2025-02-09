@@ -83,13 +83,13 @@ export class ReportService {
     if (isComment) {
       await this.commentService.deleteComment(
         transactionManager,
-        { id: userId, username: '' },
+        { id: -1, username: '' },
         report.commentId,
       );
     } else {
       await this.postService.deletePost(
         transactionManager,
-        { id: userId, username: '' },
+        { id: -1, username: '' },
         report.postId,
       );
     }
