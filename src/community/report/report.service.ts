@@ -45,7 +45,6 @@ export class ReportService {
 
   async getReportList(): Promise<GetReportListResponseDto[]> {
     const reports = await this.reportRepository.getReportList();
-    console.log(reports);
     return reports.map((report) => new GetReportListResponseDto(report));
   }
 
