@@ -9,6 +9,7 @@ import { PaginatedCoursesDto } from './dto/paginated-courses.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
 import { SearchCourseNewDto } from './dto/search-course-new.dto';
 import { CourseSearchStrategy } from './strategy/course-search-strategy';
+import { SearchCourseReviewsWithKeywordRequest } from 'src/course-review/dto/search-course-reviews-with-keyword-request.dto';
 
 @Injectable()
 export class CourseService {
@@ -87,6 +88,30 @@ export class CourseService {
       (course) => new CommonCourseResponseDto(course),
     );
     return new PaginatedCoursesDto(courseInformations);
+  }
+
+  async searchCoursesWithOnlyKeyword(
+    searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
+  ): Promise<CourseEntity[]> {
+    const { keyword } = searchCourseReviewsWithKeywordRequest;
+
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .where(
+        new Brackets((qb) => {
+          qb.where('course.courseName LIKE :keyword', {
+            keyword: `%${keyword}%`,
+          })
+            .orWhere('course.professorName LIKE :keyword', {
+              keyword: `%${keyword}%`,
+            })
+            .orWhere('course.courseCode LIKE :keyword', {
+              keyword: `%${keyword}%`,
+            });
+        }),
+      );
+
+    return await queryBuilder.getMany();
   }
 
   async searchCourses(

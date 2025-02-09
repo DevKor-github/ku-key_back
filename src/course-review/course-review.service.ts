@@ -9,7 +9,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -17,6 +17,9 @@ import { CourseService } from 'src/course/course.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointService } from 'src/user/point.service';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
+import { SearchCourseReviewsWithKeywordResponse } from './dto/search-course-reviews-with-keyword-response.dto';
+import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
 
 @Injectable()
 export class CourseReviewService {
@@ -177,6 +180,114 @@ export class CourseReviewService {
       (courseReview) =>
         new CourseReviewResponseDto(courseReview, user.username),
     );
+  }
+
+  async getCourseReviewsWithKeyword(
+    searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
+  ): Promise<PaginatedCourseReviewsDto> {
+    const { cursorId } = searchCourseReviewsWithKeywordRequest;
+    const LIMIT = 10;
+
+    const courses = await this.courseService.searchCoursesWithOnlyKeyword(
+      searchCourseReviewsWithKeywordRequest,
+    );
+
+    if (courses.length === 0) {
+      return new PaginatedCourseReviewsDto([]);
+    }
+
+    const courseGroupMap = new Map<
+      string,
+      {
+        id: number;
+        courseCode: string;
+        professorName: string;
+        courseName: string;
+      }
+    >();
+
+    for (const course of courses) {
+      const key = `${course.courseCode.slice(0, 7)}_${course.professorName}`;
+      if (!courseGroupMap.has(key)) {
+        courseGroupMap.set(key, {
+          id: course.id,
+          courseCode: course.courseCode.slice(0, 7),
+          professorName: course.professorName,
+          courseName: course.courseName,
+        });
+      }
+    }
+    const courseGroups = Array.from(courseGroupMap.values());
+
+    const reviewQueryBuilder = this.courseReviewRepository
+      .createQueryBuilder('review')
+      .select([
+        'MIN(review.id) AS id',
+        'review.courseCode AS courseCode',
+        'review.professorName AS professorName',
+        'ROUND(AVG(review.rate), 1) AS totalRate',
+        'COUNT(review.id) AS reviewCount',
+      ])
+      .groupBy('review.courseCode')
+      .addGroupBy('review.professorName');
+
+    reviewQueryBuilder.where(
+      new Brackets((qb) => {
+        courseGroups.forEach((group, index) => {
+          const condition = `review.courseCode = :courseCode${index} AND review.professorName = :professorName${index}`;
+          if (index === 0) {
+            qb.where(condition, {
+              [`courseCode${index}`]: group.courseCode,
+              [`professorName${index}`]: group.professorName,
+            });
+          } else {
+            qb.orWhere(condition, {
+              [`courseCode${index}`]: group.courseCode,
+              [`professorName${index}`]: group.professorName,
+            });
+          }
+        });
+      }),
+    );
+
+    const reviewAggregates = await reviewQueryBuilder.getRawMany();
+
+    const reviewMap = new Map<
+      string,
+      { totalRate: number; reviewCount: number }
+    >();
+    reviewAggregates.forEach((item) => {
+      const key = `${item.courseCode}_${item.professorName}`;
+      reviewMap.set(key, {
+        totalRate: item.totalRate ? parseFloat(item.totalRate) : 0,
+        reviewCount: item.reviewCount ? parseInt(item.reviewCount, 10) : 0,
+      });
+    });
+
+    let responses: SearchCourseReviewsWithKeywordResponse[] = courseGroups.map(
+      (group) => {
+        const key = `${group.courseCode}_${group.professorName}`;
+        const reviewData = reviewMap.get(key) || {
+          totalRate: 0,
+          reviewCount: 0,
+        };
+        return {
+          id: group.id,
+          courseName: group.courseName,
+          professorName: group.professorName,
+          totalRate: reviewData.totalRate,
+          reviewCount: reviewData.reviewCount,
+        };
+      },
+    );
+
+    if (cursorId) {
+      responses = responses.filter((response) => response.id > cursorId);
+    }
+
+    const paginatedResponses = responses.slice(0, LIMIT + 1);
+
+    return new PaginatedCourseReviewsDto(paginatedResponses);
   }
 
   async getCourseReviews(

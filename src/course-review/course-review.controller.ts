@@ -23,6 +23,8 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { CourseReviewDocs } from 'src/decorators/docs/course-review.decorator';
+import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
+import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -72,6 +74,17 @@ export class CourseReviewController {
     return await this.courseReviewService.checkCourseReviewSubmission(
       user,
       getCourseReviewRequestDto,
+    );
+  }
+
+  // 강의평 조회를 위한 New 검색
+  @Get('search')
+  async getCourseReviewsWithKeyword(
+    @Query()
+    searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
+  ): Promise<PaginatedCourseReviewsDto> {
+    return await this.courseReviewService.getCourseReviewsWithKeyword(
+      searchCourseReviewsWithKeywordRequest,
     );
   }
 
