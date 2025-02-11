@@ -57,6 +57,22 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
     }),
     ApiKukeyExceptionResponse(['MAJOR_REQUIRED', 'COLLEGE_REQUIRED']),
   ],
+  getRecommendationCourses: [
+    ApiOperation({
+      summary: '추천 강의 조회',
+      description: '추천 강의를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: true,
+      type: 'number',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '추천 강의 조회 성공 시',
+      type: PaginatedCoursesDto,
+    }),
+  ],
 };
 
 export function CourseDocs(target: typeof CourseController) {

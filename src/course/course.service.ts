@@ -10,6 +10,7 @@ import { throwKukeyException } from 'src/utils/exception.util';
 import { SearchCourseNewDto } from './dto/search-course-new.dto';
 import { CourseSearchStrategy } from './strategy/course-search-strategy';
 import { SearchCourseReviewsWithKeywordRequest } from 'src/course-review/dto/search-course-reviews-with-keyword-request.dto';
+import { GetRecommendationCoursesRequestDto } from './dto/get-recommendation-courses-request.dto';
 
 @Injectable()
 export class CourseService {
@@ -161,6 +162,18 @@ export class CourseService {
 
     const courses = await queryBuilder.getMany();
     return await this.mappingCourseDetailsToCourses(courses);
+  }
+
+  async getRecommendationCourses(
+    getRecommendationCoursesRequestDto: GetRecommendationCoursesRequestDto,
+  ): Promise<CommonCourseResponseDto[]> {
+    const courses = await this.courseRepository.find({
+      order: { totalRate: 'DESC' },
+      take: getRecommendationCoursesRequestDto.limit,
+      relations: ['courseDetails'],
+    });
+
+    return courses.map((course) => new CommonCourseResponseDto(course));
   }
 
   private async findSearchStrategy(
