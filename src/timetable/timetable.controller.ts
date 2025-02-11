@@ -28,6 +28,7 @@ import { TransactionInterceptor } from 'src/common/interceptors/transaction.inte
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { TimetableDocs } from 'src/decorators/docs/timetable.decorator';
+import { GetTodayTimetableResponse } from './dto/get-today-timetable-response.dto';
 
 @Controller('timetable')
 @ApiTags('timetable')
@@ -81,6 +82,15 @@ export class TimetableController {
     @User() user: AuthorizedUserDto,
   ): Promise<GetTimetableByUserIdResponseDto[]> {
     return await this.timetableService.getTimetableByUserId(user.id);
+  }
+
+  // 오늘 시간표 가져오기
+  @Get('/today')
+  async getTodayTimetable(
+    @Query() timetableDto: TimetableDto,
+    @User() user: AuthorizedUserDto,
+  ): Promise<GetTodayTimetableResponse> {
+    return await this.timetableService.getTodayTimetable(timetableDto, user);
   }
 
   // 특정 시간표 가져오기
