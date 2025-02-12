@@ -133,7 +133,7 @@ export class ClubService {
     });
   }
 
-  async getRecommendClubList(
+  async getRecommendClubs(
     user: AuthorizedUserDto | null,
     requestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
@@ -153,7 +153,7 @@ export class ClubService {
     const likedClubCategories =
       await this.clubLikeRepository.findLikedClubCategories(userId);
 
-    // 좋아요 누른 동아리가 없을 경우 무작위로 4개 선정
+    // 좋아요 누른 동아리가 없을 경우 무작위로 5개 선정
     if (likedClubCategories.length === 0) {
       const recommendClubs = await this.clubRepository.findClubsByRandom();
       return recommendClubs.map((club) => {
@@ -162,10 +162,10 @@ export class ClubService {
     }
 
     const recommendClubList: GetRecommendClubResponseDto[] = [];
-    const clubsPerCategory = Math.ceil(4 / likedClubCategories.length);
+    const clubsPerCategory = Math.round(5 / likedClubCategories.length);
     const shuffledCategories = this.shuffleArray(likedClubCategories);
 
-    // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 4개 선정
+    // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 5개 선정
     for (const category of shuffledCategories) {
       const clubs = await this.clubRepository.findClubsByCategoryAndRandom(
         category,
@@ -176,11 +176,11 @@ export class ClubService {
       });
       recommendClubList.push(...recommendClubs);
 
-      if (recommendClubs.length >= 4) break;
+      if (recommendClubs.length >= 5) break;
     }
 
     // 부족한 경우, 랜덤으로 채움
-    if (recommendClubList.length < 4) {
+    if (recommendClubList.length < 5) {
       const existingClubNames = new Set(recommendClubList.map((rc) => rc.name));
       const randomClubs = await this.clubRepository.findClubsByRandom();
       const additionalClubs = randomClubs
@@ -191,8 +191,8 @@ export class ClubService {
       recommendClubList.push(...additionalClubs);
     }
 
-    // 앞에서부터 4개를 랜덤한 순서로 반환
-    return this.shuffleArray(recommendClubList.slice(0, 4));
+    // 앞에서부터 5개를 랜덤한 순서로 반환
+    return this.shuffleArray(recommendClubList.slice(0, 5));
   }
 
   async createClub(

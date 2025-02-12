@@ -90,7 +90,7 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       type: GetHotClubResponseDto,
     }),
   ],
-  getRecommendClubList: [
+  getRecommendClubs: [
     ApiOperation({
       summary: 'Recommend Club 목록 조회',
       description:
@@ -102,7 +102,7 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       required: true,
     }),
     ApiOkResponse({
-      description: 'Recommend Club 목록 4개 반환',
+      description: 'Recommend Club 목록 5개 반환',
       isArray: true,
       type: GetRecommendClubResponseDto,
     }),

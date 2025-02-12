@@ -74,11 +74,11 @@ export class ClubController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get('recommend')
-  async getRecommendClubList(
+  async getRecommendClubs(
     @User() user: AuthorizedUserDto | null,
     @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
-    return await this.clubService.getRecommendClubList(
+    return await this.clubService.getRecommendClubs(
       user,
       getRecommendClubRequestDto,
     );

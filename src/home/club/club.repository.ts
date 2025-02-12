@@ -69,10 +69,10 @@ export class ClubRepository extends Repository<ClubEntity> {
   }
 
   async findClubsByRandom(): Promise<ClubEntity[]> {
-    // 랜덤 4개 반환
+    // 랜덤 5개 반환
     return await this.createQueryBuilder('club')
       .orderBy('RAND()')
-      .limit(4)
+      .limit(5)
       .getMany();
   }
 
