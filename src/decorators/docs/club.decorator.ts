@@ -23,7 +23,7 @@ import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 type ClubEndPoints = MethodNames<ClubController>;
 
 const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
-  getClubList: [
+  getClubs: [
     ApiOperation({
       summary: '동아리 목록 조회',
       description:

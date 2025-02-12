@@ -26,7 +26,7 @@ export class ClubService {
     private readonly fileService: FileService,
   ) {}
 
-  async getClubList(
+  async getClubs(
     user: AuthorizedUserDto | null,
     requestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
@@ -50,7 +50,7 @@ export class ClubService {
     }
 
     // 현재 접속 중인 유저의 각 동아리에 대한 좋아요 여부 함께 반환. 유저 존재하지 않을 시 false
-    let clubList = clubs.map((club) => {
+    let response = clubs.map((club) => {
       const isLiked = club.clubLikes.some((clubLike) =>
         user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
       );
@@ -59,9 +59,9 @@ export class ClubService {
 
     // 내가 좋아요를 누른 동아리만 보기 (유저 존재한다면)
     if (user && isLogin && wishList) {
-      clubList = clubList.filter((club) => club.isLiked === true);
+      response = response.filter((club) => club.isLiked === true);
     }
-    return clubList;
+    return response;
   }
 
   async toggleLikeClub(
