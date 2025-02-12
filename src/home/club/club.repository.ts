@@ -60,11 +60,11 @@ export class ClubRepository extends Repository<ClubEntity> {
   }
 
   async findClubsByAllLikesAndRandom(): Promise<ClubEntity[]> {
-    // allLikes 순서대로 4개 반환, allLikes 같은 경우 랜덤으로 선택
+    // allLikes 순서대로 5개 반환, allLikes 같은 경우 랜덤으로 선택
     return await this.createQueryBuilder('club')
       .orderBy('club.allLikes', 'DESC')
       .addOrderBy('RAND()')
-      .limit(4)
+      .limit(5)
       .getMany();
   }
 

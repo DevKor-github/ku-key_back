@@ -68,8 +68,8 @@ export class ClubController {
   }
 
   @Get('hot')
-  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
-    return await this.clubService.getHotClubList();
+  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
+    return await this.clubService.getHotClubs();
   }
 
   @UseGuards(OptionalJwtAuthGuard)
