@@ -39,7 +39,10 @@ export class GetClubDetailResponseDto {
   @ApiProperty({ description: '좋아요 여부' })
   isLiked: boolean;
 
-  constructor(club: ClubEntity, isLiked: boolean) {
+  @ApiProperty({ description: '링크 개수' })
+  linkCount: number;
+
+  constructor(club: ClubEntity, isLiked: boolean, linkCount: number) {
     this.clubId = club.id;
     this.name = club.name;
     this.category = club.category;
@@ -53,5 +56,6 @@ export class GetClubDetailResponseDto {
     this.instagramLink = club.instagramLink;
     this.youtubeLink = club.youtubeLink;
     this.isLiked = isLiked;
+    this.linkCount = linkCount;
   }
 }

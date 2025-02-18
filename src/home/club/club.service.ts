@@ -90,7 +90,9 @@ export class ClubService {
       user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
     );
 
-    return new GetClubDetailResponseDto(club, isLiked);
+    const linkCount = (club.instagramLink ? 1 : 0) + (club.youtubeLink ? 1 : 0);
+
+    return new GetClubDetailResponseDto(club, isLiked, linkCount);
   }
 
   async toggleLikeClub(
