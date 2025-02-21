@@ -185,9 +185,6 @@ export class CourseReviewService {
   async getCourseReviewsWithKeyword(
     searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
   ): Promise<PaginatedCourseReviewsDto> {
-    const { cursorId } = searchCourseReviewsWithKeywordRequest;
-    const LIMIT = 10;
-
     const courses = await this.courseService.searchCoursesWithOnlyKeyword(
       searchCourseReviewsWithKeywordRequest,
     );
@@ -208,11 +205,11 @@ export class CourseReviewService {
     >();
 
     for (const course of courses) {
-      const key = `${course.courseCode.slice(0, 7)}_${course.professorName}`;
+      const key = `${course.courseCode}_${course.professorName}`;
       if (!courseGroupMap.has(key)) {
         courseGroupMap.set(key, {
           id: course.id,
-          courseCode: course.courseCode.slice(0, 7),
+          courseCode: course.courseCode,
           professorName: course.professorName,
           courseName: course.courseName,
           totalRate: course.totalRate,
@@ -229,8 +226,8 @@ export class CourseReviewService {
         'review.professorName AS professorName',
         'COUNT(review.id) AS reviewCount',
       ])
-      .groupBy('review.courseCode')
-      .addGroupBy('review.professorName');
+      .groupBy('courseCode')
+      .addGroupBy('professorName');
 
     reviewQueryBuilder.where(
       new Brackets((qb) => {
@@ -278,13 +275,7 @@ export class CourseReviewService {
       },
     );
 
-    if (cursorId) {
-      responses = responses.filter((response) => response.id > cursorId);
-    }
-
-    const paginatedResponses = responses.slice(0, LIMIT + 1);
-
-    return new PaginatedCourseReviewsDto(paginatedResponses);
+    return new PaginatedCourseReviewsDto(responses);
   }
 
   async getCourseReviews(

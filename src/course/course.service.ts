@@ -93,11 +93,25 @@ export class CourseService {
 
   async searchCoursesWithOnlyKeyword(
     searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
-  ): Promise<CourseEntity[]> {
-    const { keyword } = searchCourseReviewsWithKeywordRequest;
+  ): Promise<
+    {
+      id: number;
+      courseCode: string;
+      professorName: string;
+      courseName: string;
+      totalRate: number;
+    }[]
+  > {
+    const { keyword, cursorId } = searchCourseReviewsWithKeywordRequest;
+    const LIMIT = 10;
 
-    const queryBuilder = this.courseRepository
+    const subQuery = this.courseRepository
       .createQueryBuilder('course')
+      .select([
+        'MIN(course.id) AS id',
+        'SUBSTRING(course.courseCode, 1, 7) AS courseCode',
+        'course.professorName AS professorName',
+      ])
       .where(
         new Brackets((qb) => {
           qb.where('course.courseName LIKE :keyword', {
@@ -110,9 +124,37 @@ export class CourseService {
               keyword: `%${keyword}%`,
             });
         }),
-      );
+      )
+      .groupBy('courseCode, professorName');
 
-    return await queryBuilder.getMany();
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .innerJoin(
+        `(${subQuery.getQuery()})`,
+        'subQuery',
+        'subQuery.id = course.id',
+      )
+      .setParameters(subQuery.getParameters())
+      .select([
+        'course.id AS id',
+        'SUBSTRING(course.courseCode, 1, 7) AS courseCode',
+        'course.professorName AS professorName',
+        'course.courseName AS courseName',
+        'course.totalRate AS totalRate',
+      ])
+      .orderBy('course.id', 'ASC')
+      .where(cursorId ? 'course.id > :cursorId' : '1=1', { cursorId })
+      .limit(LIMIT + 1);
+
+    const courseGroups = await queryBuilder.getRawMany();
+
+    return courseGroups.map((course) => ({
+      id: course.id,
+      courseCode: course.courseCode,
+      professorName: course.professorName,
+      courseName: course.courseName,
+      totalRate: course.totalRate,
+    }));
   }
 
   async searchCourses(
