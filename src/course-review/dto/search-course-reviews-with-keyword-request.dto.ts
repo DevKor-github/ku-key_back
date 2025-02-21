@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Length } from 'class-validator';
+import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
 
 export class SearchCourseReviewsWithKeywordRequest {
   @ApiProperty({
@@ -13,6 +13,7 @@ export class SearchCourseReviewsWithKeywordRequest {
     description: 'cursor id, 값이 존재하지 않으면 첫 페이지',
   })
   @IsInt()
+  @Min(0)
   @IsOptional()
   cursorId?: number;
 }
