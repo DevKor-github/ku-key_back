@@ -203,6 +203,7 @@ export class CourseReviewService {
         courseCode: string;
         professorName: string;
         courseName: string;
+        totalRate: number;
       }
     >();
 
@@ -214,6 +215,7 @@ export class CourseReviewService {
           courseCode: course.courseCode.slice(0, 7),
           professorName: course.professorName,
           courseName: course.courseName,
+          totalRate: course.totalRate,
         });
       }
     }
@@ -225,7 +227,6 @@ export class CourseReviewService {
         'MIN(review.id) AS id',
         'review.courseCode AS courseCode',
         'review.professorName AS professorName',
-        'ROUND(AVG(review.rate), 1) AS totalRate',
         'COUNT(review.id) AS reviewCount',
       ])
       .groupBy('review.courseCode')
@@ -252,14 +253,10 @@ export class CourseReviewService {
 
     const reviewAggregates = await reviewQueryBuilder.getRawMany();
 
-    const reviewMap = new Map<
-      string,
-      { totalRate: number; reviewCount: number }
-    >();
+    const reviewMap = new Map<string, { reviewCount: number }>();
     reviewAggregates.forEach((item) => {
       const key = `${item.courseCode}_${item.professorName}`;
       reviewMap.set(key, {
-        totalRate: item.totalRate ? parseFloat(item.totalRate) : 0,
         reviewCount: item.reviewCount ? parseInt(item.reviewCount, 10) : 0,
       });
     });
@@ -275,7 +272,7 @@ export class CourseReviewService {
           id: group.id,
           courseName: group.courseName,
           professorName: group.professorName,
-          totalRate: reviewData.totalRate,
+          totalRate: group.totalRate,
           reviewCount: reviewData.reviewCount,
         };
       },
