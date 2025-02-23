@@ -19,6 +19,7 @@ import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
 import { CursorPageMetaResponseDto } from 'src/common/dto/CursorPageResponse.dto';
 import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { UserBanService } from 'src/user/user-ban.service';
 
 @Injectable()
 export class CommentService {
@@ -28,6 +29,7 @@ export class CommentService {
     @InjectRepository(CommentAnonymousNumberEntity)
     private readonly commentAnonymousNumberRepository: Repository<CommentAnonymousNumberEntity>,
     private readonly noticeService: NoticeService,
+    private readonly userBanService: UserBanService,
   ) {}
 
   async getMyCommentList(
@@ -62,6 +64,10 @@ export class CommentService {
     requestDto: CreateCommentRequestDto,
     parentCommentId?: number,
   ) {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const post = await this.postService.isExistingPostId(postId);
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
@@ -171,6 +177,10 @@ export class CommentService {
     commentId: number,
     requestDto: UpdateCommentRequestDto,
   ): Promise<GetCommentResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const comment =
       await this.commentRepository.getCommentByCommentId(commentId);
     if (!comment) {
@@ -218,13 +228,20 @@ export class CommentService {
     if (!comment) {
       throwKukeyException('COMMENT_NOT_FOUND');
     }
-    if (comment.userId !== user.id) {
-      throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
-    }
-
     const post = await this.postService.isExistingPostId(comment.postId);
-    if (Number(post.boardId) === 2) {
-      throwKukeyException('COMMENT_IN_QUESTION_BOARD');
+
+    this.checkDeleteAuthority(comment, post, user);
+
+    if (post) {
+      const updateResult = await transactionManager.decrement(
+        PostEntity,
+        { id: comment.postId },
+        'commentCount',
+        1,
+      );
+      if (!updateResult.affected) {
+        throwKukeyException('POST_UPDATE_FAILED');
+      }
     }
 
     const deleteResult = await transactionManager.softRemove(
@@ -235,17 +252,24 @@ export class CommentService {
       throwKukeyException('COMMENT_DELETE_FAILED');
     }
 
-    const updateResult = await transactionManager.decrement(
-      PostEntity,
-      { id: comment.postId },
-      'commentCount',
-      1,
-    );
-    if (!updateResult.affected) {
-      throwKukeyException('POST_UPDATE_FAILED');
-    }
-
     return new DeleteCommentResponseDto(true);
+  }
+
+  private checkDeleteAuthority(
+    comment: CommentEntity,
+    post: PostEntity,
+    user: AuthorizedUserDto,
+  ) {
+    if (user.id !== -1) {
+      if (comment.userId !== user.id) {
+        throwKukeyException('COMMENT_OWNERSHIP_REQUIRED');
+      }
+      if (post) {
+        if (Number(post.boardId) === 2) {
+          throwKukeyException('COMMENT_IN_QUESTION_BOARD');
+        }
+      }
+    }
   }
 
   async likeComment(

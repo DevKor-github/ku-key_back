@@ -207,6 +207,12 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 2016,
     statusCode: 500,
   },
+  USER_BANNED: {
+    name: 'USER_BANNED',
+    message: 'User is banned.',
+    errorCode: 2017,
+    statusCode: 403,
+  },
   // - 21xx : Point
   POINT_NOT_ENOUGH: {
     name: 'POINT_NOT_ENOUGH',

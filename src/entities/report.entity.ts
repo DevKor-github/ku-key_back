@@ -27,6 +27,9 @@ export class ReportEntity extends CommonEntity {
   @Column('varchar', { nullable: false })
   reason: string;
 
+  @Column('boolean', { default: false })
+  isAccepted: boolean;
+
   @JoinColumn({ name: 'reporterId' })
   @ManyToOne(() => UserEntity, (userEntity) => userEntity.reports, {
     onDelete: 'SET NULL',

@@ -43,7 +43,7 @@ export class CommentEntity extends CommonEntity {
 
   @JoinColumn({ name: 'postId' })
   @ManyToOne(() => PostEntity, (postEntity) => postEntity.comments, {
-    onDelete: 'CASCADE',
+    onDelete: 'NO ACTION',
   })
   post: PostEntity;
 
