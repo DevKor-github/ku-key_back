@@ -561,14 +561,7 @@ export class TimetableService {
       weekday: 'short',
     }) as DayType;
 
-    const mainTimetable = await this.timetableRepository.findOne({
-      where: {
-        userId: user.id,
-        year: timetableDto.year,
-        semester: timetableDto.semester,
-        mainTimetable: true,
-      },
-    });
+    const mainTimetable = await this.getMainTimetable(timetableDto, user);
 
     const todayCourses = await this.timetableCourseRepository
       .createQueryBuilder('timetableCourse')

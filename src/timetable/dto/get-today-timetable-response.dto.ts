@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CourseEntity } from 'src/entities/course.entity';
-import { ScheduleEntity } from 'src/entities/schedule.entity';
 
 // 대표시간표의 오늘 수업 + 일정
 export class TodayCourseDto {
