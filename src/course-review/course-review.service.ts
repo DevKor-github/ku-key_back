@@ -260,11 +260,10 @@ export class CourseReviewService {
       });
     });
 
-    let responses: SearchCourseReviewsWithKeywordResponse[] = courseGroups.map(
-      (group) => {
+    const responses: SearchCourseReviewsWithKeywordResponse[] =
+      courseGroups.map((group) => {
         const key = `${group.courseCode}_${group.professorName}`;
         const reviewData = reviewMap.get(key) || {
-          totalRate: 0,
           reviewCount: 0,
         };
         return {
@@ -274,8 +273,7 @@ export class CourseReviewService {
           totalRate: group.totalRate,
           reviewCount: reviewData.reviewCount,
         };
-      },
-    );
+      });
 
     return new PaginatedCourseReviewsDto(responses);
   }
