@@ -20,7 +20,9 @@ import { throwKukeyException } from 'src/utils/exception.util';
 import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
 import { SearchCourseReviewsWithKeywordResponse } from './dto/search-course-reviews-with-keyword-response.dto';
 import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
-
+import { GetCoursesWithRecentCourseReviewsRequestDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-request.dto';
+import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
+import { CourseEntity } from 'src/entities/course.entity';
 @Injectable()
 export class CourseReviewService {
   constructor(
@@ -421,5 +423,30 @@ export class CourseReviewService {
     });
 
     return !!courseReview;
+  }
+
+  async getCoursesWithRecentCourseReviews(
+    getCoursesWithRecentCourseReviewsRequestDto: GetCoursesWithRecentCourseReviewsRequestDto,
+  ): Promise<GetCoursesWithRecentCourseReviewsResponseDto[]> {
+    const recentCourseReviews = await this.courseReviewRepository.find({
+      order: { createdAt: 'DESC' },
+      take: getCoursesWithRecentCourseReviewsRequestDto.limit,
+    });
+
+    let courses: CourseEntity[] = [];
+    for (const review of recentCourseReviews) {
+      const foundCourses =
+        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+          review.courseCode,
+          review.professorName,
+          review.year,
+          review.semester,
+        );
+      courses.push(...foundCourses);
+    }
+
+    return courses.map((course) => {
+      return new GetCoursesWithRecentCourseReviewsResponseDto(course);
+    });
   }
 }

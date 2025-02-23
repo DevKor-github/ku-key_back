@@ -61,11 +61,15 @@ export class CourseService {
   async searchCoursesByCourseCodeAndProfessorName(
     courseCode: string,
     professorName: string,
+    year?: string,
+    semester?: string,
   ): Promise<CourseEntity[]> {
     return await this.courseRepository.find({
       where: {
         courseCode: Like(`${courseCode}%`),
         professorName,
+        year,
+        semester,
       },
     });
   }

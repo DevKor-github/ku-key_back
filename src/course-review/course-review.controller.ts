@@ -25,6 +25,8 @@ import { EntityManager } from 'typeorm';
 import { CourseReviewDocs } from 'src/decorators/docs/course-review.decorator';
 import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
 import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
+import { GetCoursesWithRecentCourseReviewsResponseDto } from './dto/get-courses-with-recent-course-reviews-response.dto';
+import { GetCoursesWithRecentCourseReviewsRequestDto } from './dto/get-courses-with-recent-course-reviews-request.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -85,6 +87,16 @@ export class CourseReviewController {
   ): Promise<PaginatedCourseReviewsDto> {
     return await this.courseReviewService.getCourseReviewsWithKeyword(
       searchCourseReviewsWithKeywordRequest,
+    );
+  }
+
+  @Get('recent-written-courses')
+  async getCoursesWithRecentCourseReviews(
+    @Query()
+    getCoursesWithRecentCourseReviewsRequestDto: GetCoursesWithRecentCourseReviewsRequestDto,
+  ): Promise<GetCoursesWithRecentCourseReviewsResponseDto[]> {
+    return await this.courseReviewService.getCoursesWithRecentCourseReviews(
+      getCoursesWithRecentCourseReviewsRequestDto,
     );
   }
 

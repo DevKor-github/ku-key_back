@@ -13,6 +13,7 @@ import { GetCourseReviewSummaryResponseDto } from 'src/course-review/dto/get-cou
 import { GetCourseReviewsResponseDto } from 'src/course-review/dto/get-course-reviews-response.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { PaginatedCourseReviewsDto } from 'src/course-review/dto/paginated-course-reviews.dto';
+import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
 
 type CourseReviewEndPoints = MethodNames<CourseReviewController>;
 
@@ -162,6 +163,22 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       'COURSE_REVIEW_NOT_VIEWABLE',
       'SELF_REVIEW_RECOMMENDATION_FORBIDDEN',
     ]),
+  ],
+  getCoursesWithRecentCourseReviews: [
+    ApiOperation({
+      summary: '최근 강의평이 등록된 강의 관련 정보 조회',
+      description: '최근 강의평이 등록된 강의 관련 정보를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: true,
+      type: Number,
+    }),
+    ApiResponse({
+      status: 200,
+      description: '최근 강의평이 등록된 강의 관련 정보 조회 성공 시',
+      type: GetCoursesWithRecentCourseReviewsResponseDto,
+    }),
   ],
 };
 
