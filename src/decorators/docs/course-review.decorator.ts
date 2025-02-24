@@ -14,7 +14,7 @@ import { GetCourseReviewsResponseDto } from 'src/course-review/dto/get-course-re
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { PaginatedCourseReviewsDto } from 'src/course-review/dto/paginated-course-reviews.dto';
 import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
-
+import { GetCoursesWithTeachingSkillsResponseDto } from 'src/course-review/dto/get-courses-with-teaching-skills-response.dto';
 type CourseReviewEndPoints = MethodNames<CourseReviewController>;
 
 const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
@@ -178,6 +178,22 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       status: 200,
       description: '최근 강의평이 등록된 강의 관련 정보 조회 성공 시',
       type: GetCoursesWithRecentCourseReviewsResponseDto,
+    }),
+  ],
+  getCoursesWithTeachingSkills: [
+    ApiOperation({
+      summary: '교수님 강의력이 높은 강의 조회',
+      description: '교수님 강의력이 높은 강의를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: true,
+      type: Number,
+    }),
+    ApiResponse({
+      status: 200,
+      description: '교수님 강의력이 높은 강의 조회 성공 시',
+      type: GetCoursesWithTeachingSkillsResponseDto,
     }),
   ],
 };

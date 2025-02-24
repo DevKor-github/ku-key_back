@@ -27,6 +27,8 @@ import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-revie
 import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
 import { GetCoursesWithRecentCourseReviewsResponseDto } from './dto/get-courses-with-recent-course-reviews-response.dto';
 import { GetCoursesWithRecentCourseReviewsRequestDto } from './dto/get-courses-with-recent-course-reviews-request.dto';
+import { GetCoursesWithTeachingSkillsRequestDto } from './dto/get-courses-with-teaching-skills-request.dto';
+import { GetCoursesWithTeachingSkillsResponseDto } from './dto/get-courses-with-teaching-skills-response.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -97,6 +99,16 @@ export class CourseReviewController {
   ): Promise<GetCoursesWithRecentCourseReviewsResponseDto[]> {
     return await this.courseReviewService.getCoursesWithRecentCourseReviews(
       getCoursesWithRecentCourseReviewsRequestDto,
+    );
+  }
+
+  @Get('teaching-skills')
+  async getCoursesWithTeachingSkills(
+    @Query()
+    getCoursesWithTeachingSkillsRequestDto: GetCoursesWithTeachingSkillsRequestDto,
+  ): Promise<GetCoursesWithTeachingSkillsResponseDto[]> {
+    return await this.courseReviewService.getCoursesWithTeachingSkills(
+      getCoursesWithTeachingSkillsRequestDto,
     );
   }
 

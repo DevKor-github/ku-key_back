@@ -9,7 +9,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { Brackets, EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, MoreThanOrEqual, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -23,6 +23,8 @@ import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
 import { GetCoursesWithRecentCourseReviewsRequestDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-request.dto';
 import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
 import { CourseEntity } from 'src/entities/course.entity';
+import { GetCoursesWithTeachingSkillsRequestDto } from './dto/get-courses-with-teaching-skills-request.dto';
+import { GetCoursesWithTeachingSkillsResponseDto } from './dto/get-courses-with-teaching-skills-response.dto';
 @Injectable()
 export class CourseReviewService {
   constructor(
@@ -445,6 +447,43 @@ export class CourseReviewService {
 
     return courses.map((course) => {
       return new GetCoursesWithRecentCourseReviewsResponseDto(course);
+    });
+  }
+
+  async getCoursesWithTeachingSkills(
+    getCoursesWithTeachingSkillsRequestDto: GetCoursesWithTeachingSkillsRequestDto,
+  ): Promise<GetCoursesWithTeachingSkillsResponseDto[]> {
+    const goodTeachingSkillsCourseReviews =
+      await this.courseReviewRepository.find({
+        where: { teachingSkills: MoreThanOrEqual(4) }, // 구체적인 기준이 안 나와서 임의로 4 이상으로 설정
+        order: { teachingSkills: 'DESC' },
+        take: getCoursesWithTeachingSkillsRequestDto.limit,
+      });
+
+    let courses = [];
+    for (const review of goodTeachingSkillsCourseReviews) {
+      const foundCourses =
+        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+          review.courseCode,
+          review.professorName,
+          review.year,
+          review.semester,
+        );
+
+      const parsedCourses = {
+        id: foundCourses[0].id,
+        professorName: foundCourses[0].professorName,
+        courseName: foundCourses[0].courseName,
+        teachingSkills: review.teachingSkills,
+        year: review.year,
+        semester: review.semester,
+      };
+
+      courses.push(parsedCourses);
+    }
+
+    return courses.map((course) => {
+      return new GetCoursesWithTeachingSkillsResponseDto(course);
     });
   }
 }
