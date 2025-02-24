@@ -17,6 +17,8 @@ import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { GetClubDetailResponseDto } from './dto/get-club-detail-response.dto';
+import { GetClubDetailRequestDto } from './dto/get-club-detail-request.dto';
 
 @Injectable()
 export class ClubService {
@@ -62,6 +64,35 @@ export class ClubService {
       clubList = clubList.filter((club) => club.isLiked === true);
     }
     return clubList;
+  }
+
+  async getClubDetail(
+    user: AuthorizedUserDto | null,
+    requetDto: GetClubDetailRequestDto,
+  ): Promise<GetClubDetailResponseDto> {
+    const { clubId, isLogin } = requetDto;
+
+    // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
+    if (!user && isLogin) {
+      throwKukeyException('LOGIN_REQUIRED');
+    }
+
+    const club = await this.clubRepository.findOne({
+      where: { id: clubId },
+      relations: ['clubLikes', 'clubLikes.user'],
+    });
+
+    if (!club) {
+      throwKukeyException('CLUB_NOT_FOUND');
+    }
+
+    const isLiked = club.clubLikes.some((clubLike) =>
+      user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
+    );
+
+    const linkCount = (club.instagramLink ? 1 : 0) + (club.youtubeLink ? 1 : 0);
+
+    return new GetClubDetailResponseDto(club, isLiked, linkCount);
   }
 
   async toggleLikeClub(
