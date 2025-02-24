@@ -17,6 +17,7 @@ import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 import { GetClubDetailResponseDto } from './dto/get-club-detail-response.dto';
 import { GetClubDetailRequestDto } from './dto/get-club-detail-request.dto';
 
@@ -28,7 +29,7 @@ export class ClubService {
     private readonly fileService: FileService,
   ) {}
 
-  async getClubList(
+  async getClubs(
     user: AuthorizedUserDto | null,
     requestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
@@ -52,7 +53,7 @@ export class ClubService {
     }
 
     // 현재 접속 중인 유저의 각 동아리에 대한 좋아요 여부 함께 반환. 유저 존재하지 않을 시 false
-    let clubList = clubs.map((club) => {
+    let response = clubs.map((club) => {
       const isLiked = club.clubLikes.some((clubLike) =>
         user && isLogin && clubLike.user ? clubLike.user.id === user.id : false,
       );
@@ -61,9 +62,9 @@ export class ClubService {
 
     // 내가 좋아요를 누른 동아리만 보기 (유저 존재한다면)
     if (user && isLogin && wishList) {
-      clubList = clubList.filter((club) => club.isLiked === true);
+      response = response.filter((club) => club.isLiked === true);
     }
-    return clubList;
+    return response;
   }
 
   async getClubDetail(
@@ -139,22 +140,22 @@ export class ClubService {
     }
   }
 
-  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
+  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
     const topLikedClubsInfo =
       await this.clubLikeRepository.findTopLikedClubsInfo();
 
     const hotClubIds = topLikedClubsInfo.map((info) => info.clubId);
     const hotClubs = await this.clubRepository.findClubsByIdOrder(hotClubIds);
 
-    // hotClubs의 개수가 4개 미만인 경우, 전체 좋아요 개수 기준으로 높은 것부터 선택(좋아요 개수 같은 경우 랜덤 선택)하여 부족한 수를 채움
-    const additionalClubsNeeded = 4 - hotClubs.length;
+    // hotClubs의 개수가 5개 미만인 경우, 전체 좋아요 개수 기준으로 높은 것부터 선택(좋아요 개수 같은 경우 랜덤 선택)하여 부족한 수를 채움
+    const additionalCount = CLUB_COUNT - hotClubs.length;
     const allClubs = await this.clubRepository.findClubsByAllLikesAndRandom();
 
-    // 전체 찜 개수 기준으로 가져온 동아리 중 hotClubs내에 이미 포함된 경우 제거
+    // 전체 좋아요 개수 기준으로 가져온 동아리 중 hotClubs내에 이미 포함된 경우 제거
     const existingClubIds = new Set(hotClubs.map((hc) => hc.id));
     const additionalClubs = allClubs
       .filter((club) => !existingClubIds.has(club.id))
-      .slice(0, additionalClubsNeeded);
+      .slice(0, additionalCount);
 
     const combinedClubs = [...hotClubs, ...additionalClubs];
     let ranking = 1;
@@ -164,7 +165,7 @@ export class ClubService {
     });
   }
 
-  async getRecommendClubList(
+  async getRecommendClubs(
     user: AuthorizedUserDto | null,
     requestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
@@ -184,7 +185,7 @@ export class ClubService {
     const likedClubCategories =
       await this.clubLikeRepository.findLikedClubCategories(userId);
 
-    // 좋아요 누른 동아리가 없을 경우 무작위로 4개 선정
+    // 좋아요 누른 동아리가 없을 경우 무작위로 5개 선정
     if (likedClubCategories.length === 0) {
       const recommendClubs = await this.clubRepository.findClubsByRandom();
       return recommendClubs.map((club) => {
@@ -193,10 +194,12 @@ export class ClubService {
     }
 
     const recommendClubList: GetRecommendClubResponseDto[] = [];
-    const clubsPerCategory = Math.ceil(4 / likedClubCategories.length);
+    const clubsPerCategory = Math.round(
+      CLUB_COUNT / likedClubCategories.length,
+    );
     const shuffledCategories = this.shuffleArray(likedClubCategories);
 
-    // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 4개 선정
+    // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 5개 선정
     for (const category of shuffledCategories) {
       const clubs = await this.clubRepository.findClubsByCategoryAndRandom(
         category,
@@ -207,11 +210,11 @@ export class ClubService {
       });
       recommendClubList.push(...recommendClubs);
 
-      if (recommendClubs.length >= 4) break;
+      if (recommendClubs.length >= CLUB_COUNT) break;
     }
 
     // 부족한 경우, 랜덤으로 채움
-    if (recommendClubList.length < 4) {
+    if (recommendClubList.length < CLUB_COUNT) {
       const existingClubNames = new Set(recommendClubList.map((rc) => rc.name));
       const randomClubs = await this.clubRepository.findClubsByRandom();
       const additionalClubs = randomClubs
@@ -222,8 +225,8 @@ export class ClubService {
       recommendClubList.push(...additionalClubs);
     }
 
-    // 앞에서부터 4개를 랜덤한 순서로 반환
-    return this.shuffleArray(recommendClubList.slice(0, 4));
+    // 앞에서부터 5개를 랜덤한 순서로 반환
+    return this.shuffleArray(recommendClubList.slice(0, CLUB_COUNT));
   }
 
   async createClub(

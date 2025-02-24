@@ -46,11 +46,11 @@ export class ClubController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async getClubList(
+  async getClubs(
     @User() user: AuthorizedUserDto | null,
     @Query() getClubRequestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
-    return await this.clubService.getClubList(user, getClubRequestDto);
+    return await this.clubService.getClubs(user, getClubRequestDto);
   }
 
   @UseGuards(OptionalJwtAuthGuard)
@@ -79,17 +79,17 @@ export class ClubController {
   }
 
   @Get('hot')
-  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
-    return await this.clubService.getHotClubList();
+  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
+    return await this.clubService.getHotClubs();
   }
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get('recommend')
-  async getRecommendClubList(
+  async getRecommendClubs(
     @User() user: AuthorizedUserDto | null,
     @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
   ): Promise<GetRecommendClubResponseDto[]> {
-    return await this.clubService.getRecommendClubList(
+    return await this.clubService.getRecommendClubs(
       user,
       getRecommendClubRequestDto,
     );

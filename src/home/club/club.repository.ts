@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 import { ClubCategory } from 'src/common/types/club-category-type';
 import { ClubEntity } from 'src/entities/club.entity';
 import { Brackets, DataSource, Repository } from 'typeorm';
@@ -60,19 +61,19 @@ export class ClubRepository extends Repository<ClubEntity> {
   }
 
   async findClubsByAllLikesAndRandom(): Promise<ClubEntity[]> {
-    // allLikes 순서대로 4개 반환, allLikes 같은 경우 랜덤으로 선택
+    // allLikes 순서대로 5개 반환, allLikes 같은 경우 랜덤으로 선택
     return await this.createQueryBuilder('club')
       .orderBy('club.allLikes', 'DESC')
       .addOrderBy('RAND()')
-      .limit(4)
+      .limit(CLUB_COUNT)
       .getMany();
   }
 
   async findClubsByRandom(): Promise<ClubEntity[]> {
-    // 랜덤 4개 반환
+    // 랜덤 5개 반환
     return await this.createQueryBuilder('club')
       .orderBy('RAND()')
-      .limit(4)
+      .limit(CLUB_COUNT)
       .getMany();
   }
 

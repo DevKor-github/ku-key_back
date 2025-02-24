@@ -24,7 +24,7 @@ import { GetClubDetailResponseDto } from 'src/home/club/dto/get-club-detail-resp
 type ClubEndPoints = MethodNames<ClubController>;
 
 const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
-  getClubList: [
+  getClubs: [
     ApiOperation({
       summary: '동아리 목록 조회',
       description:
@@ -100,19 +100,19 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
     }),
     ApiKukeyExceptionResponse(['CLUB_NOT_FOUND']),
   ],
-  getHotClubList: [
+  getHotClubs: [
     ApiOperation({
       summary: 'Hot Club 목록 조회',
       description:
-        '최근 일주일 동안 좋아요 개수가 가장 많은 동아리 4개를 반환합니다.',
+        '최근 일주일 동안 좋아요 개수가 가장 많은 동아리 5개를 반환합니다.',
     }),
     ApiOkResponse({
-      description: 'Hot Club 목록 4개 반환',
+      description: 'Hot Club 목록 5개 반환',
       isArray: true,
       type: GetHotClubResponseDto,
     }),
   ],
-  getRecommendClubList: [
+  getRecommendClubs: [
     ApiOperation({
       summary: 'Recommend Club 목록 조회',
       description:
@@ -124,7 +124,7 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       required: true,
     }),
     ApiOkResponse({
-      description: 'Recommend Club 목록 4개 반환',
+      description: 'Recommend Club 목록 5개 반환',
       isArray: true,
       type: GetRecommendClubResponseDto,
     }),
