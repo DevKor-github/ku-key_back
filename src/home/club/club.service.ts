@@ -17,6 +17,7 @@ import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { UpdateClubResponseDto } from './dto/update-club-response-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 
 @Injectable()
 export class ClubService {
@@ -116,7 +117,7 @@ export class ClubService {
     const hotClubs = await this.clubRepository.findClubsByIdOrder(hotClubIds);
 
     // hotClubs의 개수가 5개 미만인 경우, 전체 좋아요 개수 기준으로 높은 것부터 선택(좋아요 개수 같은 경우 랜덤 선택)하여 부족한 수를 채움
-    const additionalCount = 5 - hotClubs.length;
+    const additionalCount = CLUB_COUNT - hotClubs.length;
     const allClubs = await this.clubRepository.findClubsByAllLikesAndRandom();
 
     // 전체 좋아요 개수 기준으로 가져온 동아리 중 hotClubs내에 이미 포함된 경우 제거
@@ -162,7 +163,9 @@ export class ClubService {
     }
 
     const recommendClubList: GetRecommendClubResponseDto[] = [];
-    const clubsPerCategory = Math.round(5 / likedClubCategories.length);
+    const clubsPerCategory = Math.round(
+      CLUB_COUNT / likedClubCategories.length,
+    );
     const shuffledCategories = this.shuffleArray(likedClubCategories);
 
     // 좋아요 누른 동아리의 카테고리 수에 따라 비율에 맞게 5개 선정
@@ -176,11 +179,11 @@ export class ClubService {
       });
       recommendClubList.push(...recommendClubs);
 
-      if (recommendClubs.length >= 5) break;
+      if (recommendClubs.length >= CLUB_COUNT) break;
     }
 
     // 부족한 경우, 랜덤으로 채움
-    if (recommendClubList.length < 5) {
+    if (recommendClubList.length < CLUB_COUNT) {
       const existingClubNames = new Set(recommendClubList.map((rc) => rc.name));
       const randomClubs = await this.clubRepository.findClubsByRandom();
       const additionalClubs = randomClubs
@@ -192,7 +195,7 @@ export class ClubService {
     }
 
     // 앞에서부터 5개를 랜덤한 순서로 반환
-    return this.shuffleArray(recommendClubList.slice(0, 5));
+    return this.shuffleArray(recommendClubList.slice(0, CLUB_COUNT));
   }
 
   async createClub(

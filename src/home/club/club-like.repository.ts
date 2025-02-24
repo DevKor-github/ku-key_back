@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { DataSource, Repository } from 'typeorm';
 
@@ -23,7 +24,7 @@ export class ClubLikeRepository extends Repository<ClubLikeEntity> {
       .groupBy('club_like.clubId')
       .orderBy('likeCount', 'DESC')
       .addOrderBy('RAND()')
-      .limit(5)
+      .limit(CLUB_COUNT)
       .getRawMany();
 
     return topClubLikes;

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 import { ClubCategory } from 'src/common/types/club-category-type';
 import { ClubEntity } from 'src/entities/club.entity';
 import { Brackets, DataSource, Repository } from 'typeorm';
@@ -64,7 +65,7 @@ export class ClubRepository extends Repository<ClubEntity> {
     return await this.createQueryBuilder('club')
       .orderBy('club.allLikes', 'DESC')
       .addOrderBy('RAND()')
-      .limit(5)
+      .limit(CLUB_COUNT)
       .getMany();
   }
 
@@ -72,7 +73,7 @@ export class ClubRepository extends Repository<ClubEntity> {
     // 랜덤 5개 반환
     return await this.createQueryBuilder('club')
       .orderBy('RAND()')
-      .limit(5)
+      .limit(CLUB_COUNT)
       .getMany();
   }
 
