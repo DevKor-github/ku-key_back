@@ -19,6 +19,7 @@ import { GetRecommendClubResponseDto } from 'src/home/club/dto/get-recommend-clu
 import { UpdateClubRequestDto } from 'src/home/club/dto/update-club-request-dto';
 import { UpdateClubResponseDto } from 'src/home/club/dto/update-club-response-dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { GetClubDetailResponseDto } from 'src/home/club/dto/get-club-detail-response.dto';
 
 type ClubEndPoints = MethodNames<ClubController>;
 
@@ -60,6 +61,27 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       type: GetClubResponseDto,
     }),
     ApiKukeyExceptionResponse(['LOGIN_REQUIRED']),
+  ],
+  getClubDetail: [
+    ApiOperation({
+      summary: '동아리 상세 조회',
+      description: '동아리 상세 정보를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'clubId',
+      description: 'club id',
+      required: true,
+    }),
+    ApiQuery({
+      name: 'isLogin',
+      description: '로그인 여부',
+      required: true,
+    }),
+    ApiOkResponse({
+      description: '동아리 상세 정보 반환',
+      type: GetClubDetailResponseDto,
+    }),
+    ApiKukeyExceptionResponse(['LOGIN_REQUIRED', 'CLUB_NOT_FOUND']),
   ],
   toggleLikeClub: [
     ApiOperation({

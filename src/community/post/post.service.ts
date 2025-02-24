@@ -36,6 +36,7 @@ import { PostPreview, PostPreviewWithBoardName } from './dto/post-preview.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointService } from 'src/user/point.service';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { UserBanService } from 'src/user/user-ban.service';
 
 @Injectable()
 export class PostService {
@@ -48,6 +49,7 @@ export class PostService {
     private readonly fileService: FileService,
     private readonly pointService: PointService,
     private readonly noticeService: NoticeService,
+    private readonly userBanService: UserBanService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -131,6 +133,10 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: CreatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     for (const image of images) {
       if (!this.fileService.imagefilter(image)) {
         throwKukeyException('NOT_IMAGE_FILE');
@@ -195,6 +201,10 @@ export class PostService {
     images: Array<Express.Multer.File>,
     requestDto: UpdatePostRequestDto,
   ): Promise<GetPostResponseDto> {
+    if (await this.userBanService.checkUserBan(user.id)) {
+      throwKukeyException('USER_BANNED');
+    }
+
     const post = await this.postRepository.getPostByPostId(postId);
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
@@ -271,31 +281,48 @@ export class PostService {
   }
 
   async deletePost(
+    transactionManager: EntityManager,
     user: AuthorizedUserDto,
     postId: number,
   ): Promise<DeletePostResponseDto> {
-    const post = await this.postRepository.getPostByPostId(postId);
+    const post = await transactionManager.findOne(PostEntity, {
+      where: { id: postId },
+      relations: [
+        'postImages',
+        // 댓글에 대해 신고가 들어왔을때 대비해서 삭제x
+        // 'comments.commentLikes',
+        'postScraps',
+        'postReactions',
+        'commentAnonymousNumbers',
+      ],
+    });
     if (!post) {
       throwKukeyException('POST_NOT_FOUND');
     }
-    if (post.userId !== user.id) {
-      throwKukeyException('POST_OWNERSHIP_REQUIRED');
-    }
 
-    if (post.boardId == 2 && post.commentCount > 0) {
-      throwKukeyException('POST_IN_QUESTION_BOARD');
-    }
+    this.checkDeleteAuthority(post, user);
 
     for (const image of post.postImages) {
       await this.fileService.deleteFile(image.imgDir);
     }
 
-    const isDeleted = await this.postRepository.deletePost(postId);
+    const isDeleted = await transactionManager.softRemove(post);
     if (!isDeleted) {
       throwKukeyException('POST_DELETE_FAILED');
     }
 
     return new DeletePostResponseDto(true);
+  }
+
+  private checkDeleteAuthority(post: PostEntity, user: AuthorizedUserDto) {
+    if (user.id !== -1) {
+      if (post.userId !== user.id) {
+        throwKukeyException('POST_OWNERSHIP_REQUIRED');
+      }
+      if (post.boardId == 2 && post.commentCount > 0) {
+        throwKukeyException('POST_IN_QUESTION_BOARD');
+      }
+    }
   }
 
   async scrapPost(

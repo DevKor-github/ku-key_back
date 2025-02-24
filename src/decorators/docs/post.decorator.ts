@@ -19,10 +19,6 @@ import {
 import { ScrapPostResponseDto } from 'src/community/post/dto/scrap-post.dto';
 import { UpdatePostRequestDto } from 'src/community/post/dto/update-post.dto';
 import { PostController } from 'src/community/post/post.controller';
-import {
-  CreateReportRequestDto,
-  CreateReportResponseDto,
-} from 'src/community/report/dto/create-report.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 
 type PostEndPoints = MethodNames<PostController>;
@@ -134,6 +130,7 @@ const PostDocsMap: Record<PostEndPoints, MethodDecorator[]> = {
       'TOO_MANY_IMAGES',
       'BOARD_NOT_FOUND',
       'FILE_UPLOAD_FAILED',
+      'USER_BANNED',
     ]),
   ],
   updatePost: [
@@ -162,6 +159,7 @@ const PostDocsMap: Record<PostEndPoints, MethodDecorator[]> = {
       'TOO_MANY_IMAGES',
       'FILE_UPLOAD_FAILED',
       'FILE_DELETE_FAILED',
+      'USER_BANNED',
     ]),
   ],
   deletePost: [
@@ -234,25 +232,6 @@ const PostDocsMap: Record<PostEndPoints, MethodDecorator[]> = {
       'REACTION_CHANGE_FAILED',
       'USER_NOT_FOUND',
     ]),
-  ],
-  reportPost: [
-    ApiOperation({
-      summary: '게시글 신고',
-      description: '게시글을 신고합니다',
-    }),
-    ApiParam({
-      name: 'postId',
-      description: '게시글의 고유 ID',
-    }),
-    ApiBody({
-      type: CreateReportRequestDto,
-    }),
-    ApiResponse({
-      status: 201,
-      description: '게시글 신고 성공',
-      type: CreateReportResponseDto,
-    }),
-    ApiKukeyExceptionResponse(['POST_NOT_FOUND', 'ALREADY_REPORTED']),
   ],
 };
 

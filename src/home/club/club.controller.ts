@@ -34,6 +34,8 @@ import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 import { ClubDocs } from 'src/decorators/docs/club.decorator';
+import { GetClubDetailResponseDto } from './dto/get-club-detail-response.dto';
+import { GetClubDetailRequestDto } from './dto/get-club-detail-request.dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -49,6 +51,15 @@ export class ClubController {
     @Query() getClubRequestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
     return await this.clubService.getClubs(user, getClubRequestDto);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('/:clubId')
+  async getClubDetail(
+    @User() user: AuthorizedUserDto | null,
+    @Query() getClubDetailRequestDto: GetClubDetailRequestDto,
+  ): Promise<GetClubDetailResponseDto> {
+    return await this.clubService.getClubDetail(user, getClubDetailRequestDto);
   }
 
   @UseGuards(JwtAuthGuard)
