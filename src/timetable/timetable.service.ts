@@ -18,6 +18,7 @@ import { isConflictingTime } from 'src/utils/time-utils';
 import { DayType } from 'src/common/types/day-type.utils';
 import { throwKukeyException } from 'src/utils/exception.util';
 import { DeleteTimetableResponseDto } from './dto/delete-timetable-response.dto';
+import { GetTodayTimetableResponse } from './dto/get-today-timetable-response.dto';
 
 @Injectable()
 export class TimetableService {
@@ -550,5 +551,53 @@ export class TimetableService {
 
     newMainTimetable.mainTimetable = true;
     return newMainTimetable;
+  }
+
+  async getTodayTimetable(
+    timetableDto: TimetableDto,
+    user: AuthorizedUserDto,
+  ): Promise<GetTodayTimetableResponse> {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+    }) as DayType;
+
+    const mainTimetable = await this.getMainTimetable(timetableDto, user);
+
+    const todayCourses = await this.timetableCourseRepository
+      .createQueryBuilder('timetableCourse')
+      .leftJoinAndSelect('timetableCourse.course', 'course')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetail')
+      .where('timetableCourse.timetableId = :timetableId', {
+        timetableId: mainTimetable.id,
+      })
+      .andWhere('courseDetail.day = :today', { today })
+      .getMany();
+
+    const schedules = await this.scheduleService.getScheduleByTimetableId(
+      mainTimetable.id,
+    );
+    const todaySchedules = schedules.filter(
+      (schedule) => schedule.day === today,
+    );
+
+    const todayCoursesResponse = todayCourses.map((timetableCourse) => ({
+      courseName: timetableCourse.course.courseName,
+      classroom: timetableCourse.course.courseDetails[0].classroom,
+      startTime: timetableCourse.course.courseDetails[0].startTime,
+      endTime: timetableCourse.course.courseDetails[0].endTime,
+      professorName: timetableCourse.course.professorName,
+    }));
+
+    const todaySchedulesResponse = todaySchedules.map((schedule) => ({
+      scheduleName: schedule.title,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      location: schedule.location,
+    }));
+
+    return new GetTodayTimetableResponse(
+      todayCoursesResponse,
+      todaySchedulesResponse,
+    );
   }
 }

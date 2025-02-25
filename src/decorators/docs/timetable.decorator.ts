@@ -17,6 +17,7 @@ import { UpdateTimetableNameDto } from 'src/timetable/dto/update-timetable-name.
 import { GetTimetableByUserIdResponseDto } from 'src/timetable/dto/userId-timetable.dto';
 import { TimetableController } from 'src/timetable/timetable.controller';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { GetTodayTimetableResponse } from 'src/timetable/dto/get-today-timetable-response.dto';
 
 type TimetableEndPoints = MethodNames<TimetableController>;
 
@@ -103,6 +104,29 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
       isArray: true,
     }),
     ApiKukeyExceptionResponse(['TIMETABLE_NOT_FOUND']),
+  ],
+  getTodayTimetable: [
+    ApiOperation({
+      summary: '오늘의 시간표 조회',
+      description: '오늘의 시간표를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'year',
+      type: 'string',
+      required: true,
+      description: '연도',
+    }),
+    ApiQuery({
+      name: 'semester',
+      type: 'string',
+      required: true,
+      description: '학기',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '오늘의 시간표 조회 성공 시',
+      type: GetTodayTimetableResponse,
+    }),
   ],
   getTimetableByTimetableId: [
     ApiOperation({
