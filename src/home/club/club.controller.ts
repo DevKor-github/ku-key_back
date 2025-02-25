@@ -53,6 +53,23 @@ export class ClubController {
     return await this.clubService.getClubs(user, getClubRequestDto);
   }
 
+  @Get('hot')
+  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
+    return await this.clubService.getHotClubs();
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('recommend')
+  async getRecommendClubs(
+    @User() user: AuthorizedUserDto | null,
+    @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
+  ): Promise<GetRecommendClubResponseDto[]> {
+    return await this.clubService.getRecommendClubs(
+      user,
+      getRecommendClubRequestDto,
+    );
+  }
+
   @UseGuards(OptionalJwtAuthGuard)
   @Get('/:clubId')
   async getClubDetail(
@@ -75,23 +92,6 @@ export class ClubController {
       transactionManager,
       userId,
       clubId,
-    );
-  }
-
-  @Get('hot')
-  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
-    return await this.clubService.getHotClubs();
-  }
-
-  @UseGuards(OptionalJwtAuthGuard)
-  @Get('recommend')
-  async getRecommendClubs(
-    @User() user: AuthorizedUserDto | null,
-    @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
-  ): Promise<GetRecommendClubResponseDto[]> {
-    return await this.clubService.getRecommendClubs(
-      user,
-      getRecommendClubRequestDto,
     );
   }
 
