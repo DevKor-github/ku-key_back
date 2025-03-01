@@ -25,10 +25,8 @@ import { EntityManager } from 'typeorm';
 import { CourseReviewDocs } from 'src/decorators/docs/course-review.decorator';
 import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
 import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
-import { GetCoursesWithRecentCourseReviewsResponseDto } from './dto/get-courses-with-recent-course-reviews-response.dto';
-import { GetCoursesWithRecentCourseReviewsRequestDto } from './dto/get-courses-with-recent-course-reviews-request.dto';
-import { GetCoursesWithTeachingSkillsRequestDto } from './dto/get-courses-with-teaching-skills-request.dto';
-import { GetCoursesWithTeachingSkillsResponseDto } from './dto/get-courses-with-teaching-skills-response.dto';
+import { GetCoursesWithCourseReviewsRequestDto } from './dto/get-courses-with-course-reviews-request.dto';
+import { GetCoursesWithCourseReviewsResponseDto } from './dto/get-courses-with-course-reviews-response.dto';
 
 @ApiTags('course-review')
 @Controller('course-review')
@@ -92,23 +90,13 @@ export class CourseReviewController {
     );
   }
 
-  @Get('recent-written-courses')
-  async getCoursesWithRecentCourseReviews(
+  @Get('course')
+  async getCoursesWithCourseReviews(
     @Query()
-    getCoursesWithRecentCourseReviewsRequestDto: GetCoursesWithRecentCourseReviewsRequestDto,
-  ): Promise<GetCoursesWithRecentCourseReviewsResponseDto[]> {
-    return await this.courseReviewService.getCoursesWithRecentCourseReviews(
-      getCoursesWithRecentCourseReviewsRequestDto,
-    );
-  }
-
-  @Get('teaching-skills')
-  async getCoursesWithTeachingSkills(
-    @Query()
-    getCoursesWithTeachingSkillsRequestDto: GetCoursesWithTeachingSkillsRequestDto,
-  ): Promise<GetCoursesWithTeachingSkillsResponseDto[]> {
-    return await this.courseReviewService.getCoursesWithTeachingSkills(
-      getCoursesWithTeachingSkillsRequestDto,
+    getCoursesWithCourseReviewsRequestDto: GetCoursesWithCourseReviewsRequestDto,
+  ): Promise<GetCoursesWithCourseReviewsResponseDto[]> {
+    return await this.courseReviewService.getCoursesWithCourseReviews(
+      getCoursesWithCourseReviewsRequestDto,
     );
   }
 
