@@ -13,8 +13,8 @@ import { GetCourseReviewSummaryResponseDto } from 'src/course-review/dto/get-cou
 import { GetCourseReviewsResponseDto } from 'src/course-review/dto/get-course-reviews-response.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { PaginatedCourseReviewsDto } from 'src/course-review/dto/paginated-course-reviews.dto';
-import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
-import { GetCoursesWithTeachingSkillsResponseDto } from 'src/course-review/dto/get-courses-with-teaching-skills-response.dto';
+import { CourseReviewCriteria } from 'src/enums/course-review-criteria.enum';
+import { GetCoursesWithCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-course-reviews-response.dto';
 type CourseReviewEndPoints = MethodNames<CourseReviewController>;
 
 const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
@@ -164,36 +164,26 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       'SELF_REVIEW_RECOMMENDATION_FORBIDDEN',
     ]),
   ],
-  getCoursesWithRecentCourseReviews: [
+  getCoursesWithCourseReviews: [
     ApiOperation({
-      summary: '최근 강의평이 등록된 강의 관련 정보 조회',
-      description: '최근 강의평이 등록된 강의 관련 정보를 조회합니다.',
+      summary: '강의평과 관련된 강의 조회',
+      description:
+        '최근 강의평이 등록되었거나, 강의력이 좋은 강의를 조회합니다.',
     }),
     ApiQuery({
       name: 'limit',
       required: true,
       type: Number,
     }),
-    ApiResponse({
-      status: 200,
-      description: '최근 강의평이 등록된 강의 관련 정보 조회 성공 시',
-      type: GetCoursesWithRecentCourseReviewsResponseDto,
-    }),
-  ],
-  getCoursesWithTeachingSkills: [
-    ApiOperation({
-      summary: '교수님 강의력이 높은 강의 조회',
-      description: '교수님 강의력이 높은 강의를 조회합니다.',
-    }),
     ApiQuery({
-      name: 'limit',
+      name: 'criteria',
       required: true,
-      type: Number,
+      type: String,
     }),
     ApiResponse({
       status: 200,
-      description: '교수님 강의력이 높은 강의 조회 성공 시',
-      type: GetCoursesWithTeachingSkillsResponseDto,
+      description: '최근 강의평 혹은 강의력이 좋은 강의 조회 성공 시',
+      type: GetCoursesWithCourseReviewsResponseDto,
     }),
   ],
 };
