@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
 import { CourseReviewResponseDto } from './dto/course-review-response.dto';
@@ -9,7 +9,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { Brackets, EntityManager, MoreThanOrEqual, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -20,11 +20,11 @@ import { throwKukeyException } from 'src/utils/exception.util';
 import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
 import { SearchCourseReviewsWithKeywordResponse } from './dto/search-course-reviews-with-keyword-response.dto';
 import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
-import { GetCoursesWithRecentCourseReviewsRequestDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-request.dto';
-import { GetCoursesWithRecentCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-recent-course-reviews-response.dto';
 import { CourseEntity } from 'src/entities/course.entity';
-import { GetCoursesWithTeachingSkillsRequestDto } from './dto/get-courses-with-teaching-skills-request.dto';
-import { GetCoursesWithTeachingSkillsResponseDto } from './dto/get-courses-with-teaching-skills-response.dto';
+import { CourseReviewCriteriaStrategy } from './strategy/course-review-criteria-strategy';
+import { GetCoursesWithCourseReviewsRequestDto } from './dto/get-courses-with-course-reviews-request.dto';
+import { CourseReviewCriteria } from 'src/enums/course-review-criteria.enum';
+import { GetCoursesWithCourseReviewsResponseDto } from './dto/get-courses-with-course-reviews-response.dto';
 @Injectable()
 export class CourseReviewService {
   constructor(
@@ -35,6 +35,8 @@ export class CourseReviewService {
     private readonly userService: UserService,
     private readonly pointService: PointService,
     private readonly courseService: CourseService,
+    @Inject('CourseReviewCriteriaStrategy')
+    private readonly strategies: CourseReviewCriteriaStrategy[],
   ) {}
 
   async createCourseReview(
@@ -425,16 +427,27 @@ export class CourseReviewService {
     return !!courseReview;
   }
 
-  async getCoursesWithRecentCourseReviews(
-    getCoursesWithRecentCourseReviewsRequestDto: GetCoursesWithRecentCourseReviewsRequestDto,
-  ): Promise<GetCoursesWithRecentCourseReviewsResponseDto[]> {
-    const recentCourseReviews = await this.courseReviewRepository.find({
-      order: { createdAt: 'DESC' },
-      take: getCoursesWithRecentCourseReviewsRequestDto.limit,
-    });
+  async getCoursesWithCourseReviews(
+    getCoursesWithCourseReviewsRequestDto: GetCoursesWithCourseReviewsRequestDto,
+  ): Promise<GetCoursesWithCourseReviewsResponseDto[]> {
+    const { criteria, limit } = getCoursesWithCourseReviewsRequestDto;
+
+    const courseReviewCriteria =
+      await this.findCourseReviewCriteriaStrategy(criteria);
+
+    let mainQuery = this.courseReviewRepository
+      .createQueryBuilder('courseReview')
+      .select('courseReview.courseCode', 'courseCode')
+      .addSelect('courseReview.professorName', 'professorName')
+      .groupBy('courseReview.courseCode')
+      .addGroupBy('courseReview.professorName');
+
+    mainQuery = await courseReviewCriteria.buildQuery(mainQuery);
+
+    const courseReviews = await mainQuery.take(limit).getRawMany();
 
     let courses: CourseEntity[] = [];
-    for (const review of recentCourseReviews) {
+    for (const review of courseReviews) {
       const foundCourses =
         await this.courseService.searchCoursesByCourseCodeAndProfessorName(
           review.courseCode,
@@ -446,44 +459,21 @@ export class CourseReviewService {
     }
 
     return courses.map((course) => {
-      return new GetCoursesWithRecentCourseReviewsResponseDto(course);
+      return new GetCoursesWithCourseReviewsResponseDto(course);
     });
   }
 
-  async getCoursesWithTeachingSkills(
-    getCoursesWithTeachingSkillsRequestDto: GetCoursesWithTeachingSkillsRequestDto,
-  ): Promise<GetCoursesWithTeachingSkillsResponseDto[]> {
-    const goodTeachingSkillsCourseReviews =
-      await this.courseReviewRepository.find({
-        where: { teachingSkills: MoreThanOrEqual(4) }, // 구체적인 기준이 안 나와서 임의로 4 이상으로 설정
-        order: { teachingSkills: 'DESC' },
-        take: getCoursesWithTeachingSkillsRequestDto.limit,
-      });
+  private async findCourseReviewCriteriaStrategy(
+    criteria: CourseReviewCriteria,
+  ): Promise<CourseReviewCriteriaStrategy> {
+    const courseReviewCriteria = this.strategies.find((strategy) =>
+      strategy.supports(criteria),
+    );
 
-    let courses = [];
-    for (const review of goodTeachingSkillsCourseReviews) {
-      const foundCourses =
-        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
-          review.courseCode,
-          review.professorName,
-          review.year,
-          review.semester,
-        );
-
-      const parsedCourses = {
-        id: foundCourses[0].id,
-        professorName: foundCourses[0].professorName,
-        courseName: foundCourses[0].courseName,
-        teachingSkills: review.teachingSkills,
-        year: review.year,
-        semester: review.semester,
-      };
-
-      courses.push(parsedCourses);
+    if (!courseReviewCriteria) {
+      throwKukeyException('COURSE_REVIEW_CRITERIA_NOT_FOUND');
     }
 
-    return courses.map((course) => {
-      return new GetCoursesWithTeachingSkillsResponseDto(course);
-    });
+    return courseReviewCriteria;
   }
 }

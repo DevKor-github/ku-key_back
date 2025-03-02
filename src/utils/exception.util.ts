@@ -392,6 +392,12 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 3304,
     statusCode: 403,
   },
+  COURSE_REVIEW_CRITERIA_NOT_FOUND: {
+    name: 'COURSE_REVIEW_CRITERIA_NOT_FOUND',
+    message: 'There are two criteria. (RECENT, TEACHING)',
+    errorCode: 3305,
+    statusCode: 404,
+  },
   // - 34xx : Friendship
   FRIENDSHIP_NOT_FOUND: {
     name: 'FRIENDSHIP_NOT_FOUND',
