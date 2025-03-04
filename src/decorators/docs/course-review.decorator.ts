@@ -12,7 +12,9 @@ import { CreateCourseReviewRequestDto } from 'src/course-review/dto/create-cours
 import { GetCourseReviewSummaryResponseDto } from 'src/course-review/dto/get-course-review-summary-response.dto';
 import { GetCourseReviewsResponseDto } from 'src/course-review/dto/get-course-reviews-response.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
-
+import { PaginatedCourseReviewsDto } from 'src/course-review/dto/paginated-course-reviews.dto';
+import { CourseReviewCriteria } from 'src/enums/course-review-criteria.enum';
+import { GetCoursesWithCourseReviewsResponseDto } from 'src/course-review/dto/get-courses-with-course-reviews-response.dto';
 type CourseReviewEndPoints = MethodNames<CourseReviewController>;
 
 const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
@@ -83,6 +85,27 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       type: Boolean,
     }),
   ],
+  getCourseReviewsWithKeyword: [
+    ApiOperation({
+      summary: '강의평 검색',
+      description: '키워드로 강의평을 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'keyword',
+      required: true,
+      type: String,
+    }),
+    ApiQuery({
+      name: 'cursorId',
+      required: false,
+      type: Number,
+    }),
+    ApiResponse({
+      status: 200,
+      description: '강의평 검색 성공',
+      type: PaginatedCourseReviewsDto,
+    }),
+  ],
   getCourseReviews: [
     ApiOperation({
       summary: '강의평 조회',
@@ -140,6 +163,28 @@ const CourseReviewDocsMap: Record<CourseReviewEndPoints, MethodDecorator[]> = {
       'COURSE_REVIEW_NOT_VIEWABLE',
       'SELF_REVIEW_RECOMMENDATION_FORBIDDEN',
     ]),
+  ],
+  getCoursesWithCourseReviews: [
+    ApiOperation({
+      summary: '강의평과 관련된 강의 조회',
+      description:
+        '최근 강의평이 등록되었거나, 강의력이 좋은 강의를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: true,
+      type: Number,
+    }),
+    ApiQuery({
+      name: 'criteria',
+      required: true,
+      type: String,
+    }),
+    ApiResponse({
+      status: 200,
+      description: '최근 강의평 혹은 강의력이 좋은 강의 조회 성공 시',
+      type: GetCoursesWithCourseReviewsResponseDto,
+    }),
   ],
 };
 
