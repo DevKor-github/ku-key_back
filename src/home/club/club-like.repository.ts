@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CLUB_COUNT } from 'src/common/constant/club-count.constant';
 import { ClubLikeEntity } from 'src/entities/club-like.entity';
 import { DataSource, Repository } from 'typeorm';
 
@@ -15,7 +16,7 @@ export class ClubLikeRepository extends Repository<ClubLikeEntity> {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    // 일주일 간 좋아요 개수가 가장 많은 동아리 4개 반환, 좋아요 개수가 같은 경우 랜덤 선택
+    // 일주일 간 좋아요 개수가 가장 많은 동아리 5개 반환, 좋아요 개수가 같은 경우 랜덤 선택
     const topClubLikes = await this.createQueryBuilder('club_like')
       .select('club_like.clubId')
       .addSelect('COUNT(club_like.id)', 'likeCount')
@@ -23,7 +24,7 @@ export class ClubLikeRepository extends Repository<ClubLikeEntity> {
       .groupBy('club_like.clubId')
       .orderBy('likeCount', 'DESC')
       .addOrderBy('RAND()')
-      .limit(4)
+      .limit(CLUB_COUNT)
       .getRawMany();
 
     return topClubLikes;

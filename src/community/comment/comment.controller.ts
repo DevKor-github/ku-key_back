@@ -20,11 +20,6 @@ import { GetCommentResponseDto } from './dto/get-comment.dto';
 import { UpdateCommentRequestDto } from './dto/update-comment.dto';
 import { DeleteCommentResponseDto } from './dto/delete-comment.dto';
 import { LikeCommentResponseDto } from './dto/like-comment.dto';
-import {
-  CreateReportRequestDto,
-  CreateReportResponseDto,
-} from '../report/dto/create-report.dto';
-import { ReportService } from '../report/report.service';
 import { CursorPageOptionsDto } from 'src/common/dto/CursorPageOptions.dto';
 import { GetMyCommentListResponseDto } from './dto/get-myComment-list.dto';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
@@ -39,10 +34,7 @@ import { CommentDocs } from 'src/decorators/docs/comment.decorator';
 @ApiBearerAuth('accessToken')
 @CommentDocs
 export class CommentController {
-  constructor(
-    private readonly commentService: CommentService,
-    private readonly reportService: ReportService,
-  ) {}
+  constructor(private readonly commentService: CommentService) {}
 
   @Get('/my')
   async getMyCommentList(
@@ -109,24 +101,6 @@ export class CommentController {
     return await this.commentService.likeComment(
       transactionManager,
       user,
-      commentId,
-    );
-  }
-
-  @Post('/:commentId/report')
-  async reportComment(
-    @User() user: AuthorizedUserDto,
-    @Param('commentId') commentId: number,
-    @Body() body: CreateReportRequestDto,
-  ): Promise<CreateReportResponseDto> {
-    const comment = await this.commentService.getComment(commentId);
-    if (!comment) {
-      throwKukeyException('COMMENT_NOT_FOUND');
-    }
-    return await this.reportService.createReport(
-      user.id,
-      body.reason,
-      comment.postId,
       commentId,
     );
   }

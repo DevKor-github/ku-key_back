@@ -42,6 +42,9 @@ export class ReportRepository extends Repository<ReportEntity> {
 
   async getReportList(): Promise<ReportEntity[]> {
     const reports = await this.find({
+      where: {
+        isAccepted: false,
+      },
       order: {
         createdAt: 'DESC',
       },
@@ -82,5 +85,17 @@ export class ReportRepository extends Repository<ReportEntity> {
         commentId: commentId,
       },
     });
+  }
+
+  async acceptReport(reportId: number): Promise<void> {
+    const report = await this.getReport(reportId);
+    if (report.commentId) {
+      await this.update({ commentId: report.commentId }, { isAccepted: true });
+    } else {
+      await this.update(
+        { postId: report.postId, commentId: IsNull() },
+        { isAccepted: true },
+      );
+    }
   }
 }

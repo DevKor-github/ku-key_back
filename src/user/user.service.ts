@@ -442,4 +442,8 @@ export class UserService {
 
     return new SelectCharacterLevelResponseDto(selectedLevel);
   }
+
+  async getTotalUsersCount(): Promise<number> {
+    return await this.userRepository.getTotalUsersCount();
+  }
 }

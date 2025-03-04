@@ -207,6 +207,12 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 2016,
     statusCode: 500,
   },
+  USER_BANNED: {
+    name: 'USER_BANNED',
+    message: 'User is banned.',
+    errorCode: 2017,
+    statusCode: 403,
+  },
   // - 21xx : Point
   POINT_NOT_ENOUGH: {
     name: 'POINT_NOT_ENOUGH',
@@ -308,6 +314,12 @@ export const kukeyExceptions = createKukeyExceptions({
     message: 'Course conflicts with existing courses or schedules.',
     errorCode: 3004,
     statusCode: 409,
+  },
+  COURSE_SEARCH_STRATEGY_NOT_FOUND: {
+    name: 'COURSE_SEARCH_STRATEGY_NOT_FOUND',
+    message: 'Course search strategy not found.',
+    errorCode: 3005,
+    statusCode: 404,
   },
   // - 31xx : Schedule
   INVALID_TIME_RANGE: {
@@ -653,6 +665,31 @@ export const kukeyExceptions = createKukeyExceptions({
     message: 'Calendar delete failed.',
     errorCode: 5102,
     statusCode: 500,
+  },
+  // - 52xx : Banner
+  BANNER_NOT_FOUND: {
+    name: 'BANNER_NOT_FOUND',
+    message: 'Banner not found.',
+    errorCode: 5200,
+    statusCode: 404,
+  },
+  BANNER_DELETE_FAILED: {
+    name: 'BANNER_DELETE_FAILED',
+    message: 'Banner delete failed.',
+    errorCode: 5201,
+    statusCode: 500,
+  },
+  BANNER_UPDATE_FAILED: {
+    name: 'BANNER_UPDATE_FAILED',
+    message: 'Banner update failed.',
+    errorCode: 5202,
+    statusCode: 500,
+  },
+  BANNER_IMAGE_REQUIRED: {
+    name: 'BANNER_IMAGE_REQUIRED',
+    message: 'Banner image required.',
+    errorCode: 5203,
+    statusCode: 400,
   },
   // 6xxx : S3, File 관련 예외
   NOT_IMAGE_FILE: {

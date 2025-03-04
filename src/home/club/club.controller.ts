@@ -34,6 +34,8 @@ import { CreateClubResponseDto } from './dto/create-club-response-dto';
 import { UpdateClubRequestDto } from './dto/update-club-request-dto';
 import { DeleteClubResponseDto } from './dto/delete-club-response-dto';
 import { ClubDocs } from 'src/decorators/docs/club.decorator';
+import { GetClubDetailResponseDto } from './dto/get-club-detail-response.dto';
+import { GetClubDetailRequestDto } from './dto/get-club-detail-request.dto';
 
 @Controller('club')
 @ApiTags('club')
@@ -44,11 +46,37 @@ export class ClubController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async getClubList(
+  async getClubs(
     @User() user: AuthorizedUserDto | null,
     @Query() getClubRequestDto: GetClubRequestDto,
   ): Promise<GetClubResponseDto[]> {
-    return await this.clubService.getClubList(user, getClubRequestDto);
+    return await this.clubService.getClubs(user, getClubRequestDto);
+  }
+
+  @Get('hot')
+  async getHotClubs(): Promise<GetHotClubResponseDto[]> {
+    return await this.clubService.getHotClubs();
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('recommend')
+  async getRecommendClubs(
+    @User() user: AuthorizedUserDto | null,
+    @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
+  ): Promise<GetRecommendClubResponseDto[]> {
+    return await this.clubService.getRecommendClubs(
+      user,
+      getRecommendClubRequestDto,
+    );
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('/:clubId')
+  async getClubDetail(
+    @User() user: AuthorizedUserDto | null,
+    @Query() getClubDetailRequestDto: GetClubDetailRequestDto,
+  ): Promise<GetClubDetailResponseDto> {
+    return await this.clubService.getClubDetail(user, getClubDetailRequestDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -64,23 +92,6 @@ export class ClubController {
       transactionManager,
       userId,
       clubId,
-    );
-  }
-
-  @Get('hot')
-  async getHotClubList(): Promise<GetHotClubResponseDto[]> {
-    return await this.clubService.getHotClubList();
-  }
-
-  @UseGuards(OptionalJwtAuthGuard)
-  @Get('recommend')
-  async getRecommendClubList(
-    @User() user: AuthorizedUserDto | null,
-    @Query() getRecommendClubRequestDto: GetRecommendClubRequestDto,
-  ): Promise<GetRecommendClubResponseDto[]> {
-    return await this.clubService.getRecommendClubList(
-      user,
-      getRecommendClubRequestDto,
     );
   }
 

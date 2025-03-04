@@ -1,3 +1,4 @@
+import { GetReceivedFriendshipRequestCountDto } from './dto/get-received-friendship-request-count.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendshipRepository } from './friendship.repository';
@@ -37,7 +38,7 @@ export class FriendshipService {
 
     if (keyword) {
       friendships =
-        await this.friendshipRepository.findFriendshipByUserIdAndKeyword(
+        await this.friendshipRepository.findFriendshipsByUserIdAndKeyword(
           userId,
           keyword,
         );
@@ -156,24 +157,56 @@ export class FriendshipService {
   }
 
   async getReceivedWaitingFriendList(
+    transactionManager: EntityManager,
     userId: number,
   ): Promise<GetWaitingFriendResponseDto[]> {
-    const friendshipRequests =
-      await this.friendshipRepository.findReceivedFriendshipsByUserId(userId);
+    const receivedFriendshipRequests = await transactionManager.find(
+      FriendshipEntity,
+      {
+        where: { toUserId: userId, areWeFriend: false },
+        relations: ['fromUser', 'fromUser.character'],
+        order: { createdAt: 'DESC' },
+      },
+    );
 
-    if (friendshipRequests.length === 0) {
+    if (receivedFriendshipRequests.length === 0) {
       return [];
     }
 
-    const waitingFriendList = friendshipRequests.map((friendshipRequest) => {
-      const waitingFriend = friendshipRequest.fromUser;
-      return new GetWaitingFriendResponseDto(
-        friendshipRequest.id,
-        waitingFriend,
-      );
+    await transactionManager.update(
+      FriendshipEntity,
+      { toUserId: userId, areWeFriend: false, isRead: false },
+      { isRead: true },
+    );
+
+    return receivedFriendshipRequests.map((r) => {
+      return new GetWaitingFriendResponseDto(r.id, r.fromUser);
+    });
+  }
+
+  async getReceivedFriendshipRequestCount(
+    userId: number,
+  ): Promise<GetReceivedFriendshipRequestCountDto> {
+    const { totalCount, unreadCount } =
+      await this.friendshipRepository.countReceivedFriendships(userId);
+
+    const recentRequests = await this.friendshipRepository.find({
+      where: { toUserId: userId, areWeFriend: false },
+      relations: ['fromUser', 'fromUser.character'],
+      order: { createdAt: 'DESC' },
+      select: ['fromUser'],
+      take: 2,
     });
 
-    return waitingFriendList;
+    const recentCharacters = recentRequests.map((req) => {
+      return req.fromUser.character;
+    });
+
+    return new GetReceivedFriendshipRequestCountDto(
+      totalCount,
+      unreadCount,
+      recentCharacters,
+    );
   }
 
   async getSentWaitingFriendList(

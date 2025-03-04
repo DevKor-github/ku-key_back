@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsIn,
@@ -36,6 +36,6 @@ export class GetClubRequestDto {
   @IsNotEmpty()
   @ToBoolean()
   @IsBoolean()
-  @ApiPropertyOptional({ description: '로그인 여부' })
+  @ApiProperty({ description: '로그인 여부' })
   isLogin: boolean;
 }

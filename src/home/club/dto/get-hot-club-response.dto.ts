@@ -3,6 +3,7 @@ import { GetClubResponseDto } from './get-club-response.dto';
 import { ClubEntity } from 'src/entities/club.entity';
 
 export class GetHotClubResponseDto extends PickType(GetClubResponseDto, [
+  'clubId',
   'name',
   'summary',
   'imageUrl',
@@ -15,6 +16,7 @@ export class GetHotClubResponseDto extends PickType(GetClubResponseDto, [
 
   constructor(club: ClubEntity, ranking: number) {
     super();
+    this.clubId = club.id;
     this.name = club.name;
     this.summary = club.summary;
     this.imageUrl = club.imageUrl;

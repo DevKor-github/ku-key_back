@@ -17,6 +17,8 @@ import { TimetableCourseEntity } from 'src/entities/timetable-course.entity';
 import { isConflictingTime } from 'src/utils/time-utils';
 import { DayType } from 'src/common/types/day-type.utils';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { DeleteTimetableResponseDto } from './dto/delete-timetable-response.dto';
+import { GetTodayTimetableResponse } from './dto/get-today-timetable-response.dto';
 
 @Injectable()
 export class TimetableService {
@@ -247,7 +249,7 @@ export class TimetableService {
       color: timetable.color,
       timetableName: timetable.timetableName,
     };
-    timetable.timetableCourses.forEach((courseEntry) => {
+    for (const courseEntry of timetable.timetableCourses) {
       const {
         id: courseId,
         professorName,
@@ -256,7 +258,25 @@ export class TimetableService {
         syllabus,
       } = courseEntry.course;
 
-      courseEntry.course.courseDetails.forEach((detailEntry) => {
+      if (
+        !courseEntry.course.courseDetails ||
+        courseEntry.course.courseDetails.length === 0
+      ) {
+        getTimetableByTimetableIdResponse.courses.push({
+          courseId,
+          professorName,
+          courseName,
+          courseCode,
+          syllabus,
+          day: null,
+          startTime: null,
+          endTime: null,
+          classroom: null,
+        });
+        continue;
+      }
+
+      for (const detailEntry of courseEntry.course.courseDetails) {
         const { day, startTime, endTime, classroom } = detailEntry;
 
         // 강의 정보 객체
@@ -271,8 +291,8 @@ export class TimetableService {
           endTime,
           classroom,
         });
-      });
-    });
+      }
+    }
 
     // 스케줄 정보 객체
     schedules.forEach((schedule) => {
@@ -360,7 +380,7 @@ export class TimetableService {
     transactionManager: EntityManager,
     timetableId: number,
     user: AuthorizedUserDto,
-  ): Promise<CommonDeleteResponseDto> {
+  ): Promise<DeleteTimetableResponseDto> {
     const timetable = await transactionManager.findOne(TimetableEntity, {
       where: { id: timetableId, userId: user.id },
       relations: ['timetableCourses', 'schedules'], // soft-remove cascade 조건을 위해 추가
@@ -391,7 +411,33 @@ export class TimetableService {
       }
     }
     await transactionManager.softRemove(timetable);
-    return new CommonDeleteResponseDto(true);
+
+    // 삭제 후에 해당 학기에 시간표가 하나도 존재하지 않으면 추가로 하나 생성 (그 시간표가 대표시간표)
+    const remainingTimetable = await transactionManager.findOne(
+      TimetableEntity,
+      {
+        where: {
+          userId: user.id,
+          semester: timetable.semester,
+          year: timetable.year,
+        },
+      },
+    );
+
+    if (!remainingTimetable) {
+      const newTimetable = transactionManager.create(TimetableEntity, {
+        userId: user.id,
+        timetableName: 'timetable 1',
+        semester: timetable.semester,
+        year: timetable.year,
+        mainTimetable: true,
+      });
+
+      await transactionManager.save(newTimetable);
+      return new DeleteTimetableResponseDto(true, newTimetable.id);
+    }
+
+    return new DeleteTimetableResponseDto(true, null);
   }
 
   async getMainTimetable(
@@ -408,7 +454,16 @@ export class TimetableService {
     });
 
     if (!mainTimetable) {
-      throwKukeyException('TIMETABLE_NOT_FOUND');
+      // 대표 시간표 없으면 시간표 하나 바로 생성
+      return await this.createTimetable(
+        this.timetableRepository.manager,
+        {
+          timetableName: 'timetable 1',
+          semester: timetableDto.semester,
+          year: timetableDto.year,
+        },
+        user,
+      );
     }
     return mainTimetable;
   }
@@ -496,5 +551,53 @@ export class TimetableService {
 
     newMainTimetable.mainTimetable = true;
     return newMainTimetable;
+  }
+
+  async getTodayTimetable(
+    timetableDto: TimetableDto,
+    user: AuthorizedUserDto,
+  ): Promise<GetTodayTimetableResponse> {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+    }) as DayType;
+
+    const mainTimetable = await this.getMainTimetable(timetableDto, user);
+
+    const todayCourses = await this.timetableCourseRepository
+      .createQueryBuilder('timetableCourse')
+      .leftJoinAndSelect('timetableCourse.course', 'course')
+      .leftJoinAndSelect('course.courseDetails', 'courseDetail')
+      .where('timetableCourse.timetableId = :timetableId', {
+        timetableId: mainTimetable.id,
+      })
+      .andWhere('courseDetail.day = :today', { today })
+      .getMany();
+
+    const schedules = await this.scheduleService.getScheduleByTimetableId(
+      mainTimetable.id,
+    );
+    const todaySchedules = schedules.filter(
+      (schedule) => schedule.day === today,
+    );
+
+    const todayCoursesResponse = todayCourses.map((timetableCourse) => ({
+      courseName: timetableCourse.course.courseName,
+      classroom: timetableCourse.course.courseDetails[0].classroom,
+      startTime: timetableCourse.course.courseDetails[0].startTime,
+      endTime: timetableCourse.course.courseDetails[0].endTime,
+      professorName: timetableCourse.course.professorName,
+    }));
+
+    const todaySchedulesResponse = todaySchedules.map((schedule) => ({
+      scheduleName: schedule.title,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      location: schedule.location,
+    }));
+
+    return new GetTodayTimetableResponse(
+      todayCoursesResponse,
+      todaySchedulesResponse,
+    );
   }
 }

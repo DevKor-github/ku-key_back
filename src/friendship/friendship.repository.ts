@@ -44,7 +44,7 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
     });
   }
 
-  async findFriendshipByUserIdAndKeyword(
+  async findFriendshipsByUserIdAndKeyword(
     userId: number,
     keyword: string,
   ): Promise<FriendshipEntity[]> {
@@ -85,20 +85,6 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
       .getMany();
   }
 
-  async findReceivedFriendshipsByUserId(
-    userId: number,
-  ): Promise<FriendshipEntity[]> {
-    return await this.find({
-      where: [{ toUserId: userId, areWeFriend: false }],
-      relations: [
-        'fromUser',
-        'toUser',
-        'fromUser.character',
-        'toUser.character',
-      ],
-    });
-  }
-
   async findSentFriendshipsByUserId(
     userId: number,
   ): Promise<FriendshipEntity[]> {
@@ -110,6 +96,25 @@ export class FriendshipRepository extends Repository<FriendshipEntity> {
         'fromUser.character',
         'toUser.character',
       ],
+      order: { createdAt: 'DESC' },
     });
+  }
+
+  async countReceivedFriendships(
+    userId: number,
+  ): Promise<{ totalCount: number; unreadCount: number }> {
+    const result = await this.createQueryBuilder('friendship')
+      .select([
+        'COUNT(*) AS totalCount',
+        'COALESCE(SUM(CASE WHEN friendship.isRead = false THEN 1 ELSE 0 END), 0) AS unreadCount',
+      ])
+      .where('friendship.toUserId = :userId', { userId })
+      .andWhere('friendship.areWeFriend = false')
+      .getRawOne();
+
+    return {
+      totalCount: parseInt(result.totalCount, 10),
+      unreadCount: parseInt(result.unreadCount, 10),
+    };
   }
 }

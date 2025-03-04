@@ -19,11 +19,12 @@ import { GetRecommendClubResponseDto } from 'src/home/club/dto/get-recommend-clu
 import { UpdateClubRequestDto } from 'src/home/club/dto/update-club-request-dto';
 import { UpdateClubResponseDto } from 'src/home/club/dto/update-club-response-dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
+import { GetClubDetailResponseDto } from 'src/home/club/dto/get-club-detail-response.dto';
 
 type ClubEndPoints = MethodNames<ClubController>;
 
 const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
-  getClubList: [
+  getClubs: [
     ApiOperation({
       summary: '동아리 목록 조회',
       description:
@@ -61,6 +62,27 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
     }),
     ApiKukeyExceptionResponse(['LOGIN_REQUIRED']),
   ],
+  getClubDetail: [
+    ApiOperation({
+      summary: '동아리 상세 조회',
+      description: '동아리 상세 정보를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'clubId',
+      description: 'club id',
+      required: true,
+    }),
+    ApiQuery({
+      name: 'isLogin',
+      description: '로그인 여부',
+      required: true,
+    }),
+    ApiOkResponse({
+      description: '동아리 상세 정보 반환',
+      type: GetClubDetailResponseDto,
+    }),
+    ApiKukeyExceptionResponse(['LOGIN_REQUIRED', 'CLUB_NOT_FOUND']),
+  ],
   toggleLikeClub: [
     ApiOperation({
       summary: '동아리 좋아요 등록/해제',
@@ -78,19 +100,19 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
     }),
     ApiKukeyExceptionResponse(['CLUB_NOT_FOUND']),
   ],
-  getHotClubList: [
+  getHotClubs: [
     ApiOperation({
       summary: 'Hot Club 목록 조회',
       description:
-        '최근 일주일 동안 좋아요 개수가 가장 많은 동아리 4개를 반환합니다.',
+        '최근 일주일 동안 좋아요 개수가 가장 많은 동아리 5개를 반환합니다.',
     }),
     ApiOkResponse({
-      description: 'Hot Club 목록 4개 반환',
+      description: 'Hot Club 목록 5개 반환',
       isArray: true,
       type: GetHotClubResponseDto,
     }),
   ],
-  getRecommendClubList: [
+  getRecommendClubs: [
     ApiOperation({
       summary: 'Recommend Club 목록 조회',
       description:
@@ -102,7 +124,7 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       required: true,
     }),
     ApiOkResponse({
-      description: 'Recommend Club 목록 4개 반환',
+      description: 'Recommend Club 목록 5개 반환',
       isArray: true,
       type: GetRecommendClubResponseDto,
     }),
