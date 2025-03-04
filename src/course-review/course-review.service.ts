@@ -446,7 +446,7 @@ export class CourseReviewService {
 
     const courseReviews = await mainQuery.take(limit).getRawMany();
 
-    let courses: CourseEntity[] = [];
+    const courses: CourseEntity[] = [];
     for (const review of courseReviews) {
       const foundCourses =
         await this.courseService.searchCoursesByCourseCodeAndProfessorName(

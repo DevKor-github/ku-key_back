@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsPositive,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsPositive } from 'class-validator';
 import { CourseReviewCriteria } from 'src/enums/course-review-criteria.enum';
 
 export class GetCoursesWithCourseReviewsRequestDto {
