@@ -69,9 +69,10 @@ export class ClubService {
 
   async getClubDetail(
     user: AuthorizedUserDto | null,
+    clubId: number,
     requetDto: GetClubDetailRequestDto,
   ): Promise<GetClubDetailResponseDto> {
-    const { clubId, isLogin } = requetDto;
+    const { isLogin } = requetDto;
 
     // isLogin이 true이나 user가 없을 경우 refresh를 위해 401 던짐
     if (!user && isLogin) {

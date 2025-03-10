@@ -67,10 +67,10 @@ const ClubDocsMap: Record<ClubEndPoints, MethodDecorator[]> = {
       summary: '동아리 상세 조회',
       description: '동아리 상세 정보를 조회합니다.',
     }),
-    ApiQuery({
+    ApiParam({
       name: 'clubId',
       description: 'club id',
-      required: true,
+      type: Number,
     }),
     ApiQuery({
       name: 'isLogin',
