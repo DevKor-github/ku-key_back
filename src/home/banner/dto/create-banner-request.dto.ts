@@ -15,5 +15,5 @@ export class CreateBannerRequestDto {
 
   @ApiPropertyOptional({ description: '링크' })
   @IsOptional()
-  link: string;
+  link?: string;
 }

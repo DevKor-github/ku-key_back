@@ -11,5 +11,5 @@ export class bannerDto {
   title: string;
 
   @ApiProperty({ description: '배너 링크' })
-  link: string;
+  link: string | null;
 }
