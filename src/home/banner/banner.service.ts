@@ -24,7 +24,7 @@ export class BannerService {
         id: banner.id,
         imageUrl: banner.imageUrl,
         title: banner.title,
-        link: banner.link,
+        link: banner.link ?? null,
       };
     });
   }
@@ -44,14 +44,14 @@ export class BannerService {
     const banner = this.bannerRepository.create({
       imageUrl,
       title: dto.title,
-      link: dto.link,
+      link: dto.link ?? null,
     });
     const savedBanner = await this.bannerRepository.save(banner);
     return {
       id: savedBanner.id,
       imageUrl: savedBanner.imageUrl,
       title: savedBanner.title,
-      link: savedBanner.link,
+      link: savedBanner.link ?? null,
     };
   }
 
