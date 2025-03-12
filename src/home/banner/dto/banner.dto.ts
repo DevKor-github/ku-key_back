@@ -9,4 +9,7 @@ export class bannerDto {
 
   @ApiProperty({ description: '배너 제목' })
   title: string;
+
+  @ApiProperty({ description: '배너 링크', nullable: true })
+  link: string | null;
 }
