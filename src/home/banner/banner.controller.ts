@@ -39,7 +39,7 @@ export class BannerController {
     @UploadedFile() image: Express.Multer.File,
     @Body() body: CreateBannerRequestDto,
   ): Promise<bannerDto> {
-    return await this.bannerService.createBannerImage(image, body.title);
+    return await this.bannerService.createBannerImage(image, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

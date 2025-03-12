@@ -74,9 +74,14 @@ export class ClubController {
   @Get('/:clubId')
   async getClubDetail(
     @User() user: AuthorizedUserDto | null,
+    @Param('clubId') clubId: number,
     @Query() getClubDetailRequestDto: GetClubDetailRequestDto,
   ): Promise<GetClubDetailResponseDto> {
-    return await this.clubService.getClubDetail(user, getClubDetailRequestDto);
+    return await this.clubService.getClubDetail(
+      user,
+      clubId,
+      getClubDetailRequestDto,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

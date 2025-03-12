@@ -9,6 +9,7 @@ import { CourseController } from 'src/course/course.controller';
 import { PaginatedCoursesDto } from 'src/course/dto/paginated-courses.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { CourseCategory } from 'src/enums/course-category.enum';
+import { CommonCourseResponseDto } from 'src/course/dto/common-course-response.dto';
 
 type CourseEndPoints = MethodNames<CourseController>;
 
@@ -56,6 +57,22 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       type: PaginatedCoursesDto,
     }),
     ApiKukeyExceptionResponse(['MAJOR_REQUIRED', 'COLLEGE_REQUIRED']),
+  ],
+  getRecommendationCourses: [
+    ApiOperation({
+      summary: '추천 강의 조회',
+      description: '추천 강의를 조회합니다.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: true,
+      type: 'number',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '추천 강의 조회 성공 시',
+      type: [CommonCourseResponseDto],
+    }),
   ],
 };
 

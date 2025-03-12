@@ -7,6 +7,8 @@ import { AuthModule } from 'src/auth/auth.module';
 import { UserModule } from 'src/user/user.module';
 import { CourseModule } from 'src/course/course.module';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
+import { RecentCourseReviewsStrategy } from './strategy/recent-course-reviews-strategy';
+import { GoodTeachingSkillReviewsStrategy } from './strategy/good-teaching-skill-reviews-strategy';
 
 @Module({
   imports: [
@@ -16,6 +18,18 @@ import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommen
     CourseModule,
   ],
   controllers: [CourseReviewController],
-  providers: [CourseReviewService],
+  providers: [
+    CourseReviewService,
+    RecentCourseReviewsStrategy,
+    GoodTeachingSkillReviewsStrategy,
+    {
+      provide: 'CourseReviewCriteriaStrategy',
+      useFactory: (
+        recentCourseReviewsStrategy: RecentCourseReviewsStrategy,
+        goodTeachingSkillReviewsStrategy: GoodTeachingSkillReviewsStrategy,
+      ) => [recentCourseReviewsStrategy, goodTeachingSkillReviewsStrategy],
+      inject: [RecentCourseReviewsStrategy, GoodTeachingSkillReviewsStrategy],
+    },
+  ],
 })
 export class CourseReviewModule {}

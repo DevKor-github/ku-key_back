@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { CreateCourseReviewRequestDto } from './dto/create-course-review-request.dto';
 import { CourseReviewResponseDto } from './dto/course-review-response.dto';
@@ -9,7 +9,7 @@ import {
   ReviewDto,
 } from './dto/get-course-reviews-response.dto';
 import { GetCourseReviewSummaryResponseDto } from './dto/get-course-review-summary-response.dto';
-import { EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { CourseReviewEntity } from 'src/entities/course-review.entity';
 import { CourseReviewsFilterDto } from './dto/course-reviews-filter.dto';
@@ -17,7 +17,14 @@ import { CourseService } from 'src/course/course.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PointService } from 'src/user/point.service';
 import { throwKukeyException } from 'src/utils/exception.util';
-
+import { SearchCourseReviewsWithKeywordRequest } from './dto/search-course-reviews-with-keyword-request.dto';
+import { SearchCourseReviewsWithKeywordResponse } from './dto/search-course-reviews-with-keyword-response.dto';
+import { PaginatedCourseReviewsDto } from './dto/paginated-course-reviews.dto';
+import { CourseEntity } from 'src/entities/course.entity';
+import { CourseReviewCriteriaStrategy } from './strategy/course-review-criteria-strategy';
+import { GetCoursesWithCourseReviewsRequestDto } from './dto/get-courses-with-course-reviews-request.dto';
+import { CourseReviewCriteria } from 'src/enums/course-review-criteria.enum';
+import { GetCoursesWithCourseReviewsResponseDto } from './dto/get-courses-with-course-reviews-response.dto';
 @Injectable()
 export class CourseReviewService {
   constructor(
@@ -28,6 +35,8 @@ export class CourseReviewService {
     private readonly userService: UserService,
     private readonly pointService: PointService,
     private readonly courseService: CourseService,
+    @Inject('CourseReviewCriteriaStrategy')
+    private readonly strategies: CourseReviewCriteriaStrategy[],
   ) {}
 
   async createCourseReview(
@@ -179,6 +188,100 @@ export class CourseReviewService {
     );
   }
 
+  async getCourseReviewsWithKeyword(
+    searchCourseReviewsWithKeywordRequest: SearchCourseReviewsWithKeywordRequest,
+  ): Promise<PaginatedCourseReviewsDto> {
+    const courses = await this.courseService.searchCoursesWithOnlyKeyword(
+      searchCourseReviewsWithKeywordRequest,
+    );
+
+    if (courses.length === 0) {
+      return new PaginatedCourseReviewsDto([]);
+    }
+
+    const courseGroupMap = new Map<
+      string,
+      {
+        id: number;
+        courseCode: string;
+        professorName: string;
+        courseName: string;
+        totalRate: number;
+      }
+    >();
+
+    for (const course of courses) {
+      const key = `${course.courseCode}_${course.professorName}`;
+      if (!courseGroupMap.has(key)) {
+        courseGroupMap.set(key, {
+          id: course.id,
+          courseCode: course.courseCode,
+          professorName: course.professorName,
+          courseName: course.courseName,
+          totalRate: course.totalRate,
+        });
+      }
+    }
+    const courseGroups = Array.from(courseGroupMap.values());
+
+    const reviewQueryBuilder = this.courseReviewRepository
+      .createQueryBuilder('review')
+      .select([
+        'MIN(review.id) AS id',
+        'review.courseCode AS courseCode',
+        'review.professorName AS professorName',
+        'COUNT(review.id) AS reviewCount',
+      ])
+      .groupBy('courseCode')
+      .addGroupBy('professorName');
+
+    reviewQueryBuilder.where(
+      new Brackets((qb) => {
+        courseGroups.forEach((group, index) => {
+          const condition = `review.courseCode = :courseCode${index} AND review.professorName = :professorName${index}`;
+          if (index === 0) {
+            qb.where(condition, {
+              [`courseCode${index}`]: group.courseCode,
+              [`professorName${index}`]: group.professorName,
+            });
+          } else {
+            qb.orWhere(condition, {
+              [`courseCode${index}`]: group.courseCode,
+              [`professorName${index}`]: group.professorName,
+            });
+          }
+        });
+      }),
+    );
+
+    const reviewAggregates = await reviewQueryBuilder.getRawMany();
+
+    const reviewMap = new Map<string, { reviewCount: number }>();
+    reviewAggregates.forEach((item) => {
+      const key = `${item.courseCode}_${item.professorName}`;
+      reviewMap.set(key, {
+        reviewCount: item.reviewCount ? parseInt(item.reviewCount, 10) : 0,
+      });
+    });
+
+    const responses: SearchCourseReviewsWithKeywordResponse[] =
+      courseGroups.map((group) => {
+        const key = `${group.courseCode}_${group.professorName}`;
+        const reviewData = reviewMap.get(key) || {
+          reviewCount: 0,
+        };
+        return {
+          id: group.id,
+          courseName: group.courseName,
+          professorName: group.professorName,
+          totalRate: group.totalRate,
+          reviewCount: reviewData.reviewCount,
+        };
+      });
+
+    return new PaginatedCourseReviewsDto(responses);
+  }
+
   async getCourseReviews(
     user: AuthorizedUserDto,
     getCourseReviewsRequestDto: GetCourseReviewsRequestDto,
@@ -322,5 +425,55 @@ export class CourseReviewService {
     });
 
     return !!courseReview;
+  }
+
+  async getCoursesWithCourseReviews(
+    getCoursesWithCourseReviewsRequestDto: GetCoursesWithCourseReviewsRequestDto,
+  ): Promise<GetCoursesWithCourseReviewsResponseDto[]> {
+    const { criteria, limit } = getCoursesWithCourseReviewsRequestDto;
+
+    const courseReviewCriteria =
+      await this.findCourseReviewCriteriaStrategy(criteria);
+
+    let mainQuery = this.courseReviewRepository
+      .createQueryBuilder('courseReview')
+      .select('courseReview.courseCode', 'courseCode')
+      .addSelect('courseReview.professorName', 'professorName')
+      .groupBy('courseReview.courseCode')
+      .addGroupBy('courseReview.professorName');
+
+    mainQuery = await courseReviewCriteria.buildQuery(mainQuery);
+
+    const courseReviews = await mainQuery.take(limit).getRawMany();
+
+    const courses: CourseEntity[] = [];
+    for (const review of courseReviews) {
+      const foundCourses =
+        await this.courseService.searchCoursesByCourseCodeAndProfessorName(
+          review.courseCode,
+          review.professorName,
+          review.year,
+          review.semester,
+        );
+      courses.push(...foundCourses);
+    }
+
+    return courses.map((course) => {
+      return new GetCoursesWithCourseReviewsResponseDto(course);
+    });
+  }
+
+  private async findCourseReviewCriteriaStrategy(
+    criteria: CourseReviewCriteria,
+  ): Promise<CourseReviewCriteriaStrategy> {
+    const courseReviewCriteria = this.strategies.find((strategy) =>
+      strategy.supports(criteria),
+    );
+
+    if (!courseReviewCriteria) {
+      throwKukeyException('COURSE_REVIEW_CRITERIA_NOT_FOUND');
+    }
+
+    return courseReviewCriteria;
   }
 }

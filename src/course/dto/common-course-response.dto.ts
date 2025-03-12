@@ -41,7 +41,19 @@ export class CommonCourseResponseDto {
   @ApiProperty({ description: '강의평점' })
   totalRate: number;
 
-  @ApiProperty({ description: '강의 세부사항' })
+  @ApiProperty({
+    description: '강의 세부사항',
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        day: { type: 'string' },
+        startTime: { type: 'string' },
+        endTime: { type: 'string' },
+        classroom: { type: 'string' },
+      },
+    },
+  })
   details: {
     day: string;
     startTime: string;

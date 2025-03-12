@@ -5,6 +5,7 @@ import { BannerEntity } from 'src/entities/banner.entity';
 import { Repository } from 'typeorm';
 import { bannerDto } from './dto/banner.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { CreateBannerRequestDto } from 'src/home/banner/dto/create-banner-request.dto';
 
 @Injectable()
 export class BannerService {
@@ -23,13 +24,14 @@ export class BannerService {
         id: banner.id,
         imageUrl: banner.imageUrl,
         title: banner.title,
+        link: banner.link ?? null,
       };
     });
   }
 
   async createBannerImage(
     image: Express.Multer.File,
-    title: string,
+    dto: CreateBannerRequestDto,
   ): Promise<bannerDto> {
     if (!image) {
       throwKukeyException('BANNER_IMAGE_REQUIRED');
@@ -41,13 +43,15 @@ export class BannerService {
     const imageUrl = this.fileService.makeUrlByFileDir(fileDir);
     const banner = this.bannerRepository.create({
       imageUrl,
-      title,
+      title: dto.title,
+      link: dto.link ?? null,
     });
     const savedBanner = await this.bannerRepository.save(banner);
     return {
       id: savedBanner.id,
       imageUrl: savedBanner.imageUrl,
       title: savedBanner.title,
+      link: savedBanner.link ?? null,
     };
   }
 
