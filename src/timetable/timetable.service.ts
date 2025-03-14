@@ -326,7 +326,7 @@ export class TimetableService {
     friendId: number,
     semester: string,
     year: string,
-  ): Promise<GetTimetableByTimetableIdDto> {
+  ): Promise<GetTimetableByTimetableIdDto | null> {
     const timetable = await this.timetableRepository.findOne({
       where: {
         userId: friendId,
@@ -337,9 +337,7 @@ export class TimetableService {
     });
 
     // 시간표가 없을 경우
-    if (!timetable) {
-      throwKukeyException('TIMETABLE_NOT_FOUND');
-    }
+    if (!timetable) return null;
 
     // 시간표 id 추출 후 구현해놓은 함수 사용
     const friendTimetableId = timetable.id;

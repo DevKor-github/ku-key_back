@@ -86,7 +86,6 @@ const FriendshipDocsMap: Record<FriendshipEndPoints, MethodDecorator[]> = {
       'USER_NOT_FOUND',
       'FRIENDSHIP_NOT_FOUND',
       'FRIENDSHIP_REQUEST_NOT_ACCEPTED',
-      'FRIEND_TIMETABLE_NOT_FOUND',
     ]),
   ],
   sendFriendshipRequest: [

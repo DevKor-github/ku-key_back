@@ -64,7 +64,7 @@ export class FriendshipController {
   async getFriendTimetable(
     @User() user: AuthorizedUserDto,
     @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
-  ): Promise<GetTimetableByTimetableIdDto> {
+  ): Promise<GetTimetableByTimetableIdDto | { timetable: null }> {
     return await this.friendshipService.getFriendTimetable(
       user.id,
       getFriendTimetableRequestDto,
