@@ -367,7 +367,7 @@ export class FriendshipService {
   async getFriendTimetable(
     userId: number,
     getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
-  ): Promise<GetTimetableByTimetableIdDto> {
+  ): Promise<GetTimetableByTimetableIdDto | { timetable: null }> {
     // username으로 친구정보 가져오기
     const friend = await this.userService.findUserByUsername(
       getFriendTimetableRequestDto.username,
@@ -397,9 +397,11 @@ export class FriendshipService {
       getFriendTimetableRequestDto.year,
     );
 
-    if (!friendTimetable) {
-      throwKukeyException('FRIEND_TIMETABLE_NOT_FOUND');
+    // friendTimetable이 없을 경우 DTO에 맞게 빈 배열 던져주기
+    if (friendTimetable === null) {
+      return { timetable: null };
     }
+
     return friendTimetable;
   }
 }
