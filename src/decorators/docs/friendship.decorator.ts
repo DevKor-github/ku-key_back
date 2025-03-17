@@ -18,6 +18,7 @@ import { FriendshipController } from 'src/friendship/friendship.controller';
 import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { GetReceivedFriendshipRequestCountDto } from 'src/friendship/dto/get-received-friendship-request-count.dto';
+import { GetFriendTimetableResponseDto } from 'src/friendship/dto/get-friend-timetable-response.dto';
 
 type FriendshipEndPoints = MethodNames<FriendshipController>;
 
@@ -79,8 +80,7 @@ const FriendshipDocsMap: Record<FriendshipEndPoints, MethodDecorator[]> = {
     }),
     ApiOkResponse({
       description: '친구 시간표 반환',
-      type: GetTimetableByTimetableIdDto,
-      isArray: true,
+      type: GetFriendTimetableResponseDto,
     }),
     ApiKukeyExceptionResponse([
       'USER_NOT_FOUND',

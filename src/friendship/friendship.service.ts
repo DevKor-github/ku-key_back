@@ -19,6 +19,7 @@ import { Notice } from 'src/notice/enum/notice.enum';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
+import { GetFriendTimetableResponseDto } from './dto/get-friend-timetable-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -367,7 +368,7 @@ export class FriendshipService {
   async getFriendTimetable(
     userId: number,
     getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
-  ): Promise<GetTimetableByTimetableIdDto | { timetable: null }> {
+  ): Promise<GetFriendTimetableResponseDto> {
     // username으로 친구정보 가져오기
     const friend = await this.userService.findUserByUsername(
       getFriendTimetableRequestDto.username,
@@ -397,11 +398,11 @@ export class FriendshipService {
       getFriendTimetableRequestDto.year,
     );
 
-    // friendTimetable이 없을 경우 DTO에 맞게 빈 배열 던져주기
+    // friendTimetable이 없을 경우 { timetable: null } 반환
     if (friendTimetable === null) {
-      return { timetable: null };
+      return new GetFriendTimetableResponseDto(null);
     }
 
-    return friendTimetable;
+    return new GetFriendTimetableResponseDto(friendTimetable);
   }
 }
