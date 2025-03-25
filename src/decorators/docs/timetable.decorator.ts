@@ -10,7 +10,6 @@ import { CommonDeleteResponseDto } from 'src/timetable/dto/common-delete-respons
 import { CommonTimetableResponseDto } from 'src/timetable/dto/common-timetable-response.dto';
 import { CreateTimetableCourseResponseDto } from 'src/timetable/dto/create-timetable-course-response.dto';
 import { CreateTimetableDto } from 'src/timetable/dto/create-timetable.dto';
-import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { TimetableDto } from 'src/timetable/dto/timetable.dto';
 import { UpdateTimetableColorDto } from 'src/timetable/dto/update-timetable-color.dto';
 import { UpdateTimetableNameDto } from 'src/timetable/dto/update-timetable-name.dto';
@@ -18,6 +17,7 @@ import { GetTimetableByUserIdResponseDto } from 'src/timetable/dto/userId-timeta
 import { TimetableController } from 'src/timetable/timetable.controller';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { GetTodayTimetableResponse } from 'src/timetable/dto/get-today-timetable-response.dto';
+import { GetNullableTimetableResponseDto } from 'src/timetable/dto/get-nullable-timetable-response.dto';
 
 type TimetableEndPoints = MethodNames<TimetableController>;
 
@@ -48,7 +48,9 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     ApiKukeyExceptionResponse([
       'TIMETABLE_NOT_FOUND',
       'COURSE_NOT_FOUND',
+      'TIMETABLE_COURSE_MISMATCH',
       'COURSE_ALREADY_EXIST',
+      'COURSE_CONFLICT',
     ]),
   ],
   createTimetable: [
@@ -89,7 +91,6 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
       description: '대표 시간표 조회 성공 시',
       type: CommonTimetableResponseDto,
     }),
-    ApiKukeyExceptionResponse(['TIMETABLE_NOT_FOUND']),
   ],
   getTimetableByUserId: [
     ApiOperation({
@@ -103,7 +104,6 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
       type: GetTimetableByUserIdResponseDto,
       isArray: true,
     }),
-    ApiKukeyExceptionResponse(['TIMETABLE_NOT_FOUND']),
   ],
   getTodayTimetable: [
     ApiOperation({
@@ -136,14 +136,15 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     }),
     ApiParam({
       name: 'timetableId',
+      type: 'number',
+      required: true,
       description: '특정 시간표 ID',
     }),
     ApiResponse({
       status: 200,
       description: '특정 시간표 ID로 조회 성공 시',
-      type: GetTimetableByTimetableIdDto,
+      type: GetNullableTimetableResponseDto,
     }),
-    ApiKukeyExceptionResponse(['TIMETABLE_NOT_FOUND']),
   ],
   deleteTimetableCourse: [
     ApiOperation({
@@ -177,6 +178,8 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     }),
     ApiParam({
       name: 'timetableId',
+      type: 'number',
+      required: true,
       description: '삭제할 시간표 ID',
     }),
     ApiResponse({
@@ -193,6 +196,8 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     }),
     ApiParam({
       name: 'timetableId',
+      type: 'number',
+      required: true,
       description: '변경할 시간표 ID',
     }),
     ApiBody({
@@ -212,6 +217,8 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     }),
     ApiParam({
       name: 'timetableId',
+      type: 'number',
+      required: true,
       description: '변경할 시간표 ID',
     }),
     ApiBody({
@@ -232,6 +239,8 @@ const TimetableDocsMap: Record<TimetableEndPoints, MethodDecorator[]> = {
     }),
     ApiParam({
       name: 'timetableId',
+      type: 'number',
+      required: true,
       description: '대표 시간표로 변경할 시간표 ID',
     }),
     ApiBody({

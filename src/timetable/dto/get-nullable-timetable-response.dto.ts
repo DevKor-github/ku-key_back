@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
+import { GetTimetableByTimetableIdDto } from './get-timetable-timetable.dto';
 
-export class GetFriendTimetableResponseDto {
+export class GetNullableTimetableResponseDto {
   @ApiProperty({
-    description: '친구 시간표 정보',
+    description: '특정 시간표 정보',
     type: GetTimetableByTimetableIdDto,
     nullable: true,
   })

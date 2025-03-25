@@ -19,6 +19,7 @@ import { DayType } from 'src/common/types/day-type.utils';
 import { throwKukeyException } from 'src/utils/exception.util';
 import { DeleteTimetableResponseDto } from './dto/delete-timetable-response.dto';
 import { GetTodayTimetableResponse } from './dto/get-today-timetable-response.dto';
+import { GetNullableTimetableResponseDto } from './dto/get-nullable-timetable-response.dto';
 
 @Injectable()
 export class TimetableService {
@@ -226,7 +227,7 @@ export class TimetableService {
   async getTimetableByTimetableId(
     timetableId: number,
     userId: number,
-  ): Promise<GetTimetableByTimetableIdDto> {
+  ): Promise<GetNullableTimetableResponseDto> {
     const timetable = await this.timetableRepository.findOne({
       where: { id: timetableId, userId },
       relations: [
@@ -235,8 +236,9 @@ export class TimetableService {
         'timetableCourses.course.courseDetails',
       ],
     });
+
     if (!timetable) {
-      throwKukeyException('TIMETABLE_NOT_FOUND');
+      return new GetNullableTimetableResponseDto(null);
     }
 
     const schedules =
@@ -306,7 +308,9 @@ export class TimetableService {
       });
     });
 
-    return getTimetableByTimetableIdResponse;
+    return new GetNullableTimetableResponseDto(
+      getTimetableByTimetableIdResponse,
+    );
   }
 
   async getTimetableByUserId(
@@ -315,7 +319,11 @@ export class TimetableService {
     const userTimetable = await this.timetableRepository.find({
       where: { userId },
     });
-    if (!userTimetable) throwKukeyException('TIMETABLE_NOT_FOUND');
+
+    if (!userTimetable) {
+      return [];
+    }
+
     return userTimetable.map(
       (table) => new GetTimetableByUserIdResponseDto(table),
     );
@@ -326,7 +334,7 @@ export class TimetableService {
     friendId: number,
     semester: string,
     year: string,
-  ): Promise<GetTimetableByTimetableIdDto | null> {
+  ): Promise<GetNullableTimetableResponseDto> {
     const timetable = await this.timetableRepository.findOne({
       where: {
         userId: friendId,
@@ -336,8 +344,7 @@ export class TimetableService {
       },
     });
 
-    // 시간표가 없을 경우
-    if (!timetable) return null;
+    if (!timetable) return new GetNullableTimetableResponseDto(null);
 
     // 시간표 id 추출 후 구현해놓은 함수 사용
     const friendTimetableId = timetable.id;

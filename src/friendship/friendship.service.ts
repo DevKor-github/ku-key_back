@@ -11,7 +11,6 @@ import { FriendshipEntity } from 'src/entities/friendship.entity';
 import { UserService } from 'src/user/user.service';
 import { TimetableService } from 'src/timetable/timetable.service';
 import { GetFriendTimetableRequestDto } from './dto/get-friend-timetable.dto';
-import { GetTimetableByTimetableIdDto } from 'src/timetable/dto/get-timetable-timetable.dto';
 import { GetWaitingFriendResponseDto } from './dto/get-waiting-friend-response.dto';
 import { EntityManager } from 'typeorm';
 import { NoticeService } from 'src/notice/notice.service';
@@ -19,7 +18,7 @@ import { Notice } from 'src/notice/enum/notice.enum';
 import { AuthorizedUserDto } from 'src/auth/dto/authorized-user-dto';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
 import { throwKukeyException } from 'src/utils/exception.util';
-import { GetFriendTimetableResponseDto } from './dto/get-friend-timetable-response.dto';
+import { GetNullableTimetableResponseDto } from 'src/timetable/dto/get-nullable-timetable-response.dto';
 
 @Injectable()
 export class FriendshipService {
@@ -368,7 +367,7 @@ export class FriendshipService {
   async getFriendTimetable(
     userId: number,
     getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
-  ): Promise<GetFriendTimetableResponseDto> {
+  ): Promise<GetNullableTimetableResponseDto> {
     // username으로 친구정보 가져오기
     const friend = await this.userService.findUserByUsername(
       getFriendTimetableRequestDto.username,
@@ -398,11 +397,6 @@ export class FriendshipService {
       getFriendTimetableRequestDto.year,
     );
 
-    // friendTimetable이 없을 경우 { timetable: null } 반환
-    if (friendTimetable === null) {
-      return new GetFriendTimetableResponseDto(null);
-    }
-
-    return new GetFriendTimetableResponseDto(friendTimetable);
+    return friendTimetable;
   }
 }

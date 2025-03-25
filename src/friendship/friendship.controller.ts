@@ -29,7 +29,7 @@ import { EntityManager } from 'typeorm';
 import { SearchUserRequestDto } from './dto/search-user-query.dto';
 import { FriendshipDocs } from 'src/decorators/docs/friendship.decorator';
 import { GetReceivedFriendshipRequestCountDto } from './dto/get-received-friendship-request-count.dto';
-import { GetFriendTimetableResponseDto } from './dto/get-friend-timetable-response.dto';
+import { GetNullableTimetableResponseDto } from 'src/timetable/dto/get-nullable-timetable-response.dto';
 
 @Controller('friendship')
 @ApiTags('friendship')
@@ -64,7 +64,7 @@ export class FriendshipController {
   async getFriendTimetable(
     @User() user: AuthorizedUserDto,
     @Query() getFriendTimetableRequestDto: GetFriendTimetableRequestDto,
-  ): Promise<GetFriendTimetableResponseDto> {
+  ): Promise<GetNullableTimetableResponseDto> {
     return await this.friendshipService.getFriendTimetable(
       user.id,
       getFriendTimetableRequestDto,
