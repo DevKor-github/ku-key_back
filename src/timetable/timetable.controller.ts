@@ -22,13 +22,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateTimetableCourseResponseDto } from './dto/create-timetable-course-response.dto';
 import { CommonTimetableResponseDto } from './dto/common-timetable-response.dto';
 import { CommonDeleteResponseDto } from './dto/common-delete-response.dto';
-import { GetTimetableByTimetableIdDto } from './dto/get-timetable-timetable.dto';
 import { UpdateTimetableColorDto } from './dto/update-timetable-color.dto';
 import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
 import { TransactionManager } from 'src/decorators/manager.decorator';
 import { EntityManager } from 'typeorm';
 import { TimetableDocs } from 'src/decorators/docs/timetable.decorator';
 import { GetTodayTimetableResponse } from './dto/get-today-timetable-response.dto';
+import { GetNullableTimetableResponseDto } from './dto/get-nullable-timetable-response.dto';
 
 @Controller('timetable')
 @ApiTags('timetable')
@@ -98,7 +98,7 @@ export class TimetableController {
   async getTimetableByTimetableId(
     @Param('timetableId') timetableId: number,
     @User() user: AuthorizedUserDto,
-  ): Promise<GetTimetableByTimetableIdDto> {
+  ): Promise<GetNullableTimetableResponseDto> {
     return await this.timetableService.getTimetableByTimetableId(
       timetableId,
       user.id,
