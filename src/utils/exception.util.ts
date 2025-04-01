@@ -466,12 +466,6 @@ export const kukeyExceptions = createKukeyExceptions({
     errorCode: 3409,
     statusCode: 500,
   },
-  FRIEND_TIMETABLE_NOT_FOUND: {
-    name: 'FRIEND_TIMETABLE_NOT_FOUND',
-    message: "Friend's timetable not found.",
-    errorCode: 3410,
-    statusCode: 404,
-  },
   // 4xxx : 커뮤니티 관련 예외
   // - 40xx : Board
   BOARD_NOT_FOUND: {
