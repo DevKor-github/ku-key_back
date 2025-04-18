@@ -90,12 +90,14 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ['self-hosted', 'prod']
+    environment:
+      name: prod
     env:
       ACCOUNT: 'ubuntu'
       DOCKER_TAG: 'latest'
       BLUE_PORT: '3080'
       GREEN_PORT: '3081'
-      NGINX_CONFIG: '/etc/nginx/sites-available/default'
+      UPSTREAM_CONFIG: '/etc/nginx/routes/upstream.conf'
 
     steps:
       - name: setup .env.prod
@@ -119,7 +121,7 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> .env.prod
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env.prod
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env.prod
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST_PROD }}" >> .env.prod
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env.prod
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.prod
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env.prod
           echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env.prod
@@ -128,7 +130,7 @@ jobs:
 
       - name: Run Docker for main server
         run: |
-          CURRENT_PORT=$(grep 'server localhost:' ${{ env.NGINX_CONFIG }} | awk '{print $2}' | cut -d ':' -f 2 | sed 's/;//')
+          CURRENT_PORT=$(grep 'server localhost:' ${{ env.UPSTREAM_CONFIG }} | awk '{print $2}' | cut -d ':' -f 2 | sed 's/;//')
 
           if [ "$CURRENT_PORT" = "${{ env.BLUE_PORT }}" ]; then
             NEW_PORT=${{ env.GREEN_PORT }}
@@ -160,8 +162,8 @@ jobs:
             exit 1
           fi
 
-          sudo sed -i "s/server localhost:$CURRENT_PORT;/server localhost:$NEW_PORT;/g" ${{ env.NGINX_CONFIG }}
-          sudo nginx -s reload
+          echo "upstream kukey_backend { server localhost:$NEW_PORT; }" | sudo tee ${{ env.UPSTREAM_CONFIG }} > /dev/null
+          sudo nginx -t && sudo nginx -s reload
 
           sudo docker stop $OLD_SERVICE_NAME
           sudo docker rm $OLD_SERVICE_NAME
