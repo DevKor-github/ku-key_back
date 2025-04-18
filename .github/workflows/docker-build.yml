@@ -165,9 +165,9 @@ jobs:
           echo "upstream kukey_backend { server localhost:$NEW_PORT; }" | sudo tee ${{ env.UPSTREAM_CONFIG }} > /dev/null
           sudo nginx -t && sudo nginx -s reload
 
-          sudo docker stop $OLD_SERVICE_NAME
-          sudo docker rm $OLD_SERVICE_NAME
-          sudo docker images --format \"{{.ID}} {{.Repository}}:{{.Tag}}\" | grep -v ':latest' | awk '{print \$1}' | xargs -r docker rmi         
-          sudo docker system prune -a -f
+          sudo docker stop $OLD_SERVICE_NAME || true
+          sudo docker rm $OLD_SERVICE_NAME || true
+          sudo docker images --format \"{{.ID}} {{.Repository}}:{{.Tag}}\" | grep -v ':latest' | awk '{print \$1}' | xargs -r docker rmi || true
+          sudo docker system prune -a -f || true
 
           echo "배포 완료 on ${{ secrets.HOST }}. $NEW_SERVICE_NAME"
