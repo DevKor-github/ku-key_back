@@ -130,7 +130,7 @@ jobs:
 
       - name: Run Docker for main server
         run: |
-          CURRENT_PORT=$(grep 'server localhost:' "$UPSTREAM_CONFIG" | awk -F: '{print $2}' | sed 's/;//' | tr -d '\r\n ')
+          CURRENT_PORT=$(grep 'server localhost:' "$UPSTREAM_CONFIG" | awk -F: '{print $2}' | sed 's/[^0-9]*//g' | tr -d '\r\n ')
 
           echo "[DEBUG] CURRENT_PORT='$CURRENT_PORT'"
           echo "[DEBUG] BLUE_PORT='$BLUE_PORT'"
