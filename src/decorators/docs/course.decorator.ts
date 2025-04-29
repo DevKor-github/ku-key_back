@@ -10,6 +10,7 @@ import { PaginatedCoursesDto } from 'src/course/dto/paginated-courses.dto';
 import { ApiKukeyExceptionResponse } from '../api-kukey-exception-response';
 import { CourseCategory } from 'src/enums/course-category.enum';
 import { CommonCourseResponseDto } from 'src/course/dto/common-course-response.dto';
+import { SearchAllTimeCoursesResponseDto } from 'src/course/dto/search-all-time-courses-response.dto';
 
 type CourseEndPoints = MethodNames<CourseController>;
 
@@ -72,6 +73,27 @@ const CourseDocsMap: Record<CourseEndPoints, MethodDecorator[]> = {
       status: 200,
       description: '추천 강의 조회 성공 시',
       type: [CommonCourseResponseDto],
+    }),
+  ],
+  searchAllTimeCourses: [
+    ApiOperation({
+      summary: '강의 검색 (학기 입력 X)',
+      description: '학기 입력 없이 강의를 검색합니다.',
+    }),
+    ApiQuery({
+      name: 'keyword',
+      required: true,
+      type: 'string',
+    }),
+    ApiQuery({
+      name: 'cursorId',
+      required: false,
+      type: 'number',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '강의 검색 성공 시',
+      type: SearchAllTimeCoursesResponseDto,
     }),
   ],
 };
