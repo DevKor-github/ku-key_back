@@ -10,9 +10,13 @@ import { AcademicFoundationSearchStrategy } from './strategy/academic-foundation
 import { GeneralSearchStrategy } from './strategy/general-search-strategy';
 import { MajorSearchStrategy } from './strategy/major-search-strategy';
 import { AllCoursesSearchStrategy } from './strategy/all-courses-search-strategy';
+import { CommonCourseModule } from 'src/common-course/common-course.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CourseEntity, CourseDetailEntity])],
+  imports: [
+    TypeOrmModule.forFeature([CourseEntity, CourseDetailEntity]),
+    CommonCourseModule,
+  ],
   controllers: [CourseController],
   providers: [
     CourseService,

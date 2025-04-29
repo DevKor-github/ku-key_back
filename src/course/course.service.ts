@@ -11,7 +11,9 @@ import { SearchCourseNewDto } from './dto/search-course-new.dto';
 import { CourseSearchStrategy } from './strategy/course-search-strategy';
 import { SearchCourseReviewsWithKeywordRequest } from 'src/course-review/dto/search-course-reviews-with-keyword-request.dto';
 import { GetRecommendationCoursesRequestDto } from './dto/get-recommendation-courses-request.dto';
-
+import { SearchAllTimeCoursesRequestDto } from './dto/search-all-time-courses-request.dto';
+import { SearchAllTimeCoursesResponseDto } from './dto/search-all-time-courses-response.dto';
+import { CommonCourseService } from 'src/common-course/common-course.service';
 @Injectable()
 export class CourseService {
   constructor(
@@ -19,6 +21,7 @@ export class CourseService {
     private courseDetailRepository: CourseDetailRepository,
     @Inject('CourseSearchStrategy')
     private readonly strategies: CourseSearchStrategy[],
+    private readonly commonCourseService: CommonCourseService,
   ) {}
   async getCourse(courseId: number): Promise<CommonCourseResponseDto> {
     const course = await this.courseRepository.findOne({
@@ -220,6 +223,53 @@ export class CourseService {
     });
 
     return courses.map((course) => new CommonCourseResponseDto(course));
+  }
+
+  async searchAllTimeCourses(
+    searchAllTimeCoursesRequestDto: SearchAllTimeCoursesRequestDto,
+  ): Promise<SearchAllTimeCoursesResponseDto> {
+    const { keyword, cursorId } = searchAllTimeCoursesRequestDto;
+    let coursesQuery = this.courseRepository
+      .createQueryBuilder('course')
+      .where(
+        'course.courseName LIKE :keyword OR course.professorName LIKE :keyword OR course.courseCode LIKE :keyword',
+        {
+          keyword: `%${keyword}%`,
+        },
+      );
+
+    if (cursorId) {
+      coursesQuery = coursesQuery.andWhere('course.id > :cursorId', {
+        cursorId,
+      });
+    }
+
+    const courses = await coursesQuery
+      .orderBy('course.id', 'ASC')
+      .take(PaginatedCoursesDto.LIMIT)
+      .getMany();
+
+    const coursePairs = courses.map((course) => ({
+      courseCode: course.courseCode.split('-')[0],
+      professorName: course.professorName,
+    }));
+
+    const reviewCountMap =
+      await this.commonCourseService.getCourseReviewCount(coursePairs);
+
+    const coursesWithReviewCount = courses.map((course) => {
+      const key = `${course.courseCode.split('-')[0]}-${course.professorName}`;
+      return {
+        id: course.id,
+        professorName: course.professorName,
+        courseName: course.courseName,
+        courseCode: course.courseCode,
+        totalRate: course.totalRate,
+        reviewCount: reviewCountMap.get(key) || 0,
+      };
+    });
+
+    return new SearchAllTimeCoursesResponseDto(coursesWithReviewCount);
   }
 
   private async findSearchStrategy(
