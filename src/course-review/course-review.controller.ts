@@ -90,6 +90,7 @@ export class CourseReviewController {
     );
   }
 
+  // TODO: 강의관련이므로 강의평 모듈에서 강의모듈로 옮기기
   @Get('course')
   async getCoursesWithCourseReviews(
     @Query()

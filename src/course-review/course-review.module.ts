@@ -9,13 +9,15 @@ import { CourseModule } from 'src/course/course.module';
 import { CourseReviewRecommendEntity } from 'src/entities/course-review-recommend.entity';
 import { RecentCourseReviewsStrategy } from './strategy/recent-course-reviews-strategy';
 import { GoodTeachingSkillReviewsStrategy } from './strategy/good-teaching-skill-reviews-strategy';
-
+import { CommonCourseModule } from 'src/common-course/common-course.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([CourseReviewEntity, CourseReviewRecommendEntity]),
     AuthModule,
     UserModule,
+    // TODO: CourseModule 의존성 없애기
     CourseModule,
+    CommonCourseModule,
   ],
   controllers: [CourseReviewController],
   providers: [
